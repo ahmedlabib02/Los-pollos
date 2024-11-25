@@ -1,8 +1,8 @@
 // lib/screens/authenticate/authenticate.dart
 
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/authenticate/register.dart';
 import 'package:los_pollos_hermanos/screens/authenticate/sign_in.dart';
-// import 'package:los_pollos_hermanos/screens/authenticate/register.dart';
 
 class Authenticate extends StatefulWidget {
   const Authenticate({super.key});
@@ -22,6 +22,6 @@ class _AuthenticateState extends State<Authenticate> {
   Widget build(BuildContext context) {
     return showSignIn
         ? SignIn(toggleView: toggleView)
-        : SignIn(toggleView: toggleView);
+        : Register(toggleView: toggleView);
   }
 }

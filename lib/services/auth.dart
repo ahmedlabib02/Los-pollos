@@ -1,6 +1,5 @@
-// lib/services/auth.dart
-
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../models/customUser.dart';
 
 class AuthService {
@@ -16,7 +15,6 @@ class AuthService {
     return _auth.authStateChanges().map(_userFromFirebaseUser);
   }
 
-  // Sign in with email and password
   Future<CustomUser?> signInWithEmailAndPassword({
     required String email,
     required String password,
@@ -30,16 +28,17 @@ class AuthService {
 
       User? user = result.user;
 
-      // Convert and return the custom user
       return _userFromFirebaseUser(user);
     } on FirebaseAuthException catch (e) {
       // Handle Firebase-specific errors
-      print('FirebaseAuthException: ${e.message}');
-      throw e; // Rethrow the exception to handle it in the UI
+      // print('FirebaseAuthException: ${e.message}');
+      rethrow; // Rethrow the exception to handle it in the UI
     } catch (e) {
       // Handle other errors
-      print('SignIn Error: $e');
-      throw e; // Rethrow the exception to handle it in the UI
+      if (kDebugMode) {
+        print('SignIn Error: $e');
+      }
+      rethrow; // Rethrow the exception to handle it in the UI
     }
   }
 
@@ -47,15 +46,21 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      print('User signed out successfully.');
+      if (kDebugMode) {
+        print('User signed out successfully.');
+      }
     } on FirebaseAuthException catch (e) {
       // Handle Firebase-specific errors
-      print('FirebaseAuthException during sign out: ${e.message}');
-      throw e;
+      if (kDebugMode) {
+        print('FirebaseAuthException during sign out: ${e.message}');
+      }
+      rethrow;
     } catch (e) {
       // Handle other errors
-      print('SignOut Error: $e');
-      throw e;
+      if (kDebugMode) {
+        print('SignOut Error: $e');
+      }
+      rethrow;
     }
   }
 
@@ -77,12 +82,16 @@ class AuthService {
       return _userFromFirebaseUser(user);
     } on FirebaseAuthException catch (e) {
       // Handle Firebase-specific errors
-      print('FirebaseAuthException: ${e.message}');
-      throw e;
+      if (kDebugMode) {
+        print('FirebaseAuthException: ${e.message}');
+      }
+      rethrow;
     } catch (e) {
       // Handle other errors
-      print('Registration Error: $e');
-      throw e;
+      if (kDebugMode) {
+        print('Registration Error: $e');
+      }
+      rethrow;
     }
   }
 }

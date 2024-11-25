@@ -62,20 +62,16 @@ class _SignInState extends State<SignIn> {
     }
   }
 
-  // Build method for UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign In to Los Pollos'),
         actions: [
-          TextButton.icon(
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Register',
             onPressed: () => widget.toggleView(),
-            icon: const Icon(Icons.person, color: Colors.white),
-            label: const Text(
-              'Register',
-              style: TextStyle(color: Colors.white),
-            ),
           ),
         ],
       ),
@@ -149,9 +145,14 @@ class _SignInState extends State<SignIn> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _signIn,
                         child: _isLoading
-                            ? const CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                  strokeWidth: 2.0,
+                                ),
                               )
                             : const Text('Sign In'),
                         style: ElevatedButton.styleFrom(
