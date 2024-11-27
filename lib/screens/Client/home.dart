@@ -1,10 +1,8 @@
-// lib/screens/home/home.dart
-
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class ClientHome extends StatelessWidget {
+  const ClientHome({super.key});
 
   @override
   Widget build(BuildContext context) {

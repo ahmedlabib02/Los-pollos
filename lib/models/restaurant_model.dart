@@ -1,7 +1,9 @@
+// lib/models/restaurant.dart
+
 class Restaurant {
-  String id;
-  String name;
-  String menuID;
+  final String id; // Firestore document ID
+  final String name;
+  final String menuID;
 
   Restaurant({
     required this.id,
@@ -9,6 +11,7 @@ class Restaurant {
     required this.menuID,
   });
 
+  // Convert Restaurant to a map for Firestore (exclude 'id')
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -16,11 +19,12 @@ class Restaurant {
     };
   }
 
-  factory Restaurant.fromMap(Map<String, dynamic> map) {
+  // Create a Restaurant instance from Firestore map data and document ID
+  factory Restaurant.fromMap(Map<String, dynamic> map, String documentId) {
     return Restaurant(
-      id: map['id'],
-      name: map['name'],
-      menuID: map['menuID'],
+      id: documentId,
+      name: map['name'] ?? '',
+      menuID: map['menuID'] ?? '',
     );
   }
 }

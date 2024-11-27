@@ -6,7 +6,7 @@ import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
-import 'package:los_pollos_hermanos/screens/loadingScreen.dart';
+import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

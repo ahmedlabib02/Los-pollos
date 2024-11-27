@@ -3,7 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
-import 'package:los_pollos_hermanos/screens/loadingScreen.dart';
+import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
 class Register extends StatefulWidget {
   final Function toggleView;
@@ -21,6 +21,7 @@ class _RegisterState extends State<Register> {
   final AuthService _authService = AuthService();
 
   // Controllers for text fields
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -33,6 +34,7 @@ class _RegisterState extends State<Register> {
   // Dispose controllers to free resources
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -50,12 +52,12 @@ class _RegisterState extends State<Register> {
 
       try {
         // Attempt to register the user
-        final result = await _authService.registerWithEmailAndPassword(
+        await _authService.registerClient(
           email: _emailController.text,
           password: _passwordController.text,
+          name: _nameController.text, // Pass name here
         );
-
-        if (result != null) {}
+        // On success, navigation is handled by the Wrapper widget
       } on FirebaseAuthException catch (e) {
         setState(() {
           _errorMessage = e.message;
@@ -73,6 +75,7 @@ class _RegisterState extends State<Register> {
     }
   }
 
+  // Build method for UI
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -105,6 +108,22 @@ class _RegisterState extends State<Register> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Name Field
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Name',
+                              prefixIcon: Icon(Icons.person),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your name';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
                           // Email Field
                           TextFormField(
                             controller: _emailController,
