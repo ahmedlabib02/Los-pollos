@@ -19,7 +19,6 @@ class ClientService {
     }
   }
 
-  /// Retrieves a client by userID
   Future<Client?> getClient(String userID) async {
     try {
       DocumentSnapshot doc =
@@ -33,7 +32,6 @@ class ClientService {
     }
   }
 
-  /// Streams real-time updates of a client by userID
   Stream<Client?> streamClient(String userID) {
     return _firestore
         .collection(collectionPath)
@@ -47,7 +45,6 @@ class ClientService {
     });
   }
 
-  /// Updates an existing client's information
   Future<void> updateClient(Client client) async {
     try {
       await _firestore
@@ -65,6 +62,30 @@ class ClientService {
       await _firestore.collection(collectionPath).doc(userID).delete();
     } catch (e) {
       throw Exception('Error deleting client: $e');
+    }
+  }
+
+  Future<void> updateClientFcmToken(String uid, String token) async {
+    try {
+      await _firestore.collection('clients').doc(uid).update({
+        'fcmToken': token,
+      });
+    } catch (e) {
+      print('Error updating FCM token: $e');
+    }
+  }
+
+  Future<void> removeClientFcmToken(String? userId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('clients')
+          .doc(userId)
+          .update({
+        'fcmToken': FieldValue.delete(),
+      });
+      print('FCM Token removed from Firestore');
+    } catch (e) {
+      print('Error removing FCM Token: $e');
     }
   }
 }

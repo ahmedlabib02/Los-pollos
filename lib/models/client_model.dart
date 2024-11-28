@@ -4,6 +4,7 @@ class Client {
   final String email;
   final List<String> pastBillsIDs;
   final String currentTableID;
+  final String? fcmToken;
 
   Client({
     required this.userID,
@@ -11,20 +12,20 @@ class Client {
     required this.email,
     this.pastBillsIDs = const [],
     this.currentTableID = '',
+    this.fcmToken,
   });
 
-  // Method to convert Client to a map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'userID': userID,
       'name': name,
       'email': email,
       'pastBillsIDs': pastBillsIDs,
       'currentTableID': currentTableID,
+      'fcmToken': fcmToken,
     };
   }
 
-  // Factory method to create a Client instance from Firestore map data
+  // Create a Client instance from Firestore map data
   factory Client.fromMap(Map<String, dynamic> map) {
     return Client(
       userID: map['userID'] ?? '',
@@ -32,6 +33,7 @@ class Client {
       email: map['email'] ?? '',
       pastBillsIDs: List<String>.from(map['pastBillsIDs'] ?? []),
       currentTableID: map['currentTableID'] ?? '',
+      fcmToken: map['fcmToken'],
     );
   }
 }

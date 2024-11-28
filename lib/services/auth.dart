@@ -1,20 +1,21 @@
 // lib/services/auth.dart
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/services/manager_services.dart';
+import 'package:los_pollos_hermanos/services/notification_services.dart';
 import '../models/customUser.dart';
 import '../models/client_model.dart';
-import 'client_services.dart'; // Import ClientService
+import 'client_services.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ClientService _clientService =
-      ClientService(); // Instance of ClientService
+  final ClientService _clientService = ClientService();
   final ManagerServices _managerServices = ManagerServices();
+  final NotificationService _notificationService = NotificationService();
 
   // Convert Firebase User to CustomUser with role
   Future<CustomUser?> _userFromFirebaseUser(User? user) async {
@@ -71,7 +72,16 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     try {
+      final uid = _auth.currentUser?.uid;
+      await _notificationService.deleteFcmToken(uid);
+      _notificationService.dispose();
+
+      // Sign out the user
       await _auth.signOut();
+
+      // Dispose of notification listeners
+      _notificationService.dispose();
+
       if (kDebugMode) {
         print('User signed out successfully.');
       }
