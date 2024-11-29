@@ -1,6 +1,8 @@
 // lib/services/client_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:los_pollos_hermanos/models/bill_model.dart';
+import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import '../models/client_model.dart';
 
 class ClientService {
@@ -87,5 +89,153 @@ class ClientService {
     } catch (e) {
       print('Error removing FCM Token: $e');
     }
+  }
+
+// ------------------------- Order Items ---------------------------------------
+  Future<void> addOrderItemToTable(String tableID, OrderItem orderItem) async {
+    try {
+      DocumentReference tableRef = _firestore.collection('tables').doc(tableID);
+      await tableRef.update({
+        'orderItemIds': FieldValue.arrayUnion([orderItem.id]),
+        'totalAmount': FieldValue.increment(orderItem.price),
+      });
+      createOrUpdateBill(orderItem.userIds[0], orderItem.id);
+      updateAllBills(tableID);
+      print("Order item added to table successfully");
+    } catch (e) {
+      print("Failed to add order item to table: $e");
+    }
+  }
+
+// ------------------------- Bills ---------------------------------------
+//  Bills are created for a user when the user orders for the first time or join someones order
+//  Bills are updated when the user orders more items or joins more orders
+  Future<void> createOrUpdateBill(String userID, String orderItemID) async {
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(userID).get();
+      String currentTableID = userDoc.get('currentTableID');
+      DocumentSnapshot orderItemDoc =
+          await _firestore.collection('orderItems').doc(orderItemID).get();
+      double orderItemAmount = orderItemDoc.get('amount') /
+          orderItemDoc.get('userIds').length as double;
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(currentTableID).get();
+      List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+      String userBillId = billIds.firstWhere(
+        (billId) => billId.contains(userID),
+        orElse: () => '',
+      );
+
+      if (userBillId.isNotEmpty) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(userBillId).get();
+        double currentAmount = billDoc.get('amount');
+        double newAmount = currentAmount + orderItemAmount;
+        await _firestore
+            .collection('bills')
+            .doc(userBillId)
+            .update({'amount': newAmount});
+      } else {
+        DocumentReference billRef = _firestore.collection('bills').doc();
+        Bill bill = Bill(
+          id: billRef.id,
+          amount: orderItemAmount,
+          userId: userID,
+          isPaid: false,
+          orderItemIds: [orderItemID],
+        );
+        await billRef.set(bill.toMap());
+        await _firestore.collection('tables').doc(currentTableID).update({
+          'billIds': FieldValue.arrayUnion([billRef.id])
+        });
+      }
+    } catch (e) {
+      print("Failed to create or update bill: $e");
+    }
+  }
+
+  Future<void> updateAllBills(String tableID) async {
+    try {
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(tableID).get();
+      bool isTableSplit = tableDoc.get('isTableSplit');
+
+      if (isTableSplit) {
+        double totalAmount = tableDoc.get('totalAmount');
+        double amountPerUser = totalAmount / tableDoc.get('userIds').length;
+        List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+        for (String billId in billIds) {
+          await _firestore
+              .collection('bills')
+              .doc(billId)
+              .update({'amount': amountPerUser});
+        }
+      }
+    } catch (e) {
+      print("Failed to update all bills: $e");
+    }
+  }
+
+  Future<void> updateBillStatus(String billID) async {
+    try {
+      await _firestore.collection('bills').doc(billID).update({'isPaid': true});
+    } catch (e) {
+      print("Failed to update bill: $e");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getBillSummary(String userID) async {
+    List<Map<String, dynamic>> billSummaries = [];
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(userID).get();
+      String currentTableID = userDoc.get('currentTableID');
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(currentTableID).get();
+      List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+
+      for (String billId in billIds) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(billId).get();
+        String billUserID = billDoc.get('userId');
+        String billUserName = userDoc.get('name');
+        double billAmount = billDoc.get('amount');
+        List<String> orderItemIds =
+            List<String>.from(billDoc.get('orderItemIds'));
+        List<Map<String, dynamic>> orderItems = [];
+        for (String orderItemId in orderItemIds) {
+          DocumentSnapshot orderItemDoc =
+              await _firestore.collection('orderItems').doc(orderItemId).get();
+          int itemCount = orderItemDoc.get('userIds').length;
+          String menuItemID = orderItemDoc.get('menuItemID');
+          String menuItemName =
+              (await _firestore.collection('menuItems').doc(menuItemID).get())
+                  .get('name');
+          orderItems.add({
+            'itemCount': itemCount,
+            'itemName': menuItemName,
+          });
+        }
+
+        Map<String, dynamic> billSummary = {
+          'id': billId,
+          'name': billUserName,
+          'amount': billAmount,
+          'orderItems': orderItems,
+          'isPaid': billDoc.get('isPaid'),
+          'isCurrentUser': billUserID == userID,
+        };
+
+        if (billUserID == userID) {
+          billSummaries.insert(0, billSummary);
+        } else {
+          billSummaries.add(billSummary);
+        }
+      }
+    } catch (e) {
+      print("Failed to get bill summary: $e");
+    }
+    return billSummaries;
   }
 }
