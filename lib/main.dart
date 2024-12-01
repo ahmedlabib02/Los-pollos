@@ -2,14 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
-import 'package:los_pollos_hermanos/screens/loadingScreen.dart';
+import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
-void main() async {
+
+Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "lib/.env");
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   runApp(const MyApp());
 }
 

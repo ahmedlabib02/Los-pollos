@@ -1,10 +1,8 @@
-// lib/screens/home/home.dart
-
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class ManagerHome extends StatelessWidget {
+  const ManagerHome({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,14 +10,14 @@ class Home extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Hey Boss'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               try {
                 await _auth.signOut();
-                // Optionally show a confirmation message
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Signed out successfully')),
                 );

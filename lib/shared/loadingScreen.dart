@@ -1,5 +1,3 @@
-// lib/screens/loading.dart
-
 import 'package:flutter/material.dart';
 
 class Loading extends StatelessWidget {
