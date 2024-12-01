@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
+import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
 
 class ClientService {
@@ -88,6 +89,68 @@ class ClientService {
       print('FCM Token removed from Firestore');
     } catch (e) {
       print('Error removing FCM Token: $e');
+    }
+  }
+
+// ------------------------ Table Operations ------------------------
+  Future<String> createTable(String userID) async {
+    try {
+      Table table = Table(
+        id: "",
+        isTableSplit: false,
+        userIds: [userID],
+        orderItemIds: [],
+        billIds: [],
+        totalAmount: 0.0,
+        tableCode: Table.generateTableCode(),
+        isOngoing: true,
+      );
+      DocumentReference tableRef = _firestore.collection('tables').doc();
+      table.id = tableRef.id;
+      await tableRef.set(table.toMap());
+      print("Table added  successfully");
+      // Return the generated table code
+      return table.tableCode;
+    } catch (e) {
+      print("Failed to add table : $e");
+      throw Exception("Failed to create table: $e");
+    }
+  }
+
+  Future<Table?> getTableByID(String tableID) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('tables').doc(tableID).get();
+      if (doc.exists) {
+        return Table.fromMap(doc.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+      print("Failed to retrieve table: $e");
+    }
+    return null;
+  }
+
+  Future<void> updateTableSplitStatus(String tableID, bool isTableSplit) async {
+    try {
+      await _firestore
+          .collection('tables')
+          .doc(tableID)
+          .update({'isTableSplit': isTableSplit});
+      print("Table split status updated successfully");
+    } catch (e) {
+      print("Failed to update table split status: $e");
+    }
+  }
+
+  Future<void> addClientToTable(String tableID, String userID) async {
+    try {
+      DocumentReference tableRef = _firestore.collection('tables').doc(tableID);
+      await tableRef.update({
+        'userIds': FieldValue.arrayUnion([userID]),
+      });
+      print("Client added to table successfully");
+    } catch (e) {
+      print("Failed to add client to table: $e");
     }
   }
 
@@ -237,5 +300,57 @@ class ClientService {
       print("Failed to get bill summary: $e");
     }
     return billSummaries;
+  }
+
+  Future<List<Bill>> getPastBillsPerUser(String userID) async {
+    try {
+      QuerySnapshot billsSnapshot = await _firestore
+          .collection('bills')
+          .where('userId', isEqualTo: userID)
+          .where('isPaid', isEqualTo: true) // Assuming past bills are paid
+          .get();
+
+      return billsSnapshot.docs.map((doc) {
+        return Bill.fromMap(doc.data() as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      print("Error fetching past bills: $e");
+      throw Exception("Failed to fetch past bills");
+    }
+  }
+
+  Future<List<OrderItem>> getOrderPerBill(String billID) async {
+    try {
+      DocumentSnapshot billDoc =
+          await _firestore.collection('bills').doc(billID).get();
+
+      List<String> orderItemIds =
+          List<String>.from(billDoc.get('orderItemIds'));
+
+      List<OrderItem> orderItems = [];
+      for (String orderItemId in orderItemIds) {
+        DocumentSnapshot orderItemDoc =
+            await _firestore.collection('orderItems').doc(orderItemId).get();
+        Map<String, dynamic> orderItemData =
+            orderItemDoc.data() as Map<String, dynamic>;
+
+        // Fetch the name of the menu item using its menuItemID
+        DocumentSnapshot menuItemDoc = await _firestore
+            .collection('menuItems')
+            .doc(orderItemData['menuItemID'])
+            .get();
+        String menuItemName = menuItemDoc.get('name');
+
+        // Add the name to the orderItem
+        OrderItem orderItem = OrderItem.fromMap(orderItemData);
+        orderItem.name = menuItemName; // Dynamically set the name field
+        orderItems.add(orderItem);
+      }
+
+      return orderItems;
+    } catch (e) {
+      print("Error fetching orders for bill: $e");
+      throw Exception("Failed to fetch orders for the bill");
+    }
   }
 }

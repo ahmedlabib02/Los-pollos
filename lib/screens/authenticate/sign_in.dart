@@ -2,6 +2,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/choose_restaurant_screen.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 
 class SignIn extends StatefulWidget {
@@ -46,6 +47,11 @@ class _SignInState extends State<SignIn> {
           password: _passwordController.text,
         );
         // On success, navigation is handled by the Wrapper widget
+        // Navigate to ChooseRestaurantScreen on success
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ChooseRestaurantScreen()),
+        );
       } on FirebaseAuthException catch (e) {
         setState(() {
           _errorMessage = e.message;
