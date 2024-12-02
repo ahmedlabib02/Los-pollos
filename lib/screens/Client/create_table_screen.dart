@@ -3,7 +3,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:provider/provider.dart';
 import '../../services/client_services.dart';
 
-class TableCodeScreen extends StatelessWidget {
+class CreateTableScreen extends StatelessWidget {
   final ClientService _clientServices = ClientService();
 
   @override
@@ -12,10 +12,6 @@ class TableCodeScreen extends StatelessWidget {
     final user = Provider.of<CustomUser?>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Create or Join a Table'),
-        backgroundColor: Color.fromRGBO(242, 194, 48, 1),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

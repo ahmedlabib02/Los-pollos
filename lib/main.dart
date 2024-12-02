@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
-
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "lib/.env");
@@ -39,7 +38,6 @@ class MyApp extends StatelessWidget {
             ),
           );
         }
-
         if (snapshot.connectionState == ConnectionState.done) {
           return StreamProvider<CustomUser?>.value(
             value: AuthService().user,
@@ -49,6 +47,8 @@ class MyApp extends StatelessWidget {
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
                 primarySwatch: Colors.brown,
+                scaffoldBackgroundColor: Color.fromARGB(
+                    255, 246, 246, 246), // Set global background color
               ),
               home: const Wrapper(),
             ),
@@ -57,6 +57,7 @@ class MyApp extends StatelessWidget {
 
         return const MaterialApp(
           home: Loading(),
+          debugShowCheckedModeBanner: false,
         );
       },
     );

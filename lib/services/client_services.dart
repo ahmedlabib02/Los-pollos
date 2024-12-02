@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
+import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
 
@@ -89,6 +90,36 @@ class ClientService {
       print('FCM Token removed from Firestore');
     } catch (e) {
       print('Error removing FCM Token: $e');
+    }
+  }
+
+// -------------------Restaurant Operations -------------------------
+
+// Fetch restaurants grouped by categories
+  Future<Map<String, List<Restaurant>>> getRestaurantsAndCategories() async {
+    try {
+      QuerySnapshot snapshot = await _firestore.collection('restaurants').get();
+
+      // Parse restaurants
+      List<Restaurant> restaurants = snapshot.docs.map((doc) {
+        return Restaurant.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+
+      // Group restaurants by category (convert to lowercase for consistency)
+      Map<String, List<Restaurant>> categorizedRestaurants = {};
+      for (var restaurant in restaurants) {
+        String categoryKey =
+            restaurant.category.toLowerCase(); // Convert to lowercase
+        if (!categorizedRestaurants.containsKey(categoryKey)) {
+          categorizedRestaurants[categoryKey] = [];
+        }
+        categorizedRestaurants[categoryKey]!.add(restaurant);
+      }
+
+      return categorizedRestaurants;
+    } catch (e) {
+      print("Error fetching restaurants: $e");
+      throw Exception("Failed to fetch restaurants");
     }
   }
 

@@ -33,10 +33,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Order History'),
-        backgroundColor: Color.fromRGBO(242, 194, 48, 1),
-      ),
       body: isLoadingBills
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
