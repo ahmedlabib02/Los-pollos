@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'table_screen.dart'; // Your home screen
 import 'menu_screen.dart';
@@ -17,7 +18,7 @@ class _MainPageState extends State<MainPage> {
 
   // Screens for each tab
   final List<Widget> _screens = [
-    TableScreen(), // Table (Home)
+    AddMenuItemScreen(), // Table (Home)
     MenuScreen(),
     UpdatesScreen(),
     CreateTableScreen(), // Create Table screen added
