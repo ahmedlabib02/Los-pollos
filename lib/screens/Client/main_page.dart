@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
+import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';

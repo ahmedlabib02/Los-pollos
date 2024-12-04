@@ -12,6 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "lib/.env");
@@ -57,8 +59,10 @@ class MyApp extends StatelessWidget {
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
                 primarySwatch: Colors.brown,
-                scaffoldBackgroundColor: Color.fromARGB(
-                    255, 246, 246, 246), // Set global background color
+                // scaffoldBackgroundColor: Color.fromARGB(
+                // 255, 246, 246, 246), // Set global background color
+                scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
+                textTheme: GoogleFonts.madaTextTheme(), // default font for app
               ),
               home: const Wrapper(),
             ),
