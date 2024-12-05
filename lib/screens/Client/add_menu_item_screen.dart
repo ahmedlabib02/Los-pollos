@@ -1,3 +1,4 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/category_dropdown.dart';
 import 'package:los_pollos_hermanos/screens/Client/variations_screen.dart';
@@ -74,11 +75,184 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
               GreyTextField(label: 'Title', controller: _titleController),
               const SizedBox(height: 16),
               // GreyTextField(label: 'Category', controller: _categoryController),
-              GreyDropdown(
-                items: const ['Option 1', 'Option 2', 'Option 3'],
-                label: 'Category',
-                selectedValue: _category,
+
+              DropdownButtonHideUnderline(
+                child: DropdownButton2<String>(
+                  isExpanded: true,
+                  hint: const Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Category',
+                          style: TextStyle(
+                            fontSize: 16,
+                            // fontWeight: FontWeight.bold,
+                            color: Color.fromRGBO(50, 50, 50, 1),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  items: const [
+                    'Option 1',
+                    'Option 2',
+                    'Option 3',
+                    'Option 4',
+                    'Option 5',
+                    'Option 6',
+                    'Option 7'
+                  ]
+                      .map((String item) => DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                // fontWeight: FontWeight.bold,
+                                color: Color.fromRGBO(50, 50, 50, 1),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  value: _category,
+                  onChanged: (String? value) {
+                    setState(() {
+                      _category = value;
+                    });
+                  },
+                  buttonStyleData: ButtonStyleData(
+                    height: 50,
+                    // width: 160,
+                    padding: const EdgeInsets.only(left: 0, right: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      // border: Border.all(
+                      // color: Colors.grey[400]!,
+                      // ),
+                      color: Color.fromRGBO(244, 244, 244, 1),
+                    ),
+                    elevation: 0,
+                  ),
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(
+                      Icons.expand_more,
+                    ),
+                    iconSize: 20,
+                    iconEnabledColor: Color.fromRGBO(50, 50, 50, 1),
+                    iconDisabledColor: Color.fromRGBO(50, 50, 50, 1),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    elevation: 0,
+                    maxHeight: 200,
+                    // width: 200,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: const Color.fromARGB(244, 244, 244, 244),
+                        border: Border.all(color: Colors.grey[400]!)),
+                    offset: const Offset(0, -5),
+                    scrollbarTheme: ScrollbarThemeData(
+                      radius: const Radius.circular(40),
+                      thickness: MaterialStateProperty.all<double>(5),
+                      thumbVisibility: MaterialStateProperty.all<bool>(true),
+                    ),
+                  ),
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 40,
+                    padding: EdgeInsets.only(left: 14, right: 14),
+                  ),
+                ),
               ),
+
+              const SizedBox(height: 16),
+
+              DropdownButtonFormField2<String>(
+                isExpanded: true,
+                decoration: InputDecoration(
+                  // Add Horizontal padding using menuItemStyleData.padding so it matches
+                  // the menu padding when button's width is not specified.
+                  labelText: 'Category',
+                  labelStyle: TextStyle(
+                      color: Color.fromRGBO(50, 50, 50, 1),
+                      fontSize: 16), // Adjust font size as needed,
+                  // alignLabelWithHint: true,
+
+                  // floatingLabelBehavior: FloatingLabelBehavior.auto,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  // Add more decoration..
+                ),
+                items: ['1', '2']
+                    .map((item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select gender.';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  //Do something when selected item is changed.
+                },
+                onSaved: (value) {
+                  _category = value.toString();
+                },
+                buttonStyleData: ButtonStyleData(
+                  height: 50,
+                  // width: 160
+                  padding: const EdgeInsets.only(left: 0, right: 0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+
+                    // border: Border.all(
+                    // color: Colors.grey[400]!,
+                    // ),
+                    color: Color.fromRGBO(33, 64, 188, 1),
+                  ),
+                  elevation: 0,
+                ),
+                iconStyleData: const IconStyleData(
+                  icon: Icon(
+                    Icons.expand_more,
+                  ),
+                  iconSize: 20,
+                  iconEnabledColor: Color.fromRGBO(50, 50, 50, 1),
+                  iconDisabledColor: Color.fromRGBO(50, 50, 50, 1),
+                ),
+                dropdownStyleData: DropdownStyleData(
+                  elevation: 0,
+                  maxHeight: 200,
+                  // width: 200,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: const Color.fromARGB(244, 164, 32, 32),
+                      border: Border.all(
+                          color: const Color.fromARGB(255, 216, 33, 33))),
+                  offset: const Offset(0, -5),
+                  scrollbarTheme: ScrollbarThemeData(
+                    radius: const Radius.circular(40),
+                    thickness: MaterialStateProperty.all<double>(5),
+                    thumbVisibility: MaterialStateProperty.all<bool>(true),
+                  ),
+                ),
+                menuItemStyleData: const MenuItemStyleData(
+                  height: 40,
+                ),
+              ),
+              const SizedBox(height: 30),
+
               const SizedBox(height: 16),
 
               GreyTextField(
