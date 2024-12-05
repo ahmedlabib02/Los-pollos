@@ -1,128 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 
-class VariationsScreen extends StatefulWidget {
-  final String header;
-  final String textLabel;
-  final List<TextEditingController> controllers;
-  final List<FocusNode> focusNodes;
-  final List<TextEditingController> priceControllers;
+class ItemCustomization extends StatefulWidget {
+  final List<TextEditingController> variantControllers;
+  final List<TextEditingController>? priceControllers;
+  final bool isExtrasSection;
 
-  final bool? includePrice;
-
-  const VariationsScreen(
-      {super.key,
-      required this.header,
-      required this.textLabel,
-      required this.controllers,
-      required this.focusNodes,
-      required this.priceControllers,
-      this.includePrice});
+  const ItemCustomization({
+    super.key,
+    required this.variantControllers,
+    this.priceControllers,
+    this.isExtrasSection = false,
+  });
 
   @override
-  _VariationsScreenState createState() => _VariationsScreenState();
+  _ItemCustomizationState createState() => _ItemCustomizationState();
 }
 
-class _VariationsScreenState extends State<VariationsScreen> {
-  String _header = "";
-  String _textLabel = "";
-  List<TextEditingController> _controllers = [];
-  List<TextEditingController> _priceControllers = [];
-  List<FocusNode> _focusNodes = [];
-  bool _includePrice = false;
-
+class _ItemCustomizationState extends State<ItemCustomization> {
   bool _canAdd = true; // Determines whether the "Add" button is enabled
-
-  @override
-  void initState() {
-    super.initState();
-    _header = widget.header;
-    _textLabel = widget.textLabel;
-    _controllers = widget.controllers;
-    _focusNodes = widget.focusNodes;
-    _priceControllers = widget.priceControllers;
-    _includePrice =
-        widget.includePrice ?? false; // Use the provided value or the default
-  }
+  final List<FocusNode> variantFocusNodes = [];
 
   void _addVariantField() {
     setState(() {
-      FocusScope.of(context).unfocus();
-
       final controller = TextEditingController();
-      final priceController = TextEditingController();
       final focusNode = FocusNode();
 
-      controller.addListener(() {
-        // Enable "Add" button if the last input field is non-empty
-        setState(() {
-          _canAdd = _controllers.last.text.isNotEmpty &&
-              (_includePrice ? _priceControllers.last.text.isNotEmpty : true);
-        });
-      });
+      // Add listeners to the new controller and the price controller if in extras section
+      controller.addListener(_updateCanAdd);
 
-      _controllers.add(controller);
-      _focusNodes.add(focusNode);
+      widget.variantControllers.add(controller);
+      variantFocusNodes.add(focusNode);
 
-      if (_includePrice) {
-        priceController.addListener(() {
-          // Enable "Add" button if the last input field is non-empty
-          setState(() {
-            _canAdd = _controllers.last.text.isNotEmpty &&
-                _priceControllers.last.text.isNotEmpty;
-          });
-        });
-        _priceControllers.add(priceController);
+      if (widget.isExtrasSection) {
+        final priceController = TextEditingController();
+        priceController.addListener(_updateCanAdd);
+        widget.priceControllers!.add(priceController);
       }
 
-      _canAdd = false; // Disable the "Add" button initially
+      _canAdd = false; // Disable "Add" button initially
 
-      // Use addPostFrameCallback to ensure UI is ready before focusing
+      // Auto-focus the newly added field
       WidgetsBinding.instance.addPostFrameCallback((_) {
         FocusScope.of(context).requestFocus(focusNode);
       });
     });
   }
 
+// Method to check if "Add" button should be enabled
+  void _updateCanAdd() {
+    setState(() {
+      bool allVariantFieldsFilled = widget.variantControllers
+          .every((controller) => controller.text.isNotEmpty);
+      bool allPriceFieldsFilled = widget.isExtrasSection
+          ? widget.priceControllers!
+              .every((controller) => controller.text.isNotEmpty)
+          : true;
+
+      _canAdd = allVariantFieldsFilled && allPriceFieldsFilled;
+    });
+  }
+
   void _removeVariantField(int index) {
     setState(() {
-      if (_focusNodes[index].hasFocus) {
-        FocusScope.of(context).unfocus(); // Unfocus before removing
+      widget.variantControllers[index].dispose(); // Dispose of the controller
+      variantFocusNodes[index].dispose(); // Dispose of the focus node
+
+      widget.variantControllers.removeAt(index);
+      variantFocusNodes.removeAt(index);
+
+      if (widget.isExtrasSection) {
+        widget.priceControllers?[index].dispose();
+        widget.priceControllers?.removeAt(index);
       }
 
-      _controllers[index].dispose(); // Dispose of the controller
-      _focusNodes[index].dispose(); // Dispose of the focus node
-
-      _controllers.removeAt(index);
-      _focusNodes.removeAt(index);
-
-      if (_includePrice) {
-        _priceControllers[index].dispose(); // Dispose of the controller
-        _priceControllers.removeAt(index);
-      }
-
-      _canAdd = _controllers.isEmpty ||
-          (_controllers.last.text.isNotEmpty &&
-              (_includePrice ? _priceControllers.last.text.isNotEmpty : true));
+      _canAdd = widget.variantControllers.isEmpty ||
+          widget.variantControllers.last.text.isNotEmpty &&
+              (widget.isExtrasSection
+                  ? widget.priceControllers?.last.text.isNotEmpty ?? true
+                  : true);
     });
   }
 
   @override
   void dispose() {
     // Dispose of all controllers and focus nodes when the screen is disposed
-    for (final controller in _controllers) {
+    for (final controller in widget.variantControllers) {
       controller.dispose();
     }
-    for (final focusNode in _focusNodes) {
+    for (final focusNode in variantFocusNodes) {
       focusNode.dispose();
     }
-
-    if (_includePrice) {
-      for (final priceController in _priceControllers) {
+    if (widget.isExtrasSection) {
+      for (final priceController in widget.priceControllers ?? []) {
         priceController.dispose();
       }
     }
-
     super.dispose();
   }
 
@@ -135,8 +108,8 @@ class _VariationsScreenState extends State<VariationsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              _header,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              widget.isExtrasSection ? "Extras" : "Variations",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             ElevatedButton(
               onPressed: _canAdd ? _addVariantField : null,
@@ -145,31 +118,39 @@ class _VariationsScreenState extends State<VariationsScreen> {
                 elevation: 0, // Removes shadow
                 shadowColor: Colors.transparent, // Ensures no shadow
                 shape: CircleBorder(), // Makes the button circular
-                minimumSize: Size(40.0, 40.0), // Adjust size as needed
+                minimumSize: Size(32.0, 32.0), // Adjust size as needed
                 padding: EdgeInsets.zero, // Remove padding for a clean circle
               ),
-              child: Icon(Icons.add, color: Colors.black),
+              child: Icon(Icons.add, color: Colors.black, size: 20),
             )
           ],
         ),
         SizedBox(
           height: 10,
         ),
-        _controllers.isEmpty
+        widget.variantControllers.isEmpty
             ? Text(
-                'No variations are currently available for this item ${_includePrice}',
-                style: TextStyle(color: Color.fromRGBO(116, 116, 116, 1)),
+                widget.isExtrasSection
+                    ? 'No extras are currently available for this item'
+                    : 'No variations are currently available for this item',
+                style: TextStyle(
+                    fontSize: 16, color: Color.fromRGBO(116, 116, 116, 1)),
               )
-            : Expanded(
+            : ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: 0,
+                  maxHeight: 300,
+                ),
                 child: ListView.builder(
-                  itemCount: _controllers.length,
+                  shrinkWrap: true,
+                  itemCount: widget.variantControllers.length,
                   itemBuilder: (context, index) {
                     return SizedBox(
-                      height: 60,
+                      // height: 60,
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 5),
                         child: Dismissible(
-                          key: ValueKey(_controllers[index]),
+                          key: ValueKey(widget.variantControllers[index]),
                           direction: DismissDirection.endToStart,
                           background: Container(
                             alignment: Alignment.centerRight,
@@ -180,32 +161,38 @@ class _VariationsScreenState extends State<VariationsScreen> {
                           onDismissed: (direction) {
                             _removeVariantField(index);
                           },
-                          child: _includePrice
+                          child: widget.isExtrasSection
                               ? Row(
                                   children: [
                                     Expanded(
-                                        child: GreyTextField(
-                                            controller: _controllers[index],
-                                            focusNode: _focusNodes[index],
-                                            label: 'Base Price')),
-                                    const SizedBox(width: 16),
+                                      child: GreyTextField(
+                                        controller:
+                                            widget.variantControllers[index],
+                                        focusNode: variantFocusNodes[index],
+                                        label: 'Extra',
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
                                     Expanded(
-                                        child: GreyTextField(
-                                            label: 'Discount (%)',
-                                            controller:
-                                                _priceControllers[index])),
+                                      child: GreyTextField(
+                                        controller:
+                                            widget.priceControllers![index],
+                                        label: 'Price',
+                                      ),
+                                    ),
                                   ],
                                 )
                               : GreyTextField(
-                                  controller: _controllers[index],
-                                  focusNode: _focusNodes[index],
-                                  label: _textLabel),
+                                  controller: widget.variantControllers[index],
+                                  focusNode: variantFocusNodes[index],
+                                  label: 'Variant',
+                                ),
                         ),
                       ),
                     );
                   },
                 ),
-              ),
+              )
       ],
     );
   }

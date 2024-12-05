@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/category_dropdown.dart';
 import 'package:los_pollos_hermanos/screens/Client/variations_screen.dart';
 
 class AddMenuItemScreen extends StatefulWidget {
@@ -14,13 +15,16 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _basePriceController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
   final List<TextEditingController> _variantControllers =
       []; // Controllers for input fields
-  final List<TextEditingController> _variantPriceControllers = [];
-  final List<FocusNode> _variantFocusNodes = []; // Focus nodes for input fields
+
+  final List<TextEditingController> _extrasControllers = [];
+  final List<TextEditingController> _extrasPriceControllers = [];
+
+  String? _category;
 
   @override
   Widget build(BuildContext context) {
@@ -63,29 +67,41 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
             children: [
               const Text('Product details',
                   style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
               GreyTextField(label: 'Title', controller: _titleController),
               const SizedBox(height: 16),
-              GreyTextField(label: 'Category', controller: _categoryController),
+              // GreyTextField(label: 'Category', controller: _categoryController),
+              GreyDropdown(
+                items: const ['Option 1', 'Option 2', 'Option 3'],
+                label: 'Category',
+                selectedValue: _category,
+              ),
               const SizedBox(height: 16),
+
               GreyTextField(
-                  label: 'Description', controller: _descriptionController),
+                  label: 'Description',
+                  controller: _descriptionController,
+                  minHeight: 120,
+                  maxHeight: 120),
+
               const SizedBox(height: 24),
               const Text('Media',
                   style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
               Container(
                 height: 150,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Color.fromRGBO(244, 244, 244, 1),
                   border: Border.all(
-                      color: Colors.grey, style: BorderStyle.solid, width: 1.5),
+                      color: Color.fromRGBO(220, 220, 220, 1),
+                      style: BorderStyle.solid,
+                      width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
@@ -106,42 +122,24 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
 
               // const Text('No variations are currently available for this item',
               // style: TextStyle(color: Colors.grey)),
-              SizedBox(
-                height: 300, // Specify a height (adjust as needed)
-                child: VariationsScreen(
-                  header: "Variations",
-                  textLabel: "Variant",
-                  controllers: _variantControllers,
-                  focusNodes: _variantFocusNodes,
-                  priceControllers: _variantPriceControllers,
-                  includePrice: true,
-                ),
+              ItemCustomization(
+                variantControllers: _variantControllers,
+                isExtrasSection: false,
               ),
 
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Extras',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black)),
-                  FloatingActionButton(
-                    onPressed: () {},
-                    mini: true,
-                    backgroundColor: const Color(0xFFF2C230),
-                    child: const Icon(Icons.add, color: Colors.white),
-                  ),
-                ],
+
+              ItemCustomization(
+                variantControllers: _extrasControllers,
+                priceControllers: _extrasPriceControllers,
+                isExtrasSection: true,
               ),
-              const SizedBox(height: 8),
-              const Text('No extras are currently available for this item',
-                  style: TextStyle(color: Color.fromRGBO(116, 116, 116, 1))),
+
+              // const SizedBox(height: 8),
               const SizedBox(height: 24),
               const Text('Pricing',
                   style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
@@ -149,8 +147,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 children: [
                   Expanded(
                       child: GreyTextField(
-                          label: 'Base Price',
-                          controller: _basePriceController)),
+                          label: 'Base Price', controller: _priceController)),
                   const SizedBox(width: 16),
                   Expanded(
                       child: GreyTextField(
@@ -158,49 +155,49 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                           controller: _discountController)),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 18),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        print(_variantControllers[0].text);
-                        print(_variantControllers[1].text);
-                        // print(_variantControllers[2].text);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF2C230),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF2C230),
+                      // padding: EdgeInsets.zero,
+                      elevation: 0, // Removes shadow
+                      shadowColor: Colors.transparent, // Ensures no shadow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12.0),
-                        child: Text('Save changes',
-                            style: TextStyle(color: Colors.black)),
-                      ),
+                      // Adjust button size as needed
+                      // minimumSize:
+                      //     Size(100, 40), // Set minimum width and height
                     ),
+                    child: const Text('Save',
+                        style: TextStyle(fontSize: 18, color: Colors.black)),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  const SizedBox(width: 10), // Spacing between buttons
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      // minimumSize: Size.zero, // Set this
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      elevation: 0, // Removes shadow
+                      shadowColor: Colors.transparent, // Ensures no shadow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12.0),
-                        child: Text('Discard',
-                            style: TextStyle(color: Colors.grey)),
-                      ),
+                      // Adjust button size as needed
                     ),
+                    child: const Text('Discard',
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
-                  const SizedBox(height: 50)
                 ],
               ),
+              const SizedBox(
+                height: 18,
+              )
             ],
           ),
         ),
@@ -214,28 +211,40 @@ Widget GreyTextField({
   required TextEditingController controller,
   FocusNode? focusNode,
   TextStyle? style,
+  double? minHeight = 0,
+  double? maxHeight = 55,
   Map<String, dynamic>? extraProps, // Capture extra props
 }) {
-  return TextField(
-    maxLines: null,
-    controller: controller,
-    focusNode: focusNode,
-    decoration: InputDecoration(
-      labelText: label,
-      floatingLabelBehavior: FloatingLabelBehavior.auto,
-      filled: true,
-      fillColor: const Color.fromRGBO(244, 244, 244, 1),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(
-          color: Colors.grey[400]!,
+  return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight!, maxHeight: maxHeight!),
+      child: TextField(
+        maxLines: null,
+        expands: true,
+        textAlignVertical: TextAlignVertical.top, // Align text to the top
+        controller: controller,
+        focusNode: focusNode,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+              color: Color.fromRGBO(50, 50, 50, 1),
+              fontSize: 16), // Adjust font size as needed,
+          alignLabelWithHint: true,
+
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          filled: true,
+          fillColor: const Color.fromRGBO(244, 244, 244, 1),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(
+              color: Colors.grey[400]!,
+            ),
+          ),
         ),
-      ),
-    ),
-    style: style ?? const TextStyle(fontSize: 16),
-  );
+        style: style ??
+            const TextStyle(color: Color.fromRGBO(50, 50, 50, 1), fontSize: 16),
+      ));
 }
