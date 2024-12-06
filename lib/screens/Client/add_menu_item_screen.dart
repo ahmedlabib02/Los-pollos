@@ -143,7 +143,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                     });
                   },
                   buttonStyleData: ButtonStyleData(
-                    height: 50,
+                    height: 55,
                     // width: 160,
                     padding: const EdgeInsets.only(left: 0, right: 15),
                     decoration: BoxDecoration(
