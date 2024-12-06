@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:los_pollos_hermanos/screens/Client/category_dropdown.dart';
 import 'package:los_pollos_hermanos/screens/Client/variations_screen.dart';
 
@@ -26,9 +29,26 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   final List<TextEditingController> _extrasPriceControllers = [];
 
   String? _category;
+  File? _selectedImage;
+
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (returnedImage == null) return;
+
+    setState(() {
+      _selectedImage = File(returnedImage.path);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    Shadow shadow = Shadow(
+      color: Colors.black.withOpacity(1),
+      blurRadius: 12,
+      offset: Offset(0, 0),
+    );
     return Scaffold(
       // backgroundColor: Colors.white, // Set the background color explicitly
       appBar: PreferredSize(
@@ -136,13 +156,13 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                     elevation: 0,
                   ),
                   iconStyleData: const IconStyleData(
-                    icon: Icon(
-                      Icons.expand_more,
-                    ),
-                    iconSize: 20,
-                    iconEnabledColor: Color.fromRGBO(50, 50, 50, 1),
-                    iconDisabledColor: Color.fromRGBO(50, 50, 50, 1),
-                  ),
+                      icon: Icon(
+                        Icons.expand_more,
+                      ),
+                      iconSize: 20,
+                      iconEnabledColor: Color.fromRGBO(50, 50, 50, 1),
+                      iconDisabledColor: Color.fromRGBO(50, 50, 50, 1),
+                      openMenuIcon: Icon(Icons.expand_less)),
                   dropdownStyleData: DropdownStyleData(
                     elevation: 0,
                     maxHeight: 200,
@@ -167,94 +187,6 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
 
               const SizedBox(height: 16),
 
-              DropdownButtonFormField2<String>(
-                isExpanded: true,
-                decoration: InputDecoration(
-                  // Add Horizontal padding using menuItemStyleData.padding so it matches
-                  // the menu padding when button's width is not specified.
-                  labelText: 'Category',
-                  labelStyle: TextStyle(
-                      color: Color.fromRGBO(50, 50, 50, 1),
-                      fontSize: 16), // Adjust font size as needed,
-                  // alignLabelWithHint: true,
-
-                  // floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  // Add more decoration..
-                ),
-                items: ['1', '2']
-                    .map((item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ))
-                    .toList(),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select gender.';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  //Do something when selected item is changed.
-                },
-                onSaved: (value) {
-                  _category = value.toString();
-                },
-                buttonStyleData: ButtonStyleData(
-                  height: 50,
-                  // width: 160
-                  padding: const EdgeInsets.only(left: 0, right: 0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-
-                    // border: Border.all(
-                    // color: Colors.grey[400]!,
-                    // ),
-                    color: Color.fromRGBO(33, 64, 188, 1),
-                  ),
-                  elevation: 0,
-                ),
-                iconStyleData: const IconStyleData(
-                  icon: Icon(
-                    Icons.expand_more,
-                  ),
-                  iconSize: 20,
-                  iconEnabledColor: Color.fromRGBO(50, 50, 50, 1),
-                  iconDisabledColor: Color.fromRGBO(50, 50, 50, 1),
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  elevation: 0,
-                  maxHeight: 200,
-                  // width: 200,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: const Color.fromARGB(244, 164, 32, 32),
-                      border: Border.all(
-                          color: const Color.fromARGB(255, 216, 33, 33))),
-                  offset: const Offset(0, -5),
-                  scrollbarTheme: ScrollbarThemeData(
-                    radius: const Radius.circular(40),
-                    thickness: MaterialStateProperty.all<double>(5),
-                    thumbVisibility: MaterialStateProperty.all<bool>(true),
-                  ),
-                ),
-                menuItemStyleData: const MenuItemStyleData(
-                  height: 40,
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              const SizedBox(height: 16),
-
               GreyTextField(
                   label: 'Description',
                   controller: _descriptionController,
@@ -268,30 +200,76 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
-              Container(
-                height: 150,
+              Ink(
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(244, 244, 244, 1),
-                  border: Border.all(
-                      color: Color.fromRGBO(220, 220, 220, 1),
-                      style: BorderStyle.solid,
-                      width: 1.5),
+                  color: _selectedImage == null
+                      ? Color.fromRGBO(244, 244, 244, 1)
+                      : Colors.transparent,
+                  // border: Border.all(
+                  //   color: Color.fromRGBO(220, 220, 220, 1),
+                  //   style: BorderStyle.solid,
+                  //   width: _selectedImage == null ? 1.5 : 0,
+                  // ),
                   borderRadius: BorderRadius.circular(8),
+                  image: _selectedImage != null
+                      ? DecorationImage(
+                          image: FileImage(_selectedImage!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.upload, color: Colors.grey, size: 32),
-                      SizedBox(height: 8),
-                      Text('Tap to upload',
-                          style: TextStyle(color: Colors.grey)),
-                      Text('Supports: JPG, JPEG and PNG',
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
+                child: InkWell(
+                  onTap: () {
+                    _pickImageFromGallery();
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    height: 150,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.upload,
+                            color: _selectedImage == null
+                                ? Color.fromRGBO(50, 50, 50, 1)
+                                : Colors.white,
+                            size: 32,
+                            shadows: _selectedImage != null ? [shadow] : [],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            _selectedImage == null
+                                ? 'Tap to upload an image'
+                                : 'Tap to change the image',
+                            style: TextStyle(
+                                color: _selectedImage == null
+                                    ? Color.fromRGBO(50, 50, 50, 1)
+                                    : Colors.white,
+                                shadows:
+                                    _selectedImage != null ? [shadow] : []),
+                          ),
+                          Text(
+                            'Supports: JPG, JPEG and PNG',
+                            style: TextStyle(
+                              color: _selectedImage == null
+                                  ? Color.fromRGBO(50, 50, 50, 1)
+                                  : Colors.white,
+                              fontSize: 12,
+                              shadows: _selectedImage != null
+                                  ? [
+                                      shadow,
+                                    ]
+                                  : [],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
 
               // const Text('No variations are currently available for this item',
@@ -321,12 +299,16 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 children: [
                   Expanded(
                       child: GreyTextField(
-                          label: 'Base Price', controller: _priceController)),
+                          label: 'Base Price',
+                          controller: _priceController,
+                          keyboardType:
+                              TextInputType.numberWithOptions(decimal: false))),
                   const SizedBox(width: 16),
                   Expanded(
                       child: GreyTextField(
                           label: 'Discount (%)',
-                          controller: _discountController)),
+                          controller: _discountController,
+                          keyboardType: TextInputType.number)),
                 ],
               ),
               const SizedBox(height: 18),
@@ -387,11 +369,13 @@ Widget GreyTextField({
   TextStyle? style,
   double? minHeight = 0,
   double? maxHeight = 55,
+  TextInputType? keyboardType,
   Map<String, dynamic>? extraProps, // Capture extra props
 }) {
   return ConstrainedBox(
       constraints: BoxConstraints(minHeight: minHeight!, maxHeight: maxHeight!),
       child: TextField(
+        keyboardType: keyboardType ?? TextInputType.text,
         maxLines: null,
         expands: true,
         textAlignVertical: TextAlignVertical.top, // Align text to the top
