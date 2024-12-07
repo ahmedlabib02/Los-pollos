@@ -1,5 +1,5 @@
 class MenuItem {
-  String id; 
+  String id;
   String name;
   double price;
   String description;
@@ -8,7 +8,7 @@ class MenuItem {
   List<String> reviewIds;
 
   MenuItem({
-    this.id = '',  
+    this.id = '',
     required this.name,
     required this.price,
     required this.description,
@@ -32,7 +32,7 @@ class MenuItem {
   // To convert a Map back to a MenuItem
   factory MenuItem.fromMap(Map<String, dynamic> map) {
     return MenuItem(
-      id: map['id'] ?? '',  
+      id: map['id'] ?? '',
       name: map['name'],
       price: map['price'],
       description: map['description'],
