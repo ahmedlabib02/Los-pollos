@@ -96,46 +96,46 @@ class TableRing extends StatelessWidget {
         spacing: -15,
         runSpacing: -15,
         children: [
-          _buildBlobRow(topRow),
-          _buildBlobRow(bottomRow),
+          buildBlobRow(topRow, avatarRadius),
+          buildBlobRow(bottomRow, avatarRadius),
         ],
       ),
     );
   }
+}
 
-  Widget _buildBlobRow(List<String> initials) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: -10,
-      runSpacing: -10,
-      children: initials.map((initial) {
-        return Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                offset: Offset(0.0, 0.0),
-                blurRadius: 4.0,
-              ),
-            ],
-            border: Border.all(
-                color: Styles
-                    .inputFieldBorderColor, // Set your desired border color here
-                width: 1.0), // Set your desired border width here
-          ),
-          child: CircleAvatar(
-            radius: avatarRadius,
-            backgroundColor: const Color.fromARGB(255, 250, 250, 250),
-            child: Text(
-              initial[0],
-              style: TextStyle(
-                color: Colors.black,
-              ),
+Widget buildBlobRow(List<String> initials, double avatarRadius) {
+  return Wrap(
+    alignment: WrapAlignment.center,
+    spacing: -10,
+    runSpacing: -10,
+    children: initials.map((initial) {
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              offset: Offset(0.0, 0.0),
+              blurRadius: 4.0,
+            ),
+          ],
+          border: Border.all(
+              color: Styles
+                  .inputFieldBorderColor, // Set your desired border color here
+              width: 1.0), // Set your desired border width here
+        ),
+        child: CircleAvatar(
+          radius: avatarRadius,
+          backgroundColor: const Color.fromARGB(255, 250, 250, 250),
+          child: Text(
+            initial[0],
+            style: TextStyle(
+              color: Colors.black,
             ),
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    }).toList(),
+  );
 }
