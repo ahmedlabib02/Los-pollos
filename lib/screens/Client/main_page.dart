@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
-import 'table_screen.dart'; // Your home screen
+import '../../shared/TableRing.dart'; // Your home screen
 import 'menu_screen.dart';
 import 'updates_screen.dart';
 import 'create_table_screen.dart'; // Import Create Table screen
