@@ -23,8 +23,8 @@ class Wrapper extends StatelessWidget {
       if (user.role == 'client') {
         // return TestScreen();
         // return AddMenuItemScreen();
-        // return TableScreen();
-        return TablesScreen();
+        return TableScreen();
+        // return TablesScreen();
       } else {
         return const ManagerHome();
       }

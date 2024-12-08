@@ -35,10 +35,12 @@ import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/shared/CustomChip.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/shared/TableRing.dart';
+import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 
 class TableScreen extends StatelessWidget {
   // Text controllers
   double pad = 24.0;
+  static const List<Map<String, dynamic>> users = TempVars.users;
 
   @override
   Widget build(BuildContext context) {
@@ -81,8 +83,16 @@ class TableScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              TableRing(
-                  progressValue: 0.70, initials: ['A', 'B', 'C', 'D', 'E']),
+              TableRing(progressValue: 0.70, members: [
+                users[0],
+                users[1],
+                users[6],
+                users[4],
+                users[2],
+                users[7],
+                users[5],
+                users[3],
+              ]),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -164,6 +174,7 @@ class TableScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 26),
+              // ORDER SUMMARY SECTION BELOW
               const Text(
                 'Order Summary',
                 style: TextStyle(fontSize: 24),
