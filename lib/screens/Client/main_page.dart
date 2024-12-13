@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
-import 'table_screen.dart'; // Your home screen
+import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
+import 'package:los_pollos_hermanos/services/auth.dart';
 import 'menu_screen.dart';
 import 'updates_screen.dart';
 import 'create_table_screen.dart'; // Import Create Table screen
@@ -17,19 +18,17 @@ class _MainPageState extends State<MainPage> {
 
   // Screens for each tab
   final List<Widget> _screens = [
-    TableScreen(), // Table (Home)
+    TableScreenWrapper(), // Table (Home)
     MenuScreen(),
     UpdatesScreen(),
-    CreateTableScreen(), // Create Table screen added
-    OrderHistoryScreen(), // Order Summary screen added
+    OrderHistoryScreen(),
   ];
 
   final List<String> _titles = [
     'Table',
     'Menu',
     'Updates',
-    'Create Table',
-    'Order Summary',
+    'Orders',
   ];
 
   void _onItemTapped(int index) {
@@ -48,6 +47,23 @@ class _MainPageState extends State<MainPage> {
               'Account',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                  try {
+                    await AuthService().signOut();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Signed out successfully')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error signing out')),
+                    );
+                  }
+                },
+              ),
+            ],
             backgroundColor: Color.fromRGBO(242, 194, 48, 1),
             centerTitle: true,
           ),
@@ -109,10 +125,6 @@ class _MainPageState extends State<MainPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications),
               label: 'Updates',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
-              label: 'Create Table',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long),
