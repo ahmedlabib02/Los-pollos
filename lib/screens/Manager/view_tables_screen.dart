@@ -6,13 +6,9 @@ import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/shared/TableCard.dart';
 import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 
-void main() {
-  runApp(MaterialApp(
-    home: TablesScreen(),
-  ));
-}
+class TablesScreen extends StatefulWidget {
+  TablesScreen({super.key});
 
-class TablesScreen extends StatelessWidget {
   static const List<Map<String, String>> users = TempVars.users;
   List<Map<String, dynamic>> tables = [
     {
@@ -40,6 +36,16 @@ class TablesScreen extends StatelessWidget {
       'members': [users[5], users[6], users[7], users[8], users[0], users[1]]
     }
   ];
+
+  @override
+  State<TablesScreen> createState() => _TablesScreenState();
+}
+
+class _TablesScreenState extends State<TablesScreen> {
+  List<Map<String, dynamic>> _tables = [];
+  void initState() {
+    _tables = widget.tables;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,12 +86,12 @@ class TablesScreen extends StatelessWidget {
             // On-going Tab
             ListView.separated(
               padding: EdgeInsets.all(screenWidth * 0.03),
-              itemCount: tables.length,
+              itemCount: _tables.length,
               separatorBuilder: (context, index) => Container(
                   // color: Colors.transparent,
                   height: 10.0), // Adjust height as needed
               itemBuilder: (context, index) {
-                final table = tables[index];
+                final table = _tables[index];
 
                 return TableCard(
                   screenWidth: screenWidth,

@@ -2,6 +2,8 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
+import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/models/menu_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
@@ -459,6 +461,75 @@ class ClientService {
     } catch (e) {
       print("Error fetching orders for bill: $e");
       throw Exception("Failed to fetch orders for the bill");
+    }
+  }
+
+  // ------------------  Menu and Menu Items ------------------
+
+  Future<Menu> getMenu(String menuId) async {
+    try {
+      DocumentSnapshot menuSnapshot =
+          await _firestore.collection('menus').doc(menuId).get();
+      return Menu.fromMap(menuSnapshot.data() as Map<String, dynamic>);
+    } catch (e) {
+      print('Error getting menu: $e');
+      throw e;
+    }
+  }
+
+  Future<void> addMenuItem(
+      MenuItem menuItem, String menuId, String category) async {
+    try {
+      DocumentReference menuRef = _firestore.collection('menus').doc(menuId);
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItem.id);
+
+      await menuItemRef.set(menuItem.toMap());
+
+      await menuRef.update({
+        'categories.$category': FieldValue.arrayUnion([menuItem.id]),
+      });
+
+      print('Menu item added to category!');
+    } catch (e) {
+      print('Error adding menu item: $e');
+      throw e;
+    }
+  }
+
+  Future<void> updateMenuItem(MenuItem updatedMenuItem) async {
+    //  the updatedMenuItem should have the same id as the original menu item
+    try {
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(updatedMenuItem.id);
+
+      await menuItemRef.update(updatedMenuItem.toMap());
+
+      print('Menu item updated successfully!');
+    } catch (e) {
+      print('Error updating menu item: $e');
+      throw e;
+    }
+  }
+
+  Future<void> deleteMenuItemFromMenu(
+      String menuItemId, String menuId, String category) async {
+    //  not deleting the menuItem from the menuItems collection so old orders can still reference it
+    try {
+      DocumentReference menuRef = _firestore.collection('menus').doc(menuId);
+
+      await menuRef.update({
+        'categories.$category': FieldValue.arrayRemove([menuItemId]),
+      });
+
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItemId);
+      await menuItemRef.delete();
+
+      print('Menu item deleted successfully!');
+    } catch (e) {
+      print('Error deleting menu item: $e');
+      throw e;
     }
   }
 }
