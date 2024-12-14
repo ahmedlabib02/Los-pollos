@@ -3,7 +3,8 @@ class MenuItem {
   String name;
   double price;
   String description;
-  List<String> extras;
+  List<String> variants;
+  List<Map<String, double>> extras;
   double discount;
   List<String> reviewIds;
   String? imageUrl;
@@ -13,6 +14,7 @@ class MenuItem {
     required this.name,
     required this.price,
     required this.description,
+    required this.variants,
     required this.extras,
     required this.discount,
     required this.reviewIds,
@@ -25,6 +27,7 @@ class MenuItem {
       'name': name,
       'price': price,
       'description': description,
+      'variants': variants,
       'extras': extras,
       'discount': discount,
       'reviewIds': reviewIds,
@@ -39,7 +42,9 @@ class MenuItem {
       name: map['name'],
       price: map['price'],
       description: map['description'],
-      extras: List<String>.from(map['extras']),
+      variants: List<String>.from(map['variants']),
+      extras: List<Map<String, double>>.from((map['extras'] as List)
+          .map((item) => Map<String, double>.from(item))),
       discount: map['discount'],
       reviewIds: List<String>.from(map['reviewIds']),
       imageUrl: map['imageUrl'],

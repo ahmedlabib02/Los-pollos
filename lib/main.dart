@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
@@ -11,11 +13,21 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "lib/.env");
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SelectedRestaurantProvider()),
+        ChangeNotifierProvider(create: (_) => TableState())
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -55,7 +67,18 @@ class MyApp extends StatelessWidget {
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
                 primarySwatch: Colors.brown,
-                scaffoldBackgroundColor: Color.fromARGB(255, 245, 244, 244), // Global background color
+
+                // scaffoldBackgroundColor: Color.fromARGB(
+                // 255, 246, 246, 246), // Set global background color
+                scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
+                textTheme: GoogleFonts.madaTextTheme(), // default font for app
+                // textSelectionTheme: TextSelectionThemeData(
+                // cursorColor: const Color.fromARGB(
+                // 255, 0, 0, 0), // Change this to the color you want
+                // ),
+                inputDecorationTheme: InputDecorationTheme(
+                  focusColor: Colors.green,
+                ),
               ),
               home: const Wrapper(),
             ),

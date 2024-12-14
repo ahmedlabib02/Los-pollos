@@ -103,6 +103,7 @@ class AuthService {
     required String email,
     required String password,
     required String name, // Added name parameter
+    required String imageUrl,
   }) async {
     try {
       // Register the user with email and password
@@ -116,6 +117,7 @@ class AuthService {
       // Create a Client object
       Client newClient = Client(
         userID: user!.uid,
+        imageUrl: imageUrl,
         name: name,
         email: email,
         pastBillsIDs: [],

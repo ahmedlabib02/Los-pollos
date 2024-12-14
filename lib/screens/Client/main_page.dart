@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/dummy.dart';
+import 'package:los_pollos_hermanos/models/client_model.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
+import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen_dummy.dart';
-import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
+// import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
+import 'package:los_pollos_hermanos/screens/wrapper.dart';
+import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
 import 'package:los_pollos_hermanos/services/auth.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
+import 'package:provider/provider.dart';
 import 'menu_screen.dart';
 import 'updates_screen.dart';
 import 'create_table_screen.dart'; // Import Create Table screen
@@ -55,6 +62,11 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () async {
                   try {
                     await AuthService().signOut();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const Wrapper()),
+                      (route) =>
+                          false, // This removes all previous routes from the stack
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Signed out successfully')),
                     );
@@ -75,27 +87,28 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+  /*
+  AppBar(
         title: Text(
           _titles[_selectedIndex],
           style: TextStyle(fontWeight: FontWeight.bold), // Optional: Bold title
         ),
         backgroundColor: Color.fromRGBO(242, 194, 48, 1),
         centerTitle: true, // Centers the title
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back), // Back icon
-          tooltip: 'Back to Choose Restaurant',
-          onPressed: () {
-            // Navigate back to Choose Restaurant screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ChooseRestaurantScreen()),
-            );
-          },
-        ),
+        leading: tableState.isInTable
+            ? null
+            : IconButton(
+                icon: Icon(Icons.arrow_back), // Back icon
+                tooltip: 'Back to Choose Restaurant',
+                onPressed: () {
+                  // Navigate back to Choose Restaurant screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChooseRestaurantScreen()),
+                  );
+                },
+              ),
         actions: [
           IconButton(
             icon: Icon(Icons.person), // Account icon
@@ -105,6 +118,56 @@ class _MainPageState extends State<MainPage> {
             },
           ),
         ],
+      )
+  */
+
+  @override
+  Widget build(BuildContext context) {
+    final tableState = Provider.of<TableState>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: Text(
+            _titles[_selectedIndex],
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 26.0,
+            ),
+          ),
+        ),
+        leading: tableState.isInTable
+            ? null
+            : IconButton(
+                icon: Icon(Icons.arrow_back), // Back icon
+                tooltip: 'Back to Choose Restaurant',
+                onPressed: () {
+                  // Navigate back to Choose Restaurant screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChooseRestaurantScreen()),
+                  );
+                },
+              ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person), // Account icon
+            tooltip: 'Account',
+            onPressed: () {
+              _navigateToAccountScreen(context); // Navigate to AccountScreen
+            },
+          ),
+        ],
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Theme(
