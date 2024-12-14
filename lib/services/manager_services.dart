@@ -141,7 +141,8 @@ class ManagerServices {
 
         // Add the documents to the orderItems list
         for (var doc in batchSnapshot.docs) {
-          orderItems.add(OrderItem.fromMap(doc.data() as Map<String, dynamic>));
+          orderItems.add(
+              OrderItem.fromMap(doc.data() as Map<String, dynamic>, doc.id));
         }
       }
       return orderItems;
@@ -175,7 +176,7 @@ class ManagerServices {
 
         // Add the documents to the bills list
         for (var doc in batchSnapshot.docs) {
-          bills.add(Bill.fromMap(doc.data() as Map<String, dynamic>));
+          bills.add(Bill.fromMap(doc.data() as Map<String, dynamic>, doc.id));
         }
       }
       return bills;

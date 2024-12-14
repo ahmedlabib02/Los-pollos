@@ -18,8 +18,7 @@ class DummyScreen extends StatelessWidget {
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
-            DummyService dummyService = DummyService();
-            await dummyService.populateDummy(10);
+            await populateDummy(10);
           },
           child: Text('Populate Dummy Menu Items'),
         ),
