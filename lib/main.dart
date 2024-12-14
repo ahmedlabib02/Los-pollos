@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
 
-
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "lib/.env");

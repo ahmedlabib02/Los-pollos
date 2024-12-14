@@ -11,7 +11,6 @@ class Restaurant {
     required this.menuID,
   });
 
-  // Convert Restaurant to a map for Firestore (exclude 'id')
   Map<String, dynamic> toMap() {
     return {
       'name': name,

@@ -20,7 +20,6 @@ class ManagerServices {
     }
   }
 
-  /// Retrieves a restaurant by ID
   Future<Restaurant?> getRestaurant(String id) async {
     try {
       DocumentSnapshot doc =
