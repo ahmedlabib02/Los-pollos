@@ -134,7 +134,7 @@ class _ItemCustomizationState extends State<ItemCustomization> {
                     ? 'No extras are currently available for this item'
                     : 'No variations are currently available for this item',
                 style: TextStyle(
-                    fontSize: 16, color: Color.fromRGBO(116, 116, 116, 1)),
+                    fontSize: 16, color: Color.fromRGBO(50, 50, 50, 1)),
               )
             : ConstrainedBox(
                 constraints: const BoxConstraints(
@@ -175,10 +175,10 @@ class _ItemCustomizationState extends State<ItemCustomization> {
                                     SizedBox(width: 10),
                                     Expanded(
                                       child: GreyTextField(
-                                        controller:
-                                            widget.priceControllers![index],
-                                        label: 'Price',
-                                      ),
+                                          controller:
+                                              widget.priceControllers![index],
+                                          label: 'Price',
+                                          keyboardType: TextInputType.number),
                                     ),
                                   ],
                                 )

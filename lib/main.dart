@@ -59,10 +59,18 @@ class MyApp extends StatelessWidget {
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
                 primarySwatch: Colors.brown,
+
                 // scaffoldBackgroundColor: Color.fromARGB(
                 // 255, 246, 246, 246), // Set global background color
                 scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
                 textTheme: GoogleFonts.madaTextTheme(), // default font for app
+                // textSelectionTheme: TextSelectionThemeData(
+                // cursorColor: const Color.fromARGB(
+                // 255, 0, 0, 0), // Change this to the color you want
+                // ),
+                inputDecorationTheme: InputDecorationTheme(
+                  focusColor: Colors.green,
+                ),
               ),
               home: const Wrapper(),
             ),
