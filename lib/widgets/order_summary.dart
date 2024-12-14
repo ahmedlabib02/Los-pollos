@@ -26,6 +26,42 @@ class _OrderSummaryState extends State<OrderSummary> {
         .getOrderPerBill(widget.billID);
   }
 
+
+  // // Dummy data for the bill
+  // final Map<String, dynamic> mockBill = {
+  //   'id': 'bill_001',
+  //   'orderItemIds': ['order_001', 'order_002'],
+  //   'amount': 1500.0,
+  //   'isPaid': false,
+  //   'userId': 'user_123',
+  // };
+
+  // // Dummy data for order items
+  // final List<OrderItem> mockOrderItems = [
+  //   OrderItem(
+  //     id: 'order_001',
+  //     userIds: ['user_123'],
+  //     menuItemId: 'menu_001',
+  //     tableId: 'table_01',
+  //     status: OrderStatus.accepted,
+  //     itemCount: 2,
+  //     notes: ['Extra cheese'],
+  //     price: 300.0,
+  //     name: 'Cheeseburger',
+  //   ),
+  //   OrderItem(
+  //     id: 'order_002',
+  //     userIds: ['user_123'],
+  //     menuItemId: 'menu_002',
+  //     tableId: 'table_01',
+  //     status: OrderStatus.inProgress,
+  //     itemCount: 1,
+  //     notes: ['No onions'],
+  //     price: 200.0,
+  //     name: 'Veggie Burger',
+  //   ),
+  // ];
+
    @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,6 +105,21 @@ class _OrderSummaryState extends State<OrderSummary> {
           }
         },
       ),
+
+      // body: mockOrderItems.isEmpty
+      //     ? const Center(child: Text('No Order Items available'))
+      //     : Column(
+      //         children: [
+      //           Expanded(
+      //             child: ListView.builder(
+      //               itemCount: mockOrderItems.length,
+      //               itemBuilder: (context, index) {
+      //                 return OrderItemCard(orderItem: mockOrderItems[index]);
+      //               },
+      //             ),
+      //           ),
+      //         ],
+      //       ),
     );
   }
 }
