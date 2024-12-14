@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:provider/provider.dart';
 import '../../services/client_services.dart'; // Import your ClientService
 import '../../models/bill_model.dart';
@@ -25,6 +26,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget build(BuildContext context) {
     // Access the userID (replace with your actual method of obtaining userID)
     final user = Provider.of<CustomUser?>(context);
+    final selectedRestaurantId = Provider.of<SelectedRestaurantProvider>(context).selectedRestaurantId;
 
     if (!hasFetchedBills) {
       // Fetch past bills when the userID is available

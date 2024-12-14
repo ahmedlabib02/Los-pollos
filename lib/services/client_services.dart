@@ -162,6 +162,44 @@ class ClientService {
     return null;
   }
 
+  Future<String> joinTable(String tableCode, String userId) async {
+    try {
+      // Query Firestore for a table with the specified table code
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('tables')
+          .where('tableCode', isEqualTo: tableCode)
+          .limit(1) // Optimize for performance
+          .get();
+
+      // Check if a table was found
+      if (querySnapshot.docs.isEmpty) {
+        throw Exception('No table found with the provided code.');
+      }
+
+      // Get the table document
+      DocumentSnapshot tableDoc = querySnapshot.docs.first;
+      Map<String, dynamic> tableData =
+          tableDoc.data() as Map<String, dynamic>; // Parse the data
+
+      // Check if the user is already part of the table
+      List<dynamic> userIds = tableData['userIds'] ?? [];
+      if (!userIds.contains(userId)) {
+        // Add the user ID to the table's `userIds` field
+        userIds.add(userId);
+        await _firestore
+            .collection('tables')
+            .doc(tableDoc.id)
+            .update({'userIds': userIds});
+      }
+
+      // Return the table ID
+      return tableData['tableCode'];
+    } catch (e) {
+      // Handle any errors and rethrow them
+      throw Exception('$e');
+    }
+  }
+
   Future<void> updateTableSplitStatus(String tableID, bool isTableSplit) async {
     try {
       await _firestore
@@ -186,15 +224,36 @@ class ClientService {
     }
   }
 
+  Future<Table?> getOngoingTableForUser(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('tables')
+          .where('userIds', arrayContains: userId)
+          .where('isOngoing', isEqualTo: true)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Assuming a user can only be in one ongoing table at a time
+        final data = snapshot.docs.first.data() as Map<String, dynamic>;
+        return Table.fromMap(data);
+      }
+
+      return null; // No ongoing table found
+    } catch (e) {
+      throw Exception('Error checking ongoing tables: $e');
+    }
+  }
+
 // ------------------------- Order Items ---------------------------------------
-  Future<void> addOrderItemToTable(String tableID, OrderItem orderItem) async {
+  Future<void> addOrderItemToTable(
+      String tableID, OrderItem orderItem, String restaurantId) async {
     try {
       DocumentReference tableRef = _firestore.collection('tables').doc(tableID);
       await tableRef.update({
         'orderItemIds': FieldValue.arrayUnion([orderItem.id]),
         'totalAmount': FieldValue.increment(orderItem.price),
       });
-      createOrUpdateBill(orderItem.userIds[0], orderItem.id);
+      createOrUpdateBill(orderItem.userIds[0], orderItem.id, restaurantId);
       updateAllBills(tableID);
       print("Order item added to table successfully");
     } catch (e) {
@@ -205,7 +264,8 @@ class ClientService {
 // ------------------------- Bills ---------------------------------------
 //  Bills are created for a user when the user orders for the first time or join someones order
 //  Bills are updated when the user orders more items or joins more orders
-  Future<void> createOrUpdateBill(String userID, String orderItemID) async {
+  Future<void> createOrUpdateBill(
+      String userID, String orderItemID, String restaurantId) async {
     try {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(userID).get();
@@ -239,6 +299,7 @@ class ClientService {
           userId: userID,
           isPaid: false,
           orderItemIds: [orderItemID],
+          restaurantId: restaurantId,
         );
         await billRef.set(bill.toMap());
         await _firestore.collection('tables').doc(currentTableID).update({

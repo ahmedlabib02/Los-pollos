@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:provider/provider.dart';
 import 'main_page.dart';
 
 class ChooseRestaurantScreen extends StatefulWidget {
@@ -158,6 +160,11 @@ class _ChooseRestaurantScreenState extends State<ChooseRestaurantScreen> {
                 final restaurant = restaurants[index];
                 return GestureDetector(
                   onTap: () {
+                    final restaurantProvider =
+                        Provider.of<SelectedRestaurantProvider>(context,
+                            listen: false);
+                    restaurantProvider
+                        .setRestaurantId(restaurant.id); // Update restaurant ID
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => MainPage()),
