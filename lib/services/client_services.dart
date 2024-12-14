@@ -28,7 +28,9 @@ class ClientService {
       DocumentSnapshot doc =
           await _firestore.collection(collectionPath).doc(userID).get();
       if (doc.exists) {
-        return Client.fromMap(doc.data() as Map<String, dynamic>);
+        Client client = Client.fromMap(doc.data() as Map<String, dynamic>);
+        client.userID = userID;
+        return client;
       }
       return null;
     } catch (e) {
@@ -43,7 +45,9 @@ class ClientService {
         .snapshots()
         .map((doc) {
       if (doc.exists) {
-        return Client.fromMap(doc.data() as Map<String, dynamic>);
+        Client client = Client.fromMap(doc.data() as Map<String, dynamic>);
+        client.userID = userID;
+        return client;
       }
       return null;
     });
@@ -355,6 +359,7 @@ class ClientService {
             await _firestore.collection('bills').doc(billId).get();
         String billUserID = billDoc.get('userId');
         String billUserName = userDoc.get('name');
+        String billUserImageUrl = userDoc.get('imageUrl');
         double billAmount = billDoc.get('amount');
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
@@ -377,6 +382,7 @@ class ClientService {
           'id': billId,
           'name': billUserName,
           'amount': billAmount,
+          'imageUrl': billUserImageUrl,
           'orderItems': orderItems,
           'isPaid': billDoc.get('isPaid'),
           'isCurrentUser': billUserID == userID,
