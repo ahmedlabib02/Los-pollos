@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
+import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
@@ -384,4 +385,18 @@ class ClientService {
       throw Exception("Failed to fetch orders for the bill");
     }
   }
+
+  Future<MenuItem?> getMenuItem(String menuItemID) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('menuItems').doc(menuItemID).get();
+      if (doc.exists) {
+        return MenuItem.fromMap(doc.data() as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error fetching Menu Item: $e');
+    }
+  }
+  
 }

@@ -6,6 +6,7 @@ class MenuItem {
   List<String> extras;
   double discount;
   List<String> reviewIds;
+  String? imageUrl;
 
   MenuItem({
     this.id = '',  
@@ -15,6 +16,7 @@ class MenuItem {
     required this.extras,
     required this.discount,
     required this.reviewIds,
+    this.imageUrl,
   });
 
   // To convert a MenuItem to a Map for Firestore
@@ -26,6 +28,7 @@ class MenuItem {
       'extras': extras,
       'discount': discount,
       'reviewIds': reviewIds,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -39,6 +42,7 @@ class MenuItem {
       extras: List<String>.from(map['extras']),
       discount: map['discount'],
       reviewIds: List<String>.from(map['reviewIds']),
+      imageUrl: map['imageUrl'] ?? '',
     );
   }
 }
