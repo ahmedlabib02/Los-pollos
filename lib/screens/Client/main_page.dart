@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
+import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'menu_screen.dart';
 import 'updates_screen.dart';
@@ -53,6 +54,11 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () async {
                   try {
                     await AuthService().signOut();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const Wrapper()),
+                      (route) =>
+                          false, // This removes all previous routes from the stack
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Signed out successfully')),
                     );
