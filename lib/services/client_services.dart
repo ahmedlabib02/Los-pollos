@@ -128,7 +128,7 @@ class ClientService {
   }
 
 // ------------------------ Table Operations ------------------------
-  Future<String> createTable(String userID) async {
+  Future<Table> createTable(String userID) async {
     try {
       Table table = Table(
         id: "",
@@ -143,9 +143,14 @@ class ClientService {
       DocumentReference tableRef = _firestore.collection('tables').doc();
       table.id = tableRef.id;
       await tableRef.set(table.toMap());
+
+      // Update the user's current table ID
+      await _firestore.collection('clients').doc(userID).update({
+        'currentTableID': table.id,
+      });
       print("Table added  successfully");
-      // Return the generated table code
-      return table.tableCode;
+      // Return the generated table
+      return table;
     } catch (e) {
       print("Failed to add table : $e");
       throw Exception("Failed to create table: $e");
@@ -195,6 +200,11 @@ class ClientService {
             .update({'userIds': userIds});
       }
 
+      // Update the user's current table ID
+      await _firestore
+          .collection('clients')
+          .doc(userId)
+          .update({'currentTableID': tableDoc.id});
       // Return the table ID
       return tableData['tableCode'];
     } catch (e) {

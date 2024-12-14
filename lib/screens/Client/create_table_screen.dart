@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:provider/provider.dart';
 import '../../services/client_services.dart';
+import 'package:los_pollos_hermanos/models/table_model.dart' as custom_table;
 
 class CreateTableScreen extends StatelessWidget {
   final Function(String) onTableCreated; // Callback for table creation
@@ -64,8 +65,13 @@ class CreateTableScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        String createdTableCode =
+                        custom_table.Table table =
                             await _clientServices.createTable(user!.uid);
+                        String createdTableCode = table.tableCode;
+
+                        // Show Bill Splitting Mode Popup
+                        showBillSplittingPopup(context, table.id);
+
                         onTableCreated(
                             createdTableCode); // Pass table code to callback
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,7 +89,11 @@ class CreateTableScreen extends StatelessWidget {
                         );
                       }
                     },
-                    child: Text('Create Table'),
+                    child: Text('Create Table',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons
@@ -197,8 +207,8 @@ class CreateTableScreen extends StatelessWidget {
                                 },
                                 child: Text('Join',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    )),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
                                       Color.fromRGBO(239, 193, 52, 1),
@@ -212,7 +222,11 @@ class CreateTableScreen extends StatelessWidget {
                         },
                       );
                     },
-                    child: Text('Join Table'),
+                    child: Text('Join Table',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons
@@ -229,5 +243,51 @@ class CreateTableScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void showBillSplittingPopup(BuildContext context, String tableId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Center(
+            child: Text(
+              'Choose Your Bill Splitting Mode',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Split Equally'),
+                subtitle: const Text(
+                    'The whole table bill is divided equally among diners.'),
+                leading: const Icon(Icons.people),
+                onTap: () {
+                  simulateDbWait(tableId, true);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: const Text('Fair Share, No More'),
+                subtitle: const Text(
+                    'Each diner pays only for what they ordered. Shared items divided equally.'),
+                leading: const Icon(Icons.fastfood),
+                onTap: () {
+                  simulateDbWait(tableId, false);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // update table statis in firestore
+  void simulateDbWait(String tableId, bool billSplittingMode) async {
+    await ClientService().updateTableSplitStatus(tableId, billSplittingMode);
   }
 }
