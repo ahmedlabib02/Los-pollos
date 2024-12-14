@@ -43,7 +43,7 @@ class _OrderSummaryState extends State<OrderSummary> {
   //     userIds: ['user_123'],
   //     menuItemId: 'menu_001',
   //     tableId: 'table_01',
-  //     status: OrderStatus.accepted,
+  //     status: OrderStatus.inProgress,
   //     itemCount: 2,
   //     notes: ['Extra cheese'],
   //     price: 300.0,
@@ -54,11 +54,22 @@ class _OrderSummaryState extends State<OrderSummary> {
   //     userIds: ['user_123'],
   //     menuItemId: 'menu_002',
   //     tableId: 'table_01',
-  //     status: OrderStatus.inProgress,
+  //     status: OrderStatus.served,
   //     itemCount: 1,
   //     notes: ['No onions'],
   //     price: 200.0,
   //     name: 'Veggie Burger',
+  //   ),
+  //   OrderItem(
+  //     id: 'order_003',
+  //     userIds: ['user_123'],
+  //     menuItemId: 'menu_003',
+  //     tableId: 'table_01',
+  //     status: OrderStatus.accepted,
+  //     itemCount: 2,
+  //     notes: [],
+  //     price: 250.0,
+  //     name: 'Salad',
   //   ),
   // ];
 
@@ -70,13 +81,13 @@ class _OrderSummaryState extends State<OrderSummary> {
           'Order Summary',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.yellow[700],
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        // backgroundColor: Colors.yellow[700],
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back),
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        // ),
       ),
       body: FutureBuilder<List<OrderItem>>(
         future: getOrderItems(),

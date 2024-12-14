@@ -40,6 +40,16 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //     discount: 0.0,
   //     reviewIds: ['review_003', 'review_004'],
   //     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Cheeseburger.jpg',
+  //   ),
+  //   MenuItem(
+  //     id: 'menu_003',
+  //     name: 'Garden Salad',
+  //     price: 75.0,
+  //     description: 'A fresh mix of lettuce, tomatoes, cucumbers, and carrots, served with your choice of dressing.',
+  //     extras: ['Olives', 'Feta Cheese', 'Bacon Bits', 'Avocado'],
+  //     discount: 5.0,
+  //     reviewIds: ['review_005', 'review_006'],
+  //     imageUrl: 'https://garlicsaltandlime.com/wp-content/uploads/2022/07/Garden-salad-thumbnail.jpg',
   //   )
   // ];
 
@@ -75,6 +85,34 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //     menuItem = fetchedMenuItem;
   //   });
   // }
+
+
+  Color _getStatusColor(OrderStatus status) {
+  switch (status) {
+    case OrderStatus.accepted:
+      return Colors.blue.withOpacity(0.4); // Pending status color
+    case OrderStatus.inProgress:
+      return Colors.orange.withOpacity(0.4); // Completed status color
+    case OrderStatus.served:
+      return Colors.green.withOpacity(0.4); // Cancelled status color
+    default:
+      return Colors.grey.withOpacity(0.4); // Default color
+  }
+}
+
+Color _getTextColor(OrderStatus status) {
+  switch (status) {
+    case OrderStatus.accepted:
+      return Colors.blue; // Text color for pending
+    case OrderStatus.inProgress:
+      return Colors.orange; // Text color for completed
+    case OrderStatus.served:
+      return Colors.green; // Text color for cancelled
+    default:
+      return Colors.grey; // Default text color
+  }
+}
+
 
    @override
   Widget build(BuildContext context) {
@@ -195,13 +233,28 @@ class _OrderItemCardState extends State<OrderItemCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Notes: ${widget.orderItem.notes.join(", ")}',
+                                'Notes: ${widget.orderItem.notes.length>0? widget.orderItem.notes.join(", "): 'None'}',
                                 style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
                               ),
                               SizedBox(height: 4.0),
-                              Text(
-                                'Status: ${widget.orderItem.status.toString().split('.').last}',
-                                style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
+                              // Text(
+                              //   'Status: ${widget.orderItem.status.toString().split('.').last}',
+                              //   style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
+                              // ),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(widget.orderItem.status),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Text(
+                                  'Status: ${widget.orderItem.status.toString().split('.').last}',
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    // color: _getTextColor(widget.orderItem.status),
+                                    color: Colors.black
+                                  ),
+                                ),
                               ),
                             ],
                           ),
