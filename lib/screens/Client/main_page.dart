@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/dummy.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen_dummy.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
@@ -20,7 +21,7 @@ class _MainPageState extends State<MainPage> {
   // Screens for each tab
   final List<Widget> _screens = [
     TableScreenWrapper(), // Table (Home)
-    MenuScreen(),
+    DummyScreen(),
     UpdatesScreen(),
     OrderHistoryScreen(),
   ];

@@ -151,7 +151,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                               ),
                             ],
                           ),
-                          if (expandedState[bill.id] == true)
+                          if (expandedState[bill.id] == true) ...[
+                            SizedBox(
+                                height:
+                                    16), // Add space between the restaurant data and expanded items
                             FutureBuilder<List<OrderItem>>(
                               future: _clientService.getOrderPerBill(bill.id),
                               builder: (context, snapshot) {
@@ -162,8 +165,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                 } else if (snapshot.hasError) {
                                   return Center(
                                     child: Text(
-                                      "Error fetching orders: ${snapshot.error}",
-                                    ),
+                                        "Error fetching orders: ${snapshot.error}"),
                                   );
                                 } else if (!snapshot.hasData ||
                                     snapshot.data!.isEmpty) {
@@ -227,6 +229,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                 }
                               },
                             ),
+                          ],
                           Divider(color: Colors.grey[300], thickness: 1),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),

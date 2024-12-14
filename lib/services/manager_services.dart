@@ -64,18 +64,4 @@ class ManagerServices {
       throw Exception('Error deleting restaurant: $e');
     }
   }
-
-  /// Retrieves all restaurants (optional)
-  Future<List<Restaurant>> getAllRestaurants() async {
-    try {
-      QuerySnapshot snapshot =
-          await _firestore.collection(collectionPath).get();
-      return snapshot.docs
-          .map((doc) =>
-              Restaurant.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
-    } catch (e) {
-      throw Exception('Error fetching restaurants: $e');
-    }
-  }
 }
