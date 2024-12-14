@@ -40,42 +40,15 @@ import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 class TableScreen extends StatelessWidget {
   // Text controllers
   double pad = 24.0;
+
+  final String tableCode;
+  TableScreen({required this.tableCode});
+
   static const List<Map<String, dynamic>> users = TempVars.users;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight +
-            20), // Increase height to make the AppBar start lower
-        child: Padding(
-          padding: EdgeInsets.only(
-              top: 20,
-              left: pad,
-              right: pad), // Add top padding to push the AppBar lower
-          child: AppBar(
-            title: const Center(
-              child: Text(
-                'Table 4',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 26.0,
-                ),
-              ),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.black),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(10.0),
-              child: Container(
-                color: Styles.inputFieldBorderColor,
-                height: 1.0,
-              ),
-            ),
-          ),
-        ),
-      ),
       body: Padding(
         padding: EdgeInsets.only(left: pad, right: pad, top: 10),
         child: SingleChildScrollView(
@@ -83,7 +56,7 @@ class TableScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              TableRing(progressValue: 0.70, members: [
+              TableRing(tableCode: tableCode, progressValue: 0.70, members: [
                 users[0],
                 users[1],
                 users[6],

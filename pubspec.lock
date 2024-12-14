@@ -144,17 +144,6 @@ packages:
       sha256: "54cbbd957e1156d29548c7d9b9ec0c0ebb6de0a90452198683a7d23aed617a33"
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
-=======
-    version: "6.1.4"
-  file_selector_linux:
-    dependency: transitive
-    description:
-      name: file_selector_linux
-      sha256: "54cbbd957e1156d29548c7d9b9ec0c0ebb6de0a90452198683a7d23aed617a33"
-      url: "https://pub.dev"
-    source: hosted
->>>>>>> 921dba5 (image upload done/modified expand less in dropdown)
     version: "0.9.3+2"
   file_selector_macos:
     dependency: transitive
@@ -391,17 +380,10 @@ packages:
     dependency: "direct main"
     description:
       name: image_picker
-<<<<<<< HEAD
       sha256: "021834d9c0c3de46bf0fe40341fa07168407f694d9b2bb18d532dc1261867f7a"
       url: "https://pub.dev"
     source: hosted
     version: "1.1.2"
-=======
-      sha256: b6951e25b795d053a6ba03af5f710069c99349de9341af95155d52665cb4607c
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.9"
->>>>>>> 921dba5 (image upload done/modified expand less in dropdown)
   image_picker_android:
     dependency: transitive
     description:
@@ -414,17 +396,10 @@ packages:
     dependency: transitive
     description:
       name: image_picker_for_web
-<<<<<<< HEAD
       sha256: "717eb042ab08c40767684327be06a5d8dbb341fe791d514e4b92c7bbe1b7bb83"
       url: "https://pub.dev"
     source: hosted
     version: "3.0.6"
-=======
-      sha256: "869fe8a64771b7afbc99fc433a5f7be2fea4d1cb3d7c11a48b6b579eb9c797f0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
->>>>>>> 921dba5 (image upload done/modified expand less in dropdown)
   image_picker_ios:
     dependency: transitive
     description:
@@ -533,17 +508,10 @@ packages:
     dependency: transitive
     description:
       name: mime
-<<<<<<< HEAD
       sha256: "41a20518f0cb1256669420fdba0cd90d21561e560ac240f26ef8322e45bb7ed6"
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-=======
-      sha256: "801fd0b26f14a4a58ccb09d5892c3fbdeff209594300a542492cf13fba9d247a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.6"
->>>>>>> 921dba5 (image upload done/modified expand less in dropdown)
   nested:
     dependency: transitive
     description:
@@ -572,18 +540,18 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "8c4967f8b7cb46dc914e178daa29813d83ae502e0529d7b0478330616a691ef7"
+      sha256: "4adf4fd5423ec60a29506c76581bc05854c55e3a0b72d35bb28d661c9686edf2"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.14"
+    version: "2.2.15"
   path_provider_foundation:
     dependency: transitive
     description:
       name: path_provider_foundation
-      sha256: f234384a3fdd67f989b4d54a5d73ca2a6c422fa55ae694381ae0f4375cd1ea16
+      sha256: "4843174df4d288f5e29185bd6e72a6fbdf5a4a4602717eed565497429f179942"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.4.1"
   path_provider_linux:
     dependency: transitive
     description:

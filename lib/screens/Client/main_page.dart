@@ -3,9 +3,11 @@ import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
-import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
+// import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
+import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
 import 'package:los_pollos_hermanos/services/auth.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
 import 'menu_screen.dart';
 import 'updates_screen.dart';
@@ -83,11 +85,8 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final tableState = Provider.of<TableState>(context);
-    return Scaffold(
-      appBar: AppBar(
+  /*
+  AppBar(
         title: Text(
           _titles[_selectedIndex],
           style: TextStyle(fontWeight: FontWeight.bold), // Optional: Bold title
@@ -117,6 +116,56 @@ class _MainPageState extends State<MainPage> {
             },
           ),
         ],
+      )
+  */
+
+  @override
+  Widget build(BuildContext context) {
+    final tableState = Provider.of<TableState>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: Text(
+            _titles[_selectedIndex],
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 26.0,
+            ),
+          ),
+        ),
+        leading: tableState.isInTable
+            ? null
+            : IconButton(
+                icon: Icon(Icons.arrow_back), // Back icon
+                tooltip: 'Back to Choose Restaurant',
+                onPressed: () {
+                  // Navigate back to Choose Restaurant screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChooseRestaurantScreen()),
+                  );
+                },
+              ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person), // Account icon
+            tooltip: 'Account',
+            onPressed: () {
+              _navigateToAccountScreen(context); // Navigate to AccountScreen
+            },
+          ),
+        ],
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Theme(

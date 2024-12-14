@@ -9,10 +9,12 @@ class TableRing extends StatelessWidget {
   final double progressValue;
   final List<Map<String, dynamic>> members;
   final Color ringColor;
+  final String tableCode;
 
   TableRing({
     required this.progressValue,
     required this.members,
+    required this.tableCode,
     this.ringColor = const Color(0xFFF2C230),
   });
 
@@ -47,7 +49,7 @@ class TableRing extends StatelessWidget {
           ),
         ),
         // Code chip
-        _buildCodeChip('BFR193')
+        _buildCodeChip(tableCode)
       ],
     ));
   }

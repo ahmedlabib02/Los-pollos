@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Client/choose_restaurant_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/test_screen.dart';
@@ -29,7 +30,8 @@ class Wrapper extends StatelessWidget {
         // return TableScreen();
         // return TablesScreen();
         // return DummyScreen();
-        return MenuScreen();
+        // return MenuScreen();
+        return ChooseRestaurantScreen();
       } else {
         return const ManagerHome();
       }
