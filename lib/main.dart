@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,7 @@ Future main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SelectedRestaurantProvider()),
+        ChangeNotifierProvider(create: (_) => TableState())
       ],
       child: const MyApp(),
     ),

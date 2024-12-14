@@ -31,8 +31,12 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _updateProfileImage(Client client) async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxHeight: 300,
+      maxWidth: 300,
+      imageQuality: 80,
+    );
     if (pickedFile == null) return;
 
     try {
@@ -193,7 +197,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 leading: const Icon(Icons.lock),
                 title: const Text('Change Password'),
                 onTap: () {
-                 showChangePasswordSheet(context);
+                  showChangePasswordSheet(context);
                 },
               ),
               const Divider(),

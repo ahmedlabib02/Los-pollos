@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/client_model.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
+import 'package:provider/provider.dart';
 import 'menu_screen.dart';
 import 'updates_screen.dart';
 import 'create_table_screen.dart'; // Import Create Table screen
@@ -81,6 +84,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final tableState = Provider.of<TableState>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -89,17 +93,20 @@ class _MainPageState extends State<MainPage> {
         ),
         backgroundColor: Color.fromRGBO(242, 194, 48, 1),
         centerTitle: true, // Centers the title
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back), // Back icon
-          tooltip: 'Back to Choose Restaurant',
-          onPressed: () {
-            // Navigate back to Choose Restaurant screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ChooseRestaurantScreen()),
-            );
-          },
-        ),
+        leading: tableState.isInTable
+            ? null
+            : IconButton(
+                icon: Icon(Icons.arrow_back), // Back icon
+                tooltip: 'Back to Choose Restaurant',
+                onPressed: () {
+                  // Navigate back to Choose Restaurant screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChooseRestaurantScreen()),
+                  );
+                },
+              ),
         actions: [
           IconButton(
             icon: Icon(Icons.person), // Account icon
