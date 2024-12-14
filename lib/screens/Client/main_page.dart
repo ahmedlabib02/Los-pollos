@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
+import 'package:los_pollos_hermanos/screens/Client/order_history_screen_dummy.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'menu_screen.dart';
@@ -128,7 +129,7 @@ class _MainPageState extends State<MainPage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long),
-              label: 'Order Summary',
+              label: 'Orders',
             ),
           ],
           currentIndex: _selectedIndex,

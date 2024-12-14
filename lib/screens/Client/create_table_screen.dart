@@ -83,7 +83,12 @@ class CreateTableScreen extends StatelessWidget {
                         );
                       }
                     },
-                    child: Text('Create Table'),
+                    child: Text(
+                      'Create Table',
+                      style: TextStyle(
+                        color: Color.fromRGBO(128, 123, 123, 1),
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons
@@ -212,7 +217,10 @@ class CreateTableScreen extends StatelessWidget {
                         },
                       );
                     },
-                    child: Text('Join Table'),
+                    child: Text(
+                      'Join Table',
+                      style: TextStyle(color: Color.fromRGBO(128, 123, 123, 1)),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons

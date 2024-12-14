@@ -123,6 +123,21 @@ class ClientService {
     }
   }
 
+  Future<Restaurant> getRestaurantById(String restaurantId) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+      if (doc.exists) {
+        return Restaurant.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      } else {
+        throw Exception("Restaurant not found");
+      }
+    } catch (e) {
+      print("Error fetching restaurant by ID: $e");
+      throw Exception("Failed to fetch restaurant details");
+    }
+  }
+
 // ------------------------ Table Operations ------------------------
   Future<String> createTable(String userID) async {
     try {
@@ -402,8 +417,13 @@ class ClientService {
           .where('isPaid', isEqualTo: true) // Assuming past bills are paid
           .get();
 
+      if (billsSnapshot.docs.isEmpty) {
+        print("No bills found for user $userID.");
+        return [];
+      }
+
       return billsSnapshot.docs.map((doc) {
-        return Bill.fromMap(doc.data() as Map<String, dynamic>);
+        return Bill.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       print("Error fetching past bills: $e");
@@ -422,20 +442,22 @@ class ClientService {
       List<OrderItem> orderItems = [];
       for (String orderItemId in orderItemIds) {
         DocumentSnapshot orderItemDoc =
-            await _firestore.collection('orderItems').doc(orderItemId).get();
+            await _firestore.collection('orders').doc(orderItemId).get();
         Map<String, dynamic> orderItemData =
             orderItemDoc.data() as Map<String, dynamic>;
 
         // Fetch the name of the menu item using its menuItemID
         DocumentSnapshot menuItemDoc = await _firestore
             .collection('menuItems')
-            .doc(orderItemData['menuItemID'])
+            .doc(orderItemData['menuItemId'])
             .get();
         String menuItemName = menuItemDoc.get('name');
+        String menuItemImage = menuItemDoc.get('imageUrl');
 
         // Add the name to the orderItem
-        OrderItem orderItem = OrderItem.fromMap(orderItemData);
+        OrderItem orderItem = OrderItem.fromMap(orderItemData, orderItemDoc.id);
         orderItem.name = menuItemName; // Dynamically set the name field
+        orderItem.imageUrl = menuItemImage;
         orderItems.add(orderItem);
       }
 
