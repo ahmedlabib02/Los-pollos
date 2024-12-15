@@ -265,7 +265,7 @@ class CreateTableScreen extends StatelessWidget {
                     'The whole table bill is divided equally among diners.'),
                 leading: const Icon(Icons.people),
                 onTap: () {
-                  simulateDbWait(tableId, true);
+                  updateTableStatus(tableId, true);
                   Navigator.pop(context);
                 },
               ),
@@ -275,7 +275,7 @@ class CreateTableScreen extends StatelessWidget {
                     'Each diner pays only for what they ordered. Shared items divided equally.'),
                 leading: const Icon(Icons.fastfood),
                 onTap: () {
-                  simulateDbWait(tableId, false);
+                  updateTableStatus(tableId, false);
                   Navigator.pop(context);
                 },
               ),
@@ -287,7 +287,7 @@ class CreateTableScreen extends StatelessWidget {
   }
 
   // update table statis in firestore
-  void simulateDbWait(String tableId, bool billSplittingMode) async {
+  void updateTableStatus(String tableId, bool billSplittingMode) async {
     await ClientService().updateTableSplitStatus(tableId, billSplittingMode);
   }
 }

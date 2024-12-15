@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/dummy.dart';
-import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
+import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
@@ -10,9 +10,7 @@ import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; /
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
-import 'menu_screen.dart';
 import 'updates_screen.dart';
-import 'create_table_screen.dart'; // Import Create Table screen
 import 'choose_restaurant_screen.dart'; // Import Choose Restaurant screen
 import 'account_screen.dart'; // Import Account screen
 
@@ -45,59 +43,6 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _navigateToAccountScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'Account',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 26.0,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () async {
-                  try {
-                    await AuthService().signOut();
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const Wrapper()),
-                      (route) =>
-                          false, // This removes all previous routes from the stack
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Signed out successfully')),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error signing out')),
-                    );
-                  }
-                },
-              ),
-            ],
-            backgroundColor: Colors.white,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.black),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(10.0),
-              child: Container(
-                color: Styles.inputFieldBorderColor,
-                height: 1.0,
-              ),
-            ),
-            centerTitle: true,
-          ),
-          body: AccountScreen(),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final tableState = Provider.of<TableState>(context);
@@ -124,6 +69,28 @@ class _MainPageState extends State<MainPage> {
                   );
                 },
               ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              try {
+                await AuthService().signOut();
+                // Navigator.of(context).pushAndRemoveUntil(
+                //   MaterialPageRoute(builder: (context) => const Wrapper()),
+                //   (route) =>
+                //       false, // This removes all previous routes from the stack
+                // );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Signed out successfully')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Error signing out')),
+                );
+              }
+            },
+          ),
+        ],
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -159,12 +126,7 @@ class _MainPageState extends State<MainPage> {
               label: 'Updates',
             ),
             BottomNavigationBarItem(
-              icon: IconButton(
-                icon: Icon(Icons.person),
-                onPressed: () {
-                  _navigateToAccountScreen(context);
-                },
-              ),
+              icon: Icon(Icons.person),
               label: 'Account',
             ),
           ],

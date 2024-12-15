@@ -1,37 +1,5 @@
-// import 'package:flutter/material.dart';
-// import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
-// import 'package:provider/provider.dart';
-
-// class TableScreen extends StatelessWidget {
-//   final String tableCode;
-
-//   TableScreen({required this.tableCode});
-
-//   @override
-//   Widget build(BuildContext context) {
-
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Text(
-//             'Table Screen',
-//             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-//           ),
-//           SizedBox(height: 16),
-//           Text(
-//             'Your table code: $tableCode',
-//             style: TextStyle(fontSize: 18),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
-import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
-import 'package:provider/provider.dart';
+
 import 'package:los_pollos_hermanos/shared/CustomChip.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/shared/TableRing.dart';
@@ -39,7 +7,7 @@ import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 
 class TableScreen extends StatelessWidget {
   // Text controllers
-  double pad = 24.0;
+  final double pad = 24.0;
 
   final String tableCode;
   TableScreen({required this.tableCode});
