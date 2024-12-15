@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/screens/Client/account_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_details_screen.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
 import '../../models/bill_model.dart';
 import '../../models/order_item_model.dart';
@@ -72,6 +74,33 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Orders",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back), // Back icon
+          tooltip: 'Back to Account',
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the Account Screen
+          },
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.only(
             top: 16.0), // Add space between the first card and app bar
@@ -84,9 +113,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   final restaurant = restaurantCache[bill.restaurantId];
 
                   return Card(
-                    color: Colors.grey[100], // Light grey background color
+                    color: Colors.grey[50],
                     margin: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 4.0),
+                      horizontal: 16.0, // Increase space on the right and left
+                      vertical: 12.0, // Increase space between each card
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
@@ -190,6 +221,22 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                                           width: 40,
                                                           height: 40,
                                                           fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (context, error,
+                                                                  stackTrace) {
+                                                            return Container(
+                                                              width: 40,
+                                                              height: 40,
+                                                              color: Colors
+                                                                  .grey[300],
+                                                              child: Icon(
+                                                                Icons
+                                                                    .image_not_supported,
+                                                                color: Colors
+                                                                    .grey[600],
+                                                              ),
+                                                            );
+                                                          },
                                                         )
                                                       : Container(
                                                           width: 40,
@@ -233,24 +280,27 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           Divider(color: Colors.grey[300], thickness: 1),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'EGP ${bill.amount.toStringAsFixed(2)}',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                                SizedBox(height: 4),
                                 GestureDetector(
                                   onTap: () => _navigateToOrderDetails(
                                       context, bill, restaurant!),
                                   child: Text(
                                     'View details',
                                     style: TextStyle(
-                                        color: Colors.grey, fontSize: 12),
+                                      color: Styles.primaryYellow,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],

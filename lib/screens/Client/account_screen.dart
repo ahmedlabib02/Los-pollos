@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:los_pollos_hermanos/screens/Client/change_password.dart';
+import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart'; // Import OrderHistoryScreen
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
@@ -203,9 +204,14 @@ class _AccountScreenState extends State<AccountScreen> {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.history),
-                title: const Text('View Past Bills'),
+                title: const Text('View Past Orders'),
                 onTap: () {
-                  // Navigate to view past bills screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderHistoryScreen(),
+                    ),
+                  );
                 },
               ),
               const Divider(),

@@ -189,3 +189,67 @@ Future<void> populateDummy(int itemCount) async {
     }
   }
 }
+
+Future<void> populateDummyBills(int billCount) async {
+  final List<String> orderItemIds = [
+    '5kj5f4rUaCwNI6jveHKy',
+    '7bE45XeRrIuORVwp3LHc',
+    '8rJEqjcg292AT8093e0l',
+    'TYGjBe9GvhXo0OqeYkxi',
+    'ZySUVcYzJQ634ZhMDa3j',
+    'aOK2k6FDNimCLyWG0xMA',
+    'cQcH0t5qbivsj3LrW4Qc',
+    'dETVc9CWsXjD8uRNqURq',
+    'naborhcEU2H6rJBFnhv1',
+    'qofcamX2S6WC9JQKtcNt',
+    'uvRaNDHYgghCOlxqxJNf',
+  ];
+
+  final List<String> restaurantIds = [
+    '4DHnQwOzwfPmeWonwVdH',
+    '4NOJDueSIhM45IoLnKNr',
+    'IDakGl53E6GKhapv86Vw',
+    'QwZlcvF69tNwgkRgkknZ',
+    'Z46hV8OcSzNIU3HvUT3Z',
+    'hbSqJWIoJ2iol2i0dgxB',
+    'knPIve2BMTsiItXsrBJA',
+    'oZe29EBtKAate7Fa1VQw',
+  ];
+
+  final String userId = '9J1G53aUWiUVLEWjl4b1wxXwsJj1';
+
+  final Random random = Random();
+
+  for (int i = 0; i < billCount; i++) {
+    // Select a random number of order items
+    int numOrderItems = random.nextInt(5) + 1; // Random number between 1 and 5
+    List<String> selectedOrderItemIds = List.generate(numOrderItems, (_) {
+      return orderItemIds[random.nextInt(orderItemIds.length)];
+    });
+
+    // Calculate the amount based on random prices for each order item
+    double amount =
+        selectedOrderItemIds.length * (random.nextDouble() * 50 + 10);
+
+    // Select a random restaurant ID
+    String restaurantId = restaurantIds[random.nextInt(restaurantIds.length)];
+
+    // Create a Bill object
+    Map<String, dynamic> billData = {
+      'orderItemIds': selectedOrderItemIds,
+      'amount':
+          double.parse(amount.toStringAsFixed(2)), // Round to 2 decimal places
+      'isPaid': true,
+      'userId': userId,
+      'restaurantId': restaurantId,
+    };
+
+    try {
+      // Add the bill to Firestore
+      await _firestore.collection('bills').add(billData);
+      print('Bill added successfully with data: $billData');
+    } catch (e) {
+      print('Failed to add bill: $e');
+    }
+  }
+}

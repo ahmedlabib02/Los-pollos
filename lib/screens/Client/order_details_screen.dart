@@ -3,6 +3,7 @@ import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
   final Bill bill;
@@ -19,11 +20,30 @@ class OrderDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Order Details',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Order Details",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
+          ),
         ),
-        backgroundColor: Color.fromRGBO(242, 194, 48, 1),
-        centerTitle: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back), // Back icon
+          tooltip: 'Back to Account',
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the Account Screen
+          },
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -102,8 +122,8 @@ class OrderDetailsScreen extends StatelessWidget {
                           SizedBox(height: 16),
                           ...items.map((item) {
                             return Card(
-                              color: Colors.grey[100],
-                              elevation: 2,
+                              color: Colors.grey[50],
+                              elevation: 1,
                               margin: EdgeInsets.symmetric(vertical: 8),
                               child: Padding(
                                 padding: const EdgeInsets.all(12.0),
@@ -117,6 +137,18 @@ class OrderDetailsScreen extends StatelessWidget {
                                               width: 60,
                                               height: 60,
                                               fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  color: Colors.grey[300],
+                                                  child: Icon(
+                                                    Icons.image_not_supported,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                );
+                                              },
                                             )
                                           : Container(
                                               width: 60,
@@ -203,8 +235,8 @@ class OrderDetailsScreen extends StatelessWidget {
                             Icon(Icons.copy,
                                 size: 16,
                                 color: Color.fromRGBO(231, 182, 32, 1)),
-                            Text('#${bill.id}'),
                             SizedBox(width: 4),
+                            Text('#${bill.id}'),
                           ],
                         ),
                       ],

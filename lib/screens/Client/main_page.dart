@@ -4,7 +4,6 @@ import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
-import 'package:los_pollos_hermanos/screens/Client/order_history_screen_dummy.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
@@ -30,14 +29,14 @@ class _MainPageState extends State<MainPage> {
     TableScreenWrapper(), // Table (Home)
     DummyScreen(),
     UpdatesScreen(),
-    OrderHistoryScreen(),
+    AccountScreen(),
   ];
 
   final List<String> _titles = [
     'Table',
     'Menu',
     'Updates',
-    'Orders',
+    'Account',
   ];
 
   void _onItemTapped(int index) {
@@ -54,7 +53,10 @@ class _MainPageState extends State<MainPage> {
           appBar: AppBar(
             title: const Text(
               'Account',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 26.0,
+              ),
             ),
             actions: [
               IconButton(
@@ -78,7 +80,16 @@ class _MainPageState extends State<MainPage> {
                 },
               ),
             ],
-            backgroundColor: Color.fromRGBO(242, 194, 48, 1),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.black),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(10.0),
+              child: Container(
+                color: Styles.inputFieldBorderColor,
+                height: 1.0,
+              ),
+            ),
             centerTitle: true,
           ),
           body: AccountScreen(),
@@ -87,52 +98,16 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  /*
-  AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: TextStyle(fontWeight: FontWeight.bold), // Optional: Bold title
-        ),
-        backgroundColor: Color.fromRGBO(242, 194, 48, 1),
-        centerTitle: true, // Centers the title
-        leading: tableState.isInTable
-            ? null
-            : IconButton(
-                icon: Icon(Icons.arrow_back), // Back icon
-                tooltip: 'Back to Choose Restaurant',
-                onPressed: () {
-                  // Navigate back to Choose Restaurant screen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ChooseRestaurantScreen()),
-                  );
-                },
-              ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person), // Account icon
-            tooltip: 'Account',
-            onPressed: () {
-              _navigateToAccountScreen(context); // Navigate to AccountScreen
-            },
-          ),
-        ],
-      )
-  */
-
   @override
   Widget build(BuildContext context) {
     final tableState = Provider.of<TableState>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: Text(
-            _titles[_selectedIndex],
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 26.0,
-            ),
+        title: Text(
+          _titles[_selectedIndex],
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
           ),
         ),
         leading: tableState.isInTable
@@ -149,15 +124,6 @@ class _MainPageState extends State<MainPage> {
                   );
                 },
               ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person), // Account icon
-            tooltip: 'Account',
-            onPressed: () {
-              _navigateToAccountScreen(context); // Navigate to AccountScreen
-            },
-          ),
-        ],
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -168,6 +134,7 @@ class _MainPageState extends State<MainPage> {
             height: 1.0,
           ),
         ),
+        centerTitle: true,
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Theme(
@@ -178,7 +145,7 @@ class _MainPageState extends State<MainPage> {
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed, // Prevent tab enlargement
           elevation: 0.0, // Removes shadow effect
-          items: const [
+          items: [
             BottomNavigationBarItem(
               icon: Icon(Icons.group),
               label: 'Table',
@@ -192,8 +159,13 @@ class _MainPageState extends State<MainPage> {
               label: 'Updates',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long),
-              label: 'Orders',
+              icon: IconButton(
+                icon: Icon(Icons.person),
+                onPressed: () {
+                  _navigateToAccountScreen(context);
+                },
+              ),
+              label: 'Account',
             ),
           ],
           currentIndex: _selectedIndex,
