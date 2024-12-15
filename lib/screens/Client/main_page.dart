@@ -4,6 +4,7 @@ import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
+import 'package:los_pollos_hermanos/screens/chat/chat_overlay.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
@@ -118,6 +119,15 @@ class _MainPageState extends State<MainPage> {
         centerTitle: true,
       ),
       body: _screens[_selectedIndex],
+      floatingActionButton: tableState.isInTable
+          ? FloatingActionButton(
+              onPressed: () {
+              showDialog(context: context, builder: (context) => ChatOverlay());
+              },
+              child: Icon(Icons.auto_awesome),
+              backgroundColor: Color.fromRGBO(239, 180, 7, 1),
+            )
+          : null,
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           splashFactory: NoSplash.splashFactory, // Removes ripple effect
@@ -144,6 +154,7 @@ class _MainPageState extends State<MainPage> {
               label: 'Account',
             ),
           ],
+          backgroundColor: Colors.white,
           currentIndex: _selectedIndex,
           selectedItemColor:
               Color.fromRGBO(239, 180, 7, 1), // Highlighted color
