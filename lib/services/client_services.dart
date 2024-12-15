@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/models/menu_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
@@ -29,7 +30,9 @@ class ClientService {
       DocumentSnapshot doc =
           await _firestore.collection(collectionPath).doc(userID).get();
       if (doc.exists) {
-        return Client.fromMap(doc.data() as Map<String, dynamic>);
+        Client client = Client.fromMap(doc.data() as Map<String, dynamic>);
+        client.userID = userID;
+        return client;
       }
       return null;
     } catch (e) {
@@ -44,7 +47,9 @@ class ClientService {
         .snapshots()
         .map((doc) {
       if (doc.exists) {
-        return Client.fromMap(doc.data() as Map<String, dynamic>);
+        Client client = Client.fromMap(doc.data() as Map<String, dynamic>);
+        client.userID = userID;
+        return client;
       }
       return null;
     });
@@ -124,8 +129,23 @@ class ClientService {
     }
   }
 
+  Future<Restaurant> getRestaurantById(String restaurantId) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+      if (doc.exists) {
+        return Restaurant.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      } else {
+        throw Exception("Restaurant not found");
+      }
+    } catch (e) {
+      print("Error fetching restaurant by ID: $e");
+      throw Exception("Failed to fetch restaurant details");
+    }
+  }
+
 // ------------------------ Table Operations ------------------------
-  Future<String> createTable(String userID) async {
+  Future<Table> createTable(String userID) async {
     try {
       Table table = Table(
         id: "",
@@ -140,9 +160,14 @@ class ClientService {
       DocumentReference tableRef = _firestore.collection('tables').doc();
       table.id = tableRef.id;
       await tableRef.set(table.toMap());
+
+      // Update the user's current table ID
+      await _firestore.collection('clients').doc(userID).update({
+        'currentTableID': table.id,
+      });
       print("Table added  successfully");
-      // Return the generated table code
-      return table.tableCode;
+      // Return the generated table
+      return table;
     } catch (e) {
       print("Failed to add table : $e");
       throw Exception("Failed to create table: $e");
@@ -192,6 +217,11 @@ class ClientService {
             .update({'userIds': userIds});
       }
 
+      // Update the user's current table ID
+      await _firestore
+          .collection('clients')
+          .doc(userId)
+          .update({'currentTableID': tableDoc.id});
       // Return the table ID
       return tableData['tableCode'];
     } catch (e) {
@@ -356,6 +386,7 @@ class ClientService {
             await _firestore.collection('bills').doc(billId).get();
         String billUserID = billDoc.get('userId');
         String billUserName = userDoc.get('name');
+        String billUserImageUrl = userDoc.get('imageUrl');
         double billAmount = billDoc.get('amount');
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
@@ -378,6 +409,7 @@ class ClientService {
           'id': billId,
           'name': billUserName,
           'amount': billAmount,
+          'imageUrl': billUserImageUrl,
           'orderItems': orderItems,
           'isPaid': billDoc.get('isPaid'),
           'isCurrentUser': billUserID == userID,
@@ -403,8 +435,13 @@ class ClientService {
           .where('isPaid', isEqualTo: true) // Assuming past bills are paid
           .get();
 
+      if (billsSnapshot.docs.isEmpty) {
+        print("No bills found for user $userID.");
+        return [];
+      }
+
       return billsSnapshot.docs.map((doc) {
-        return Bill.fromMap(doc.data() as Map<String, dynamic>);
+        return Bill.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       print("Error fetching past bills: $e");
@@ -423,20 +460,22 @@ class ClientService {
       List<OrderItem> orderItems = [];
       for (String orderItemId in orderItemIds) {
         DocumentSnapshot orderItemDoc =
-            await _firestore.collection('orderItems').doc(orderItemId).get();
+            await _firestore.collection('orders').doc(orderItemId).get();
         Map<String, dynamic> orderItemData =
             orderItemDoc.data() as Map<String, dynamic>;
 
         // Fetch the name of the menu item using its menuItemID
         DocumentSnapshot menuItemDoc = await _firestore
             .collection('menuItems')
-            .doc(orderItemData['menuItemID'])
+            .doc(orderItemData['menuItemId'])
             .get();
         String menuItemName = menuItemDoc.get('name');
+        String menuItemImage = menuItemDoc.get('imageUrl');
 
         // Add the name to the orderItem
-        OrderItem orderItem = OrderItem.fromMap(orderItemData);
+        OrderItem orderItem = OrderItem.fromMap(orderItemData, orderItemDoc.id);
         orderItem.name = menuItemName; // Dynamically set the name field
+        orderItem.imageUrl = menuItemImage;
         orderItems.add(orderItem);
       }
 
@@ -444,6 +483,75 @@ class ClientService {
     } catch (e) {
       print("Error fetching orders for bill: $e");
       throw Exception("Failed to fetch orders for the bill");
+    }
+  }
+
+  // ------------------  Menu and Menu Items ------------------
+
+  Future<Menu> getMenu(String menuId) async {
+    try {
+      DocumentSnapshot menuSnapshot =
+          await _firestore.collection('menus').doc(menuId).get();
+      return Menu.fromMap(menuSnapshot.data() as Map<String, dynamic>);
+    } catch (e) {
+      print('Error getting menu: $e');
+      throw e;
+    }
+  }
+
+  Future<void> addMenuItem(
+      MenuItem menuItem, String menuId, String category) async {
+    try {
+      DocumentReference menuRef = _firestore.collection('menus').doc(menuId);
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItem.id);
+
+      await menuItemRef.set(menuItem.toMap());
+
+      await menuRef.update({
+        'categories.$category': FieldValue.arrayUnion([menuItem.id]),
+      });
+
+      print('Menu item added to category!');
+    } catch (e) {
+      print('Error adding menu item: $e');
+      throw e;
+    }
+  }
+
+  Future<void> updateMenuItem(MenuItem updatedMenuItem) async {
+    //  the updatedMenuItem should have the same id as the original menu item
+    try {
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(updatedMenuItem.id);
+
+      await menuItemRef.update(updatedMenuItem.toMap());
+
+      print('Menu item updated successfully!');
+    } catch (e) {
+      print('Error updating menu item: $e');
+      throw e;
+    }
+  }
+
+  Future<void> deleteMenuItemFromMenu(
+      String menuItemId, String menuId, String category) async {
+    //  not deleting the menuItem from the menuItems collection so old orders can still reference it
+    try {
+      DocumentReference menuRef = _firestore.collection('menus').doc(menuId);
+
+      await menuRef.update({
+        'categories.$category': FieldValue.arrayRemove([menuItemId]),
+      });
+
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItemId);
+      await menuItemRef.delete();
+
+      print('Menu item deleted successfully!');
+    } catch (e) {
+      print('Error deleting menu item: $e');
+      throw e;
     }
   }
 

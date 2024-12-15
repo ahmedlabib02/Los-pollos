@@ -16,6 +16,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '1',
       'name': 'Emily',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
       'amount': 420.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Caesar Salad'},
@@ -29,6 +31,9 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '2',
       'name': 'Jackson',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
+
       'amount': 500.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Buffalo Wings'}
@@ -38,6 +43,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '3',
       'name': 'David',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
       'amount': 610.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Creamy Shrimp Pasta'}
@@ -47,6 +54,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '4',
       'name': 'Leslie',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
       'amount': 250.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Nando’s Truffle Fries'}
@@ -56,6 +65,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '5',
       'name': 'John',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
       'amount': 300.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Caesar Salad'},
@@ -68,6 +79,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
     {
       'id': '6',
       'name': 'Sarah',
+      "imageUrl":
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
       'amount': 400.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Chicken Alfredo Pasta'}
@@ -77,7 +90,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
   ];
 
   Future<List<Map<String, dynamic>>> fetchBills() async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulate a network request
+    await Future.delayed(
+        const Duration(seconds: 2)); // Simulate a network request
     return bills;
   }
 
@@ -183,7 +197,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Subtotal", style: TextStyle(fontSize: 16)),
+                          const Text("Subtotal",
+                              style: TextStyle(fontSize: 16)),
                           Text("${subtotal.toStringAsFixed(2)} EGP"),
                         ],
                       ),
@@ -203,7 +218,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 18)),
                           Text("${total.toStringAsFixed(2)} EGP",
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],

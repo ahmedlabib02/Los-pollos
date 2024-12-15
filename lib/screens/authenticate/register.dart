@@ -1,9 +1,11 @@
-// lib/screens/authenticate/register.dart
-
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
+import 'package:uuid/uuid.dart';
 
 class Register extends StatefulWidget {
   final Function toggleView;
@@ -30,6 +32,9 @@ class _RegisterState extends State<Register> {
   // State variables
   bool _isLoading = false;
   String? _errorMessage;
+  File? _selectedImage;
+  String _imageUrl = ''; // Store the URL of the uploaded image
+  late ImagePicker imagePicker;
 
   // Dispose controllers to free resources
   @override
@@ -51,13 +56,26 @@ class _RegisterState extends State<Register> {
       });
 
       try {
-        // Attempt to register the user
+        // If there is an image, upload it
+        if (_selectedImage != null) {
+          String imageUrl = await _uploadImageToFirebase(_selectedImage!);
+          if (imageUrl.isEmpty) {
+            setState(() {
+              _errorMessage = 'Failed to upload image';
+            });
+            _imageUrl = '';
+          } else {
+            _imageUrl = imageUrl;
+          }
+        }
+
+        // Attempt to register the user with the image URL
         await _authService.registerClient(
           email: _emailController.text,
           password: _passwordController.text,
-          name: _nameController.text, // Pass name here
+          name: _nameController.text,
+          imageUrl: _imageUrl, // Send the image URL to Firebase
         );
-        // On success, navigation is handled by the Wrapper widget
       } on FirebaseAuthException catch (e) {
         setState(() {
           _errorMessage = e.message;
@@ -75,6 +93,57 @@ class _RegisterState extends State<Register> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    imagePicker = ImagePicker(); // Initialize the picker
+  }
+
+  // Method to upload image to Firebase Storage
+  Future<String> _uploadImageToFirebase(File image) async {
+    try {
+      // Create a unique ID for the image
+      String fileName = Uuid().v4();
+      // Create a reference to the Firebase Storage
+      Reference storageRef =
+          FirebaseStorage.instance.ref().child('profile_images/$fileName.jpg');
+
+      // Upload the image to Firebase Storage
+      UploadTask uploadTask = storageRef.putFile(image);
+
+      TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+      // Get the image URL
+      String imageUrl = await snapshot.ref.getDownloadURL();
+
+      return imageUrl;
+    } catch (e) {
+      print('Failed to upload image: $e');
+      return ''; // Return empty string if upload fails
+    }
+  }
+
+  // Image picker method
+  Future<void> _pickImage() async {
+    try {
+      final pickedFile = await imagePicker.pickImage(
+        source: ImageSource.gallery, // Or ImageSource.camera
+        maxHeight: 300,
+        maxWidth: 300,
+        imageQuality: 80, // Compress image
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to pick image: $e';
+      });
+    }
+  }
+
   // Build method for UI
   @override
   Widget build(BuildContext context) {
@@ -84,13 +153,10 @@ class _RegisterState extends State<Register> {
             appBar: AppBar(
               title: const Text('Register to Los Pollos'),
               actions: [
-                TextButton.icon(
+                IconButton(
+                  icon: const Icon(Icons.person),
+                  tooltip: 'Sign In',
                   onPressed: () => widget.toggleView(),
-                  icon: const Icon(Icons.person, color: Colors.white),
-                  label: const Text(
-                    'Sign In',
-                    style: TextStyle(color: Colors.white),
-                  ),
                 ),
               ],
             ),
@@ -106,8 +172,22 @@ class _RegisterState extends State<Register> {
                     child: Form(
                       key: _formKey,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: CircleAvatar(
+             
+                              radius: 50,
+                              backgroundImage: _selectedImage != null
+                                  ? FileImage(_selectedImage!)
+                                  : null,
+                              child: _selectedImage == null
+                                  ? const Icon(Icons.add_a_photo, size: 50)
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Other form fields go here
                           // Name Field
                           TextFormField(
                             controller: _nameController,
@@ -199,18 +279,7 @@ class _RegisterState extends State<Register> {
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: _register,
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
-                                        strokeWidth: 2.0,
-                                      ),
-                                    )
-                                  : const Text('Register'),
+                              child: const Text('Register'),
                               style: ElevatedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16.0),

@@ -1,7 +1,8 @@
 class Client {
-  final String userID;
+  String userID;
   final String name;
   final String email;
+  String imageUrl;
   final List<String> pastBillsIDs;
   final String currentTableID;
   final String? fcmToken;
@@ -10,6 +11,7 @@ class Client {
     required this.userID,
     required this.name,
     required this.email,
+    required this.imageUrl,
     this.pastBillsIDs = const [],
     this.currentTableID = '',
     this.fcmToken,
@@ -19,6 +21,7 @@ class Client {
     return {
       'name': name,
       'email': email,
+      'imageUrl': imageUrl,
       'pastBillsIDs': pastBillsIDs,
       'currentTableID': currentTableID,
       'fcmToken': fcmToken,
@@ -31,6 +34,7 @@ class Client {
       userID: map['userID'] ?? '',
       name: map['name'] ?? '',
       email: map['email'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
       pastBillsIDs: List<String>.from(map['pastBillsIDs'] ?? []),
       currentTableID: map['currentTableID'] ?? '',
       fcmToken: map['fcmToken'],

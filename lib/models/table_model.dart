@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Table {
   String id;
   bool isTableSplit = false;
@@ -50,5 +52,11 @@ class Table {
           65 + (DateTime.now().microsecondsSinceEpoch % 26));
     }
     return code;
+  }
+
+  @override
+  String toString() {
+    // Serialize the map to JSON
+    return jsonEncode(toMap());
   }
 }
