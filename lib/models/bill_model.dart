@@ -4,6 +4,8 @@ class Bill {
   double amount;
   bool isPaid;
   String userId;
+  String
+      restaurantId; // New field to track the restaurant associated with the bill
 
   Bill({
     required this.id,
@@ -11,6 +13,7 @@ class Bill {
     required this.amount,
     required this.isPaid,
     required this.userId,
+    required this.restaurantId,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +23,7 @@ class Bill {
       'amount': amount,
       'isPaid': isPaid,
       'userId': userId,
+      'restaurantId': restaurantId, // Add to map conversion
     };
   }
 
@@ -30,6 +34,7 @@ class Bill {
       amount: map['amount'],
       isPaid: map['isPaid'],
       userId: map['userId'],
+      restaurantId: map['restaurantId'],
     );
   }
 }
