@@ -554,4 +554,18 @@ class ClientService {
       throw e;
     }
   }
+
+  Future<MenuItem?> getMenuItem(String menuItemID) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('menuItems').doc(menuItemID).get();
+      if (doc.exists) {
+        return MenuItem.fromMap(doc.data() as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error fetching Menu Item: $e');
+    }
+  }
+  
 }
