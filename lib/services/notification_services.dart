@@ -64,7 +64,7 @@ class NotificationService {
       String deviceToken, BuildContext context, String tripId) async {
     final String serverAccessToken = await getAccessToken();
     String endPointFireBaseCloudMessaging =
-        "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages.send";
+        "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages:send";
     final Map<String, dynamic> message = {
       'message': {
         'token': deviceToken,

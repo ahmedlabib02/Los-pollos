@@ -68,7 +68,7 @@ class _MainPageState extends State<MainPage> {
             fontSize: 26.0,
           ),
         ),
-        leading: tableState.isInTable
+        leading: tableState.isInTable || tableState.isInTable == null
             ? null
             : IconButton(
                 icon: Icon(Icons.arrow_back), // Back icon
@@ -88,11 +88,11 @@ class _MainPageState extends State<MainPage> {
             onPressed: () async {
               try {
                 await AuthService().signOut();
-                // Navigator.of(context).pushAndRemoveUntil(
-                //   MaterialPageRoute(builder: (context) => const Wrapper()),
-                //   (route) =>
-                //       false, // This removes all previous routes from the stack
-                // );
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const Wrapper()),
+                  (route) =>
+                      false, // This removes all previous routes from the stack
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Signed out successfully')),
                 );
@@ -105,6 +105,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         bottom: PreferredSize(

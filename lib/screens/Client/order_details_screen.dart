@@ -34,6 +34,7 @@ class OrderDetailsScreen extends StatelessWidget {
           },
         ),
         backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         bottom: PreferredSize(

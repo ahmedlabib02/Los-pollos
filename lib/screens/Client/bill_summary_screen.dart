@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/widgets/payment_button.dart';
 import 'package:los_pollos_hermanos/widgets/bill_card_widget.dart';
 
@@ -39,17 +40,32 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Bill Summary',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
+          ),
         ),
-        backgroundColor: Colors.yellow[700],
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back), // Back icon
+          tooltip: 'Back',
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context); // Navigate back to the Account Screen
           },
         ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
+        scrolledUnderElevation: 0,
+        centerTitle: true,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: fetchBills(),
@@ -114,7 +130,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Subtotal", style: TextStyle(fontSize: 16)),
+                          const Text("Subtotal",
+                              style: TextStyle(fontSize: 16)),
                           Text("${subtotal.toStringAsFixed(2)} EGP"),
                         ],
                       ),
@@ -134,7 +151,8 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 18)),
                           Text("${total.toStringAsFixed(2)} EGP",
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
