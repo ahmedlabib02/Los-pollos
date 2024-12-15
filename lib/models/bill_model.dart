@@ -27,11 +27,13 @@ class Bill {
     };
   }
 
-  factory Bill.fromMap(Map<String, dynamic> map) {
+  factory Bill.fromMap(Map<String, dynamic> map, String documentId) {
     return Bill(
-      id: map['id'],
+      id: documentId,
       orderItemIds: List<String>.from(map['orderItemIds']),
-      amount: map['amount'],
+      amount: (map['amount'] is int)
+          ? (map['amount'] as int).toDouble() // Convert int to double
+          : map['amount'],
       isPaid: map['isPaid'],
       userId: map['userId'],
       restaurantId: map['restaurantId'],

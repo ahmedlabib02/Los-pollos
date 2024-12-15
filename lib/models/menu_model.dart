@@ -1,6 +1,7 @@
 class Menu {
   String id;
-  Map<String, List<String>> categories; // Map of categories to list of menu item IDs
+  Map<String, List<String>>
+      categories; // Map of categories to list of menu item IDs
 
   Menu({required this.id, required this.categories});
 
