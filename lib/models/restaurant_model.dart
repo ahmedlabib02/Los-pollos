@@ -1,14 +1,14 @@
 class Restaurant {
   final String id; // Firestore document ID
   final String name;
-  final String menuID;
+  final String menuId;
   final String category;
   final String? imageUrl; // Nullable imageUrl field
 
   Restaurant({
     required this.id,
     required this.name,
-    required this.menuID,
+    required this.menuId,
     required this.category,
     this.imageUrl, // Optional
   });
@@ -16,7 +16,7 @@ class Restaurant {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'menuID': menuID,
+      'menuId': menuId,
       'category': category,
       'imageUrl': imageUrl, // Add imageUrl to Firestore data
     };
@@ -26,7 +26,7 @@ class Restaurant {
     return Restaurant(
       id: documentId,
       name: map['name'] ?? '',
-      menuID: map['menuID'] ?? '',
+      menuId: map['menuId'] ?? '',
       category: map['category'] ?? '',
       imageUrl: map['imageUrl'], // Extract imageUrl from Firestore
     );
