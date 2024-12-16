@@ -85,7 +85,8 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   }
 
   Future<void> fetchMenuItem() async {
-    MenuItem? fetchedMenuItem = await ClientService().getMenuItem(widget.menuItemId);
+    MenuItem? fetchedMenuItem =
+        await ClientService().getMenuItem(widget.menuItemId);
     setState(() {
       menuItem = fetchedMenuItem;
     });
@@ -135,7 +136,6 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     if (menuItem == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -143,10 +143,8 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
     }
 
     return Scaffold(
-      
-      body: Stack(
-        children: [
-          SingleChildScrollView(
+      body: Stack(children: [
+        SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -170,12 +168,16 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                       children: [
                         Text(
                           menuItem!.name,
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
                         ),
-                        SizedBox(height: 8),  
+                        SizedBox(height: 8),
                         Text(
                           "${menuItem!.price.toStringAsFixed(2)} LE",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color.fromRGBO(239, 180, 7, 1)),
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromRGBO(239, 180, 7, 1)),
                         ),
                       ],
                     ),
@@ -188,7 +190,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   ],
                 ),
               ),
-        
+
               // Variants Section (Items to remove for free)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -197,18 +199,18 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   children: [
                     Text(
                       "Customize order item",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-        
                     Divider(
                       color: Colors.grey,
                       thickness: 0.5,
                     ),
                     const SizedBox(height: 8),
-        
                     Text(
                       "Remove Items",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
                     for (var variant in menuItem!.variants)
@@ -229,13 +231,13 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   ],
                 ),
               ),
-        
+
               Divider(
                 color: Colors.grey,
                 thickness: 0.5,
               ),
               const SizedBox(height: 8),
-        
+
               // Extras Section (Add ingredients with prices)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -244,12 +246,14 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   children: [
                     Text(
                       "Add extras",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
                     for (var extra in menuItem!.extras.entries)
                       CheckboxListTile(
-                        title: Text("${extra.key} (+${extra.value.toStringAsFixed(2)} LE)"),
+                        title: Text(
+                            "${extra.key} (+${extra.value.toStringAsFixed(2)} LE)"),
                         activeColor: Color.fromRGBO(239, 180, 7, 1),
                         value: selectedExtras.contains(extra.key),
                         onChanged: (value) {
@@ -265,16 +269,18 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   ],
                 ),
               ),
-        
+
               // Quantity Selector
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       "Quantity order",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Row(
                       children: [
@@ -305,18 +311,21 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                   ],
                 ),
               ),
-        
+
               // Add to Order Button
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
                   onPressed: () {
                     //Add Item To Order Backend
-
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(239, 180, 7, 1),
                     minimumSize: Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(8), // Reduced roundness
+                    ),
                   ),
                   child: Text(
                     "Add to order - ${calculateTotal()} LE",
@@ -341,9 +350,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
             child: Icon(Icons.arrow_back, color: Colors.black),
           ),
         ),
-        ]
-      ),
+      ]),
     );
   }
 }
-

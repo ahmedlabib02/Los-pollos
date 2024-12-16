@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
@@ -27,93 +29,87 @@ class MenuList extends StatefulWidget {
 }
 
 class _MenuListState extends State<MenuList> {
-  final ScrollController _scrollController = ScrollController();
-  final Map<String, GlobalKey> _categoryKeys = {};
-  late List<String> _categories;
-  Map<String, List<MenuItem>>?
-      _originalMenuItems; // Nullable to avoid late initialization error
-  late Map<String, List<MenuItem>> _filteredMenuItems;
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
+
+  Map<String, List<MenuItem>>? _menuItems; // Nullable initialization
+  Map<String, List<MenuItem>> _filteredMenuItems = {};
+  List<String> _categories = [];
   String? _activeCategory;
   String _searchQuery = '';
-  bool _showSelectorShadow = false;
+  bool _isUserScrolling = false; // Flag to suppress updates during scroll
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-    _scrollController.addListener(() {
-      setState(() {
-        _showSelectorShadow = _scrollController.offset > 0;
-      });
-    });
+    _itemPositionsListener.itemPositions.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _itemPositionsListener.itemPositions.removeListener(_onScroll);
     super.dispose();
   }
 
-  void _scrollToCategory(String category) {
-    final key = _categoryKeys[category];
-    if (key != null) {
-      final context = key.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 300),
-          alignment: 0.1,
-        );
+  void _onScroll() {
+    if (_isUserScrolling) return;
+
+    final positions = _itemPositionsListener.itemPositions.value;
+    if (positions.isNotEmpty) {
+      final firstVisibleIndex = positions.first.index;
+      final newActiveCategory = _categories[firstVisibleIndex];
+
+      if (_activeCategory != newActiveCategory) {
+        setState(() {
+          _activeCategory = newActiveCategory;
+        });
       }
     }
   }
 
-  void _onScroll() {
-    // We iterate through categories and find the first one that's currently near the top.
-    for (var category in _categories) {
-      final key = _categoryKeys[category];
-      if (key != null) {
-        final context = key.currentContext;
-        if (context != null) {
-          final renderBox = context.findRenderObject() as RenderBox;
-          final position = renderBox.localToGlobal(Offset.zero);
+  void _scrollToCategory(String category) async {
+    final index = _categories.indexOf(category);
+    if (index != -1) {
+      setState(() {
+        _isUserScrolling = true;
+        _activeCategory = category;
+      });
 
-          // Check if the category heading is near the top of the viewport
-          if (position.dy >= 0 && position.dy < 120) {
-            // If we're looking at the first category that appears close to the top, set it active.
-            if (_activeCategory != category) {
-              setState(() {
-                _activeCategory = category;
-              });
-            }
-            break;
-          }
-        }
-      }
+      await _itemScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+
+      setState(() {
+        _isUserScrolling = false;
+      });
     }
   }
 
   void _onSearch(String query) {
     setState(() {
-      _searchQuery = query;
-      if (query.isEmpty) {
-        _filteredMenuItems = Map.from(_originalMenuItems!);
-        _categories = _originalMenuItems!.keys.toList();
+      _searchQuery = query.toLowerCase();
+
+      if (_searchQuery.isEmpty) {
+        _filteredMenuItems = Map.from(_menuItems!);
+        _categories = _menuItems!.keys.toList();
       } else {
-        _filteredMenuItems = _originalMenuItems!.map((category, items) {
-          final filteredItems = items
-              .where((item) =>
-                  item.name.toLowerCase().contains(query.toLowerCase()) ||
-                  item.description.toLowerCase().contains(query.toLowerCase()))
-              .toList();
-          return MapEntry(category, filteredItems);
-        });
+        _filteredMenuItems = {};
+        for (var category in _menuItems!.keys) {
+          final filteredItems = _menuItems![category]!.where((item) {
+            return item.name.toLowerCase().contains(_searchQuery) ||
+                item.description.toLowerCase().contains(_searchQuery);
+          }).toList();
 
-        _filteredMenuItems.removeWhere((key, value) => value.isEmpty);
+          if (filteredItems.isNotEmpty) {
+            _filteredMenuItems[category] = filteredItems;
+          }
+        }
         _categories = _filteredMenuItems.keys.toList();
+        _activeCategory = _categories.isNotEmpty ? _categories.first : null;
       }
-
-      _activeCategory = _categories.isNotEmpty ? _categories.first : null;
     });
   }
 
@@ -130,70 +126,67 @@ class _MenuListState extends State<MenuList> {
           return const Center(child: Text('Error loading menu items'));
         }
 
-        final menuItems = snapshot.data!;
-
-        // Initialize _originalMenuItems and _filteredMenuItems on first load
-        if (_originalMenuItems == null) {
-          _originalMenuItems = menuItems;
-          _filteredMenuItems = Map.from(_originalMenuItems!);
-          _categories = _originalMenuItems!.keys.toList();
-          _activeCategory = _categories.first;
+        // Initialize menu items only once
+        if (_menuItems == null && snapshot.hasData) {
+          _menuItems = snapshot.data!;
+          _filteredMenuItems = Map.from(_menuItems!);
+          _categories = _menuItems!.keys.toList();
+          _activeCategory = _categories.isNotEmpty ? _categories.first : null;
         }
 
-        for (var category in _categories) {
-          _categoryKeys[category] = GlobalKey();
+        // Safeguard in case of empty data
+        if (_menuItems == null || _menuItems!.isEmpty) {
+          return const Center(child: Text('No menu items available.'));
         }
 
         return Column(
           children: [
             // Search Bar
-            Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: TextField(
-                  onChanged: _onSearch,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Styles.inputFieldBgColor,
-                    hintText: 'Search for items by name or description',
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 12.0, horizontal: 22.0),
+              child: TextField(
+                onChanged: _onSearch,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Styles.inputFieldBgColor,
+                  hintText: 'Search for items by name or description',
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: const TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
                   ),
-                )),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+                ),
+              ),
+            ),
 
             // Category Selector
-            if (_searchQuery.isEmpty)
-              CategorySelector(
-                categories: _categories,
-                activeCategory: _activeCategory,
-                onCategoryTap: (category) {
-                  _scrollToCategory(category);
-                },
-                showShadow: _showSelectorShadow,
-              ),
+            CategorySelector(
+              categories: _categories,
+              activeCategory: _activeCategory,
+              onCategoryTap: _scrollToCategory,
+            ),
 
             // Menu List
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.only(top: 10),
-                itemCount: _filteredMenuItems.length,
+              child: ScrollablePositionedList.builder(
+                itemCount: _categories.length,
+                itemScrollController: _itemScrollController,
+                itemPositionsListener: _itemPositionsListener,
                 itemBuilder: (context, index) {
                   final category = _categories[index];
                   final items = _filteredMenuItems[category]!;
 
                   return Column(
-                    key: _categoryKeys[category],
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (index == 0) const SizedBox(height: 15),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 22.0),
                         child: Text(
@@ -206,8 +199,8 @@ class _MenuListState extends State<MenuList> {
                       ),
                       const SizedBox(height: 10),
                       ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: items.length,
                         separatorBuilder: (context, _) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 22.0),
@@ -242,13 +235,11 @@ class CategorySelector extends StatelessWidget {
   final List<String> categories;
   final String? activeCategory;
   final void Function(String) onCategoryTap;
-  final bool showShadow;
 
   const CategorySelector({
     required this.categories,
     required this.activeCategory,
     required this.onCategoryTap,
-    required this.showShadow,
     Key? key,
   }) : super(key: key);
 
@@ -258,55 +249,46 @@ class CategorySelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : [],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: -1,
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       height: 50,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              // Ensure that the Row takes up at least the full width
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: categories.map((category) {
-                  final isActive = activeCategory == category;
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => onCategoryTap(category),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 5),
-                      decoration: BoxDecoration(
-                        border: isActive
-                            ? const Border(
-                                bottom: BorderSide(
-                                  color: Color(0xFFF2C230),
-                                  width: 3,
-                                ),
-                              )
-                            : null,
-                      ),
-                      child: Text(
-                        category,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: isActive ? Colors.black : Colors.grey,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final isActive = category == activeCategory;
+
+          return GestureDetector(
+            onTap: () => onCategoryTap(category),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: isActive
+                    ? const Border(
+                        bottom: BorderSide(
+                          color: Color(0xFFF2C230),
+                          width: 3,
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      )
+                    : null,
+              ),
+              child: Center(
+                child: Text(
+                  category,
+                  style: TextStyle(
+                    color: isActive ? Styles.primaryYellow : Colors.grey,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           );
@@ -325,7 +307,6 @@ class MenuItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate discounted price if a discount exists
     final hasDiscount = item.discount > 0;
     final discountedPrice =
         hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
@@ -336,14 +317,12 @@ class MenuItemWidget extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Text content on the left
             Flexible(
               flex: 6,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Title and description
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -355,66 +334,52 @@ class MenuItemWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      // Description
                       Text(
                         item.description.length > 140
                             ? '${item.description.substring(0, 140)}...'
                             : item.description,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: Color.fromARGB(255, 140, 140, 140),
                         ),
                       ),
                     ],
                   ),
-                  // Price (with discount if applicable)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        // color: Colors.red,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'EGP ',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(width: 1),
-                            Text(
-                              discountedPrice.toStringAsFixed(2),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
+                      Text(
+                        'EGP ${discountedPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16),
                       ),
-
                       const SizedBox(width: 8),
-                      Container(
-                          // color: Colors.blue,
-                          child: hasDiscount
-                              ?
-                              // Old price with a strikethrough
-                              Text(
-                                  'EGP ${item.price.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Color.fromARGB(255, 135, 135, 135),
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                )
-                              : null),
-                      // New price
+                      if (hasDiscount)
+                        Text(
+                          'EGP ${item.price.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color.fromARGB(255, 135, 135, 135),
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
                     ],
                   ),
                 ],
               ),
             ),
-
-            // Image on the right with rounded corners
             Flexible(
               flex: 3,
-              child: MenuItemImageWidget(imageUrl: item.imageUrl),
+              child: MenuItemImageWidget(
+                  imageUrl: item.imageUrl,
+                  onIconTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            MenuItemScreen(menuItemId: item.id),
+                      ),
+                    );
+                  }),
             ),
           ],
         ),
@@ -425,28 +390,28 @@ class MenuItemWidget extends StatelessWidget {
 
 class MenuItemImageWidget extends StatelessWidget {
   final String imageUrl;
+  final void Function() onIconTap;
 
-  const MenuItemImageWidget({required this.imageUrl});
-
+  const MenuItemImageWidget({required this.imageUrl, required this.onIconTap});
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(8), // Rounded corners
+          borderRadius: BorderRadius.circular(8),
           child: Image.network(
             imageUrl,
             fit: BoxFit.cover,
-            width: 110, // Fixed width for the image
-            height: 110, // Fixed height for the image
+            width: 100,
+            height: 100,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) {
-                return child; // Image loaded successfully
+                return child;
               }
               return const Center(child: CircularProgressIndicator());
             },
             errorBuilder: (context, error, stackTrace) {
-              return const Center(child: Icon(Icons.error)); // Error handling
+              return const Center(child: Icon(Icons.error));
             },
           ),
         ),
@@ -454,26 +419,21 @@ class MenuItemImageWidget extends StatelessWidget {
           bottom: 5,
           right: 5,
           child: GestureDetector(
-            onTap: () {
-              // Handle add to cart action
-            },
+            onTap: onIconTap,
             child: Container(
               decoration: BoxDecoration(
-                // color: const Color(0xFFF2C230), // Background color
-                color: Colors.white,
-                shape: BoxShape.circle, // Makes the container circular
+                color: Styles.primaryYellow,
+                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2), // Shadow color
-                    blurRadius: 6, // Softness of the shadow
-                    spreadRadius: 2, // How far the shadow spreads
-                    offset: const Offset(0, 0), // Position of the shadow (x, y)
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 6,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
               child: const CircleAvatar(
-                backgroundColor: Colors
-                    .transparent, // Set transparent if using the container color
+                backgroundColor: Colors.transparent,
                 radius: 18,
                 child: Icon(
                   Icons.add,

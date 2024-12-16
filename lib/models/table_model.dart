@@ -44,8 +44,8 @@ class Table {
         orderItemIds: List<String>.from(map['orderItemIds']),
         billIds: List<String>.from(map['billIds']),
         totalAmount: (map['totalAmount'] is int)
-          ? (map['totalAmount'] as int).toDouble() // Convert int to double
-          : map['totalAmount'],
+            ? (map['totalAmount'] as int).toDouble() // Convert int to double
+            : map['totalAmount'],
         tableCode: map['tableCode'],
         isOngoing: map['isOngoing'],
         restaurantId: map['restaurantId'] ?? '');

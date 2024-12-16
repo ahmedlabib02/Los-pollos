@@ -40,6 +40,24 @@ class ClientService {
     }
   }
 
+  Future<Map<String, dynamic>> getUserById(String userId) async {
+    try {
+      // Fetch the user document from Firestore based on the provided userId
+      DocumentSnapshot userSnapshot =
+          await _firestore.collection(collectionPath).doc(userId).get();
+
+      if (userSnapshot.exists) {
+        // Convert the document data to a Map<String, dynamic> and return it
+        return userSnapshot.data() as Map<String, dynamic>;
+      } else {
+        throw Exception('User not found');
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+      throw Exception('Failed to fetch user data');
+    }
+  }
+
   Stream<Client?> streamClient(String userID) {
     return _firestore
         .collection(collectionPath)
@@ -292,6 +310,47 @@ class ClientService {
       return null; // No ongoing table found
     } catch (e) {
       throw Exception('Error checking ongoing tables: $e');
+    }
+  }
+
+  Future<double> calculatePaidPercentage(String tableId) async {
+    try {
+      // Fetch the table by its ID
+      DocumentSnapshot tableSnapshot =
+          await _firestore.collection('tables').doc(tableId).get();
+
+      if (!tableSnapshot.exists) {
+        throw Exception('Table not found');
+      }
+
+      // Deserialize the table
+      Table table = Table.fromMap(tableSnapshot.data() as Map<String, dynamic>);
+
+      double totalPaid = 0.0;
+
+      // Fetch bills associated with the table
+      for (String billId in table.billIds) {
+        DocumentSnapshot billSnapshot =
+            await _firestore.collection('bills').doc(billId).get();
+
+        if (!billSnapshot.exists) {
+          continue;
+        }
+
+        Bill bill = Bill.fromMap(
+            billSnapshot.data() as Map<String, dynamic>, billSnapshot.id);
+
+        // Add to total paid if the bill is marked as paid
+        if (bill.isPaid) {
+          totalPaid += bill.amount;
+        }
+      }
+
+      // Calculate the percentage of the total amount that has been paid
+      return (totalPaid / table.totalAmount) * 100;
+    } catch (e) {
+      print('Error calculating paid percentage: $e');
+      throw Exception('Failed to calculate paid percentage');
     }
   }
 

@@ -97,15 +97,17 @@ class Wrapper extends StatelessWidget {
                   Provider.of<SelectedRestaurantProvider?>(context,
                           listen: false)
                       ?.setRestaurantId(ongoingTable.restaurantId);
-                      print("Restaurant ID SET TO: ${ongoingTable.restaurantId}");
+                  print("Restaurant ID SET TO: ${ongoingTable.restaurantId}");
                 }
               });
               // Conditionally return MainPage or ChooseRestaurantScreen
               if (ongoingTable != null) {
                 // return BillSummaryScreen();
                 return MainPage();
+                // return MenuScreen();
               } else {
                 return ChooseRestaurantScreen();
+                // return MenuScreen();
               }
             }
           },
