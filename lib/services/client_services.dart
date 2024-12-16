@@ -434,11 +434,19 @@ class ClientService {
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(currentTableID).get();
       List<String> billIds = List<String>.from(tableDoc.get('billIds'));
-      String userBillId = billIds.firstWhere(
-        (billId) => billId.contains(userID),
-        orElse: () => '',
-      );
 
+      String userBillId = '';
+
+      for (String billId in billIds) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(billId).get();
+        List<String> userIdsInBill = List<String>.from(billDoc.get('userIds'));
+        if (userIdsInBill.contains(userID)) {
+          userBillId = billId;
+          break;
+        }
+      }
+    
       if (userBillId.isNotEmpty) {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(userBillId).get();
