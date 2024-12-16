@@ -8,6 +8,7 @@ import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
+import 'package:los_pollos_hermanos/models/notification_model.dart';
 
 class ClientService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -371,7 +372,7 @@ class ClientService {
     }
   }
 
-    Future<List<OrderItem>> getOrderPerTable(String tableID) async {
+  Future<List<OrderItem>> getOrderPerTable(String tableID) async {
     try {
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(tableID).get();
@@ -745,6 +746,37 @@ class ClientService {
       return null;
     } catch (e) {
       throw Exception('Error fetching Menu Item: $e');
+    }
+  }
+
+  Future<void> addNotification(String userId, Notification notification) async {
+    try {
+      await _firestore
+          .collection(collectionPath)
+          .doc(userId)
+          .collection('notifications')
+          .doc(notification.id)
+          .set(notification.toMap());
+    } catch (e) {
+      throw Exception('Error adding notification: $e');
+    }
+  }
+
+  /// Retrieves all past notifications for a client
+  Future<List<Notification>> getNotifications(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection(collectionPath)
+          .doc(userId)
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return Notification.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+    } catch (e) {
+      throw Exception('Error fetching notifications: $e');
     }
   }
 }
