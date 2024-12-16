@@ -64,6 +64,7 @@ class MyApp extends StatelessWidget {
                 // 255, 246, 246, 246), // Set global background color
                 scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
                 textTheme: GoogleFonts.madaTextTheme(), // default font for app
+                // primaryTextTheme: GoogleFonts.madaTextTheme(),
                 // textSelectionTheme: TextSelectionThemeData(
                 // cursorColor: const Color.fromARGB(
                 // 255, 0, 0, 0), // Change this to the color you want

@@ -12,14 +12,14 @@ class Menu {
     };
   }
 
-  factory Menu.fromMap(Map<String, dynamic> map) {
+  factory Menu.fromMap(Map<String, dynamic> map, String documentId) {
     var categoriesMap = map['categories'] as Map<String, dynamic>;
     Map<String, List<String>> categories = {};
     categoriesMap.forEach((category, itemIds) {
       categories[category] = List<String>.from(itemIds);
     });
     return Menu(
-      id: map['id'],
+      id: documentId,
       categories: categories,
     );
   }

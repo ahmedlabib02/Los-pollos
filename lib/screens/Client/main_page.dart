@@ -85,40 +85,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  /*
-  AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: TextStyle(fontWeight: FontWeight.bold), // Optional: Bold title
-        ),
-        backgroundColor: Color.fromRGBO(242, 194, 48, 1),
-        centerTitle: true, // Centers the title
-        leading: tableState.isInTable
-            ? null
-            : IconButton(
-                icon: Icon(Icons.arrow_back), // Back icon
-                tooltip: 'Back to Choose Restaurant',
-                onPressed: () {
-                  // Navigate back to Choose Restaurant screen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ChooseRestaurantScreen()),
-                  );
-                },
-              ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person), // Account icon
-            tooltip: 'Account',
-            onPressed: () {
-              _navigateToAccountScreen(context); // Navigate to AccountScreen
-            },
-          ),
-        ],
-      )
-  */
-
   @override
   Widget build(BuildContext context) {
     final tableState = Provider.of<TableState>(context);

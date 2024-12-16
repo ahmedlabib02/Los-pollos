@@ -470,7 +470,7 @@ class ClientService {
     try {
       DocumentSnapshot menuSnapshot =
           await _firestore.collection('menus').doc(menuId).get();
-      return Menu.fromMap(menuSnapshot.data() as Map<String, dynamic>);
+      return Menu.fromMap(menuSnapshot.data() as Map<String, dynamic>, menuId);
     } catch (e) {
       print('Error getting menu: $e');
       throw e;
@@ -529,6 +529,67 @@ class ClientService {
       print('Menu item deleted successfully!');
     } catch (e) {
       print('Error deleting menu item: $e');
+      throw e;
+    }
+  }
+
+  Future<Map<String, List<MenuItem>>> getMenuItemsByRestaurantId(
+      String restaurantId) async {
+    try {
+      // Fetch the restaurant document
+      DocumentSnapshot restaurantSnapshot =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+
+      if (!restaurantSnapshot.exists) {
+        throw Exception('Restaurant not found');
+      }
+
+      // Parse the Restaurant object
+      Restaurant restaurant = Restaurant.fromMap(
+        restaurantSnapshot.data() as Map<String, dynamic>,
+        restaurantSnapshot.id,
+      );
+
+      // Fetch the menu document associated with the restaurant
+      DocumentSnapshot menuSnapshot =
+          await _firestore.collection('menus').doc(restaurant.menuId).get();
+
+      if (!menuSnapshot.exists) {
+        throw Exception('Menu not found for restaurant');
+      }
+
+      // Parse the Menu object
+      Menu menu = Menu.fromMap(
+          menuSnapshot.data() as Map<String, dynamic>, menuSnapshot.id);
+
+      // Create a map to store menu items by category
+      Map<String, List<MenuItem>> categorizedMenuItems = {};
+
+      // Iterate through each category in the menu
+      for (var entry in menu.categories.entries) {
+        String categoryName = entry.key;
+        List<String> menuItemIds = entry.value;
+
+        // Fetch menu items for this category
+        List<MenuItem> categoryItems = [];
+        for (String menuItemId in menuItemIds) {
+          DocumentSnapshot menuItemSnapshot =
+              await _firestore.collection('menuItems').doc(menuItemId).get();
+
+          if (menuItemSnapshot.exists) {
+            categoryItems.add(MenuItem.fromMap(
+                menuItemSnapshot.data() as Map<String, dynamic>,
+                menuItemSnapshot.id));
+          }
+        }
+
+        // Add the category and its items to the map
+        categorizedMenuItems[categoryName] = categoryItems;
+      }
+
+      return categorizedMenuItems;
+    } catch (e) {
+      print('Error fetching restaurant menu items: $e');
       throw e;
     }
   }

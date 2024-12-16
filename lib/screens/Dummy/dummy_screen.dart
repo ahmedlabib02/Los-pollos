@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/dummy.dart';
+import 'package:los_pollos_hermanos/services/client_services.dart';
 
 class DummyScreen extends StatelessWidget {
   @override
@@ -18,7 +19,7 @@ class DummyScreen extends StatelessWidget {
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
-            await populateDummyMenuItems();
+            await addDummyMenuItems();
           },
           child: Text('Populate Dummy Menu Items'),
         ),
