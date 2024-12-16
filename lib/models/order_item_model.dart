@@ -11,6 +11,7 @@ class OrderItem {
   double price;
   String? name; // Add name as an optional field
   String? imageUrl;
+  Map<String, double>? extras;
 
   OrderItem({
     required this.id,
@@ -23,6 +24,7 @@ class OrderItem {
     required this.price,
     this.name,
     this.imageUrl, // Optional
+    this.extras,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +39,7 @@ class OrderItem {
       'price': price,
       'name': name,
       'imageUrl': imageUrl,
+      'extras': extras,
     };
   }
 
@@ -55,6 +58,9 @@ class OrderItem {
           : map['price'],
       name: map['name'],
       imageUrl: map['imageUrl'],
+      extras: (map['extras'] as Map?)?.map((key, value) =>
+              MapEntry(key.toString(), (value ?? 0.0).toDouble())) ??
+          {},
     );
   }
 }
