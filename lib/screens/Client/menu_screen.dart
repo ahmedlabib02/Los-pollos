@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 
 class MenuScreen extends StatelessWidget {
+  final String role; // Role: "user" or "manager"
+
+  const MenuScreen({Key? key, required this.role}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,8 +18,25 @@ class MenuScreen extends StatelessWidget {
         child: MenuList(
           menuItemsFuture: ClientService()
               .getMenuItemsByRestaurantId('da3ZRVRibXeFl2Vw30ya'),
+          role: role, // Pass the role to MenuList
         ),
       ),
+      // Floating Action Button for Managers to Add a New Menu Item
+      floatingActionButton: role == 'manager'
+          ? FloatingActionButton(
+              backgroundColor: const Color(0xFFF2C230), // Yellow color
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddMenuItemScreen(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add New Menu Item',
+            )
+          : null, // Null if the role is not "manager"
     );
   }
 }
@@ -22,7 +44,9 @@ class MenuScreen extends StatelessWidget {
 class MenuList extends StatefulWidget {
   final Future<Map<String, List<MenuItem>>> menuItemsFuture;
 
-  const MenuList({required this.menuItemsFuture});
+  final String role;
+
+  const MenuList({required this.menuItemsFuture, required this.role});
 
   @override
   _MenuListState createState() => _MenuListState();
@@ -211,7 +235,10 @@ class _MenuListState extends State<MenuList> {
                         ),
                         itemBuilder: (context, itemIndex) {
                           final item = items[itemIndex];
-                          return MenuItemWidget(item: item);
+                          return MenuItemWidget(
+                            item: item,
+                            role: widget.role,
+                          );
                         },
                       ),
                       Container(
@@ -300,10 +327,11 @@ class CategorySelector extends StatelessWidget {
 
 class MenuItemWidget extends StatelessWidget {
   final MenuItem item;
+  final String role; // Role: "user" or "manager"
   final double hPad = 22.0;
   final double vPad = 6.0;
 
-  const MenuItemWidget({required this.item});
+  const MenuItemWidget({required this.item, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -370,8 +398,10 @@ class MenuItemWidget extends StatelessWidget {
             Flexible(
               flex: 3,
               child: MenuItemImageWidget(
-                  imageUrl: item.imageUrl,
-                  onIconTap: () {
+                imageUrl: item.imageUrl,
+                icon: role == "user" ? Icons.add : Icons.edit,
+                onIconTap: () {
+                  if (role == "user") {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -379,7 +409,26 @@ class MenuItemWidget extends StatelessWidget {
                             MenuItemScreen(menuItemId: item.id),
                       ),
                     );
-                  }),
+                  } else if (role == "manager") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddMenuItemScreen(
+                            // initialData: {
+                            //   'title': item.name,
+                            //   'description': item.description,
+                            //   'image': item.imageUrl,
+                            //   'variants': item.variants ?? [],
+                            //   'extras': item.extras ?? [],
+                            //   'basePrice': item.price,
+                            //   'discount': item.discount,
+                            // },
+                            ),
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -390,9 +439,15 @@ class MenuItemWidget extends StatelessWidget {
 
 class MenuItemImageWidget extends StatelessWidget {
   final String imageUrl;
+  final IconData icon;
   final void Function() onIconTap;
 
-  const MenuItemImageWidget({required this.imageUrl, required this.onIconTap});
+  const MenuItemImageWidget({
+    required this.imageUrl,
+    required this.icon,
+    required this.onIconTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -432,11 +487,11 @@ class MenuItemImageWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 backgroundColor: Colors.transparent,
                 radius: 18,
                 child: Icon(
-                  Icons.add,
+                  icon,
                   color: Colors.black,
                   size: 18,
                 ),
