@@ -12,18 +12,6 @@ class ClientHome extends StatefulWidget {
 }
 
 class _ClientHomeState extends State<ClientHome> {
-  final NotificationService _notificationService = NotificationService();
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeNotifications();
-  }
-
-  Future<void> _initializeNotifications() async {
-    await _notificationService.init(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<CustomUser?>(context);

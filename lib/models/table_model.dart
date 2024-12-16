@@ -9,6 +9,7 @@ class Table {
   double totalAmount;
   String tableCode;
   bool isOngoing = true;
+  String restaurantId = '';
 
   Table(
       {required this.id,
@@ -18,7 +19,8 @@ class Table {
       required this.billIds,
       required this.totalAmount,
       required this.tableCode,
-      required this.isOngoing});
+      required this.isOngoing,
+      required this.restaurantId});
 
   Map<String, dynamic> toMap() {
     return {
@@ -30,6 +32,7 @@ class Table {
       'totalAmount': totalAmount,
       'tableCode': tableCode,
       'isOngoing': isOngoing,
+      'restaurantId': restaurantId,
     };
   }
 
@@ -40,9 +43,12 @@ class Table {
         userIds: List<String>.from(map['userIds']),
         orderItemIds: List<String>.from(map['orderItemIds']),
         billIds: List<String>.from(map['billIds']),
-        totalAmount: map['totalAmount'],
+        totalAmount: (map['totalAmount'] is int)
+          ? (map['totalAmount'] as int).toDouble() // Convert int to double
+          : map['totalAmount'],
         tableCode: map['tableCode'],
-        isOngoing: map['isOngoing']);
+        isOngoing: map['isOngoing'],
+        restaurantId: map['restaurantId'] ?? '');
   }
 
   static String generateTableCode() {

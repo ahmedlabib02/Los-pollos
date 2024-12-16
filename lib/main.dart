@@ -51,10 +51,17 @@ class MyApp extends StatelessWidget {
           );
         }
         if (snapshot.connectionState == ConnectionState.done) {
-          return StreamProvider<CustomUser?>.value(
-            value: AuthService().user,
-            initialData: null,
-            catchError: (context, error) => null,
+          return MultiProvider(
+            providers: [
+              StreamProvider<CustomUser?>.value(
+                value: AuthService().user,
+                initialData: null,
+                catchError: (context, error) => null,
+              ),
+              ChangeNotifierProvider(
+                create: (_) => SelectedRestaurantProvider(),
+              ),
+            ],
             child: MaterialApp(
               title: 'Los Pollos Hermanos',
               theme: ThemeData(

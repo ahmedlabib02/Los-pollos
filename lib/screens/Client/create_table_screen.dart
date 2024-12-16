@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:provider/provider.dart';
 import '../../services/client_services.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart' as custom_table;
@@ -65,9 +67,18 @@ class CreateTableScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        custom_table.Table table =
-                            await _clientServices.createTable(user!.uid);
+                        String restaurantId =
+                            Provider.of<SelectedRestaurantProvider?>(context,
+                                        listen: false)
+                                    ?.selectedRestaurantId ??
+                                '';
+                        custom_table.Table table = await _clientServices
+                            .createTable(user!.uid, restaurantId);
                         String createdTableCode = table.tableCode;
+                        Provider.of<TableState>(
+                          context,
+                          listen: false,
+                        ).joinTable();
 
                         // Show Bill Splitting Mode Popup
                         showBillSplittingPopup(context, table.id);
@@ -89,11 +100,12 @@ class CreateTableScreen extends StatelessWidget {
                         );
                       }
                     },
-                    child: Text('Create Table',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black)),
+                    child: Text(
+                      'Create Table',
+                      style: TextStyle(
+                        color: Color.fromRGBO(128, 123, 123, 1),
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons
@@ -173,6 +185,10 @@ class CreateTableScreen extends StatelessWidget {
                                     try {
                                       String tableId = await _clientServices
                                           .joinTable(inputTableCode, user!.uid);
+                                      Provider.of<TableState>(
+                                        context,
+                                        listen: false,
+                                      ).joinTable();
                                       onTableCreated(
                                           tableId); // Pass joined table code
                                       Navigator.pop(
@@ -222,11 +238,10 @@ class CreateTableScreen extends StatelessWidget {
                         },
                       );
                     },
-                    child: Text('Join Table',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black)),
+                    child: Text(
+                      'Join Table',
+                      style: TextStyle(color: Color.fromRGBO(128, 123, 123, 1)),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),
                       minimumSize: Size(double.infinity, 50), // Wider buttons
@@ -265,7 +280,7 @@ class CreateTableScreen extends StatelessWidget {
                     'The whole table bill is divided equally among diners.'),
                 leading: const Icon(Icons.people),
                 onTap: () {
-                  simulateDbWait(tableId, true);
+                  updateTableStatus(tableId, true);
                   Navigator.pop(context);
                 },
               ),
@@ -275,7 +290,7 @@ class CreateTableScreen extends StatelessWidget {
                     'Each diner pays only for what they ordered. Shared items divided equally.'),
                 leading: const Icon(Icons.fastfood),
                 onTap: () {
-                  simulateDbWait(tableId, false);
+                  updateTableStatus(tableId, false);
                   Navigator.pop(context);
                 },
               ),
@@ -287,7 +302,7 @@ class CreateTableScreen extends StatelessWidget {
   }
 
   // update table statis in firestore
-  void simulateDbWait(String tableId, bool billSplittingMode) async {
+  void updateTableStatus(String tableId, bool billSplittingMode) async {
     await ClientService().updateTableSplitStatus(tableId, billSplittingMode);
   }
 }

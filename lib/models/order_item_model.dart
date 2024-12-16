@@ -10,6 +10,7 @@ class OrderItem {
   List<String> notes;
   double price;
   String? name; // Add name as an optional field
+  String? imageUrl;
 
   OrderItem({
     required this.id,
@@ -21,6 +22,7 @@ class OrderItem {
     required this.notes,
     required this.price,
     this.name,
+    this.imageUrl, // Optional
   });
 
   Map<String, dynamic> toMap() {
@@ -34,12 +36,13 @@ class OrderItem {
       'notes': notes,
       'price': price,
       'name': name,
+      'imageUrl': imageUrl,
     };
   }
 
-  factory OrderItem.fromMap(Map<String, dynamic> map) {
+  factory OrderItem.fromMap(Map<String, dynamic> map, String documentId) {
     return OrderItem(
-      id: map['id'],
+      id: documentId,
       userIds: List<String>.from(map['userIds']),
       menuItemId: map['menuItemId'],
       tableId: map['tableId'],
@@ -47,8 +50,11 @@ class OrderItem {
           .firstWhere((e) => e.toString().split('.').last == map['status']),
       itemCount: map['itemCount'],
       notes: List<String>.from(map['notes']),
-      price: map['price'],
+      price: (map['price'] is int)
+          ? (map['price'] as int).toDouble() // Convert int to double
+          : map['price'],
       name: map['name'],
+      imageUrl: map['imageUrl'],
     );
   }
 }
