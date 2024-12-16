@@ -99,11 +99,20 @@ class _OrderSummaryState extends State<OrderSummary> {
                 child: ListView.builder(
                   itemCount: orderItems.length,
                   itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: OrderItemCard(
-                        orderItem: orderItems[index],
-                      ),
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 0.0),
+                          child: OrderItemCard(
+                            orderItem: orderItems[index],
+                          ),
+                        ),
+                        if (index != orderItems.length - 1)
+                          Divider(
+                            color: Colors.grey.shade200,
+                            thickness: 1,
+                          ),
+                      ],
                     );
                   },
                 ),

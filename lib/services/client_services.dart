@@ -364,8 +364,8 @@ class ClientService {
   Future<void> addOrderItemToTable(
       String tableID, OrderItem orderItem, String restaurantId) async {
     try {
-
-      DocumentReference orderItemDoc = _firestore.collection('orderItems').doc();
+      DocumentReference orderItemDoc =
+          _firestore.collection('orderItems').doc();
       orderItem.id = orderItemDoc.id;
       await orderItemDoc.set(orderItem.toMap());
 
@@ -513,10 +513,10 @@ class ClientService {
             await _firestore.collection('bills').doc(userBillId).get();
         double currentAmount = billDoc.get('amount');
         double newAmount = currentAmount + orderItemAmount;
-        await _firestore
-            .collection('bills')
-            .doc(userBillId)
-            .update({'amount': newAmount, 'orderItemIds': FieldValue.arrayUnion([orderItemID])});
+        await _firestore.collection('bills').doc(userBillId).update({
+          'amount': newAmount,
+          'orderItemIds': FieldValue.arrayUnion([orderItemID])
+        });
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -573,7 +573,7 @@ class ClientService {
     List<Map<String, dynamic>> billSummaries = [];
     try {
       DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(userID).get();
+          await _firestore.collection('clients').doc(userID).get();
       String currentTableID = userDoc.get('currentTableID');
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(currentTableID).get();

@@ -112,19 +112,20 @@ class _OrderItemCardState extends State<OrderItemCard> {
 
         // Use the newly fetched orderItem instead of _orderItem
         return Container(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+          // color: Colors.green,
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
           margin: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 1.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 6.0,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
+          // decoration: BoxDecoration(
+          //   color: Colors.white,
+          //   borderRadius: BorderRadius.circular(12.0),
+          //   boxShadow: const [
+          //     BoxShadow(
+          //       color: Colors.black12,
+          //       blurRadius: 0.0,
+          //       offset: Offset(0, 0),
+          //     ),
+          //   ],
+          // ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -149,8 +150,7 @@ class _OrderItemCardState extends State<OrderItemCard> {
                       children: [
                         Text(
                           menuItem.name,
-                          style: const TextStyle(
-                              fontSize: 18.0, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 16.0),
                         ),
                         const SizedBox(height: 2.0),
                         AvatarGroup(
@@ -165,7 +165,10 @@ class _OrderItemCardState extends State<OrderItemCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('${menuItem.price.toStringAsFixed(2)} EGP'),
+                      Text(
+                        '${menuItem.price.toStringAsFixed(2)} EGP',
+                        style: TextStyle(fontSize: 14),
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6.0, vertical: 2.0),
@@ -184,34 +187,37 @@ class _OrderItemCardState extends State<OrderItemCard> {
               const SizedBox(height: 8.0),
 
               // Details Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total  ${(orderItem.price).toStringAsFixed(2)} EGP',
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _showBottomDrawer(
-                          context, menuItem, users, loggedInUserId);
-                    },
-                    child: Text(
-                      'Details',
-                      style: TextStyle(
-                        color: Styles.primaryYellow,
-                        fontWeight: FontWeight.bold,
+              Container(
+                // color: Colors.red,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total  ${(orderItem.price).toStringAsFixed(2)} EGP',
+                      style: const TextStyle(
+                        fontSize: 16.0,
                       ),
                     ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 0.0, vertical: 0.0),
-                    ),
-                  )
-                ],
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: 30),
+                      child: TextButton(
+                        onPressed: () {
+                          _showBottomDrawer(
+                              context, menuItem, users, loggedInUserId);
+                        },
+                        child: Text(
+                          'Details',
+                          style: TextStyle(
+                            color: Styles.primaryYellow,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ],
           ),
