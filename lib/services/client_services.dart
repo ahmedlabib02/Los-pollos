@@ -644,7 +644,7 @@ class ClientService {
       DocumentSnapshot doc =
           await _firestore.collection('menuItems').doc(menuItemID).get();
       if (doc.exists) {
-        return MenuItem.fromMap(doc.data() as Map<String, dynamic>);
+        return MenuItem.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }
       return null;
     } catch (e) {
