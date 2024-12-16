@@ -16,7 +16,6 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 // Top-level background message handler
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('Handling a background message: ${message.messageId}');
 }
 
 class NotificationService {
@@ -97,34 +96,26 @@ class NotificationService {
   // 4. Configure Foreground Listener
   void _configureForegroundNotificationListener(BuildContext context) {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      print('Received a foreground message');
+      print('Foreground message received: ${message.data}');
+
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       Map<String, dynamic> data = message.data;
-      final user = Provider.of<CustomUser?>(context);
+
       if (notification != null && android != null) {
-        // Extract the 'type' from the data payload
-        String typeStr =
-            data['type'] ?? 'invite'; // Default to 'invite' if not specified
-        NotificationType notifType;
+        final String typeStr = data['type'] ?? 'invite';
+        NotificationType notifType = (typeStr == 'discount')
+            ? NotificationType.discount
+            : NotificationType.invite;
 
-        switch (typeStr) {
-          case 'discount':
-            notifType = NotificationType.discount;
-            break;
-          case 'invite':
-          default:
-            notifType = NotificationType.invite;
-        }
-
-        // Show the notification
+        // Show notification locally
         _localNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
           notification.body,
           NotificationDetails(
             android: AndroidNotificationDetails(
-              'default_channel', // Ensure this matches your channel ID
+              'default_channel',
               'Default Channel',
               channelDescription: 'This is the default channel',
               importance: Importance.max,
@@ -132,29 +123,23 @@ class NotificationService {
               icon: '@mipmap/ic_launcher',
             ),
           ),
-          payload: jsonEncode({
-            'type': typeStr,
-            // Add other data fields if necessary
-          }),
         );
 
-        // Save the notification to Firestore using ClientService
-        AppNotification newNotification = AppNotification(
-          id: message.messageId ??
-              DateTime.now().millisecondsSinceEpoch.toString(),
-          userId: '',
-          title: notification.title ?? '',
-          body: notification.body ?? '',
-          timestamp: DateTime.now(),
-          sentBy:
-              data['sentBy'] ?? 'manager', // Assuming 'manager' is the sender
-          type: notifType,
-        );
-
-        // Instantiate ClientService and add the notification
-        ClientService clientService = ClientService();
-        await clientService.addNotification(user!.uid, newNotification);
-        print('Notification saved to Firestore with type: $typeStr');
+        // Save notification to Firestore
+        final user = Provider.of<CustomUser?>(context, listen: false);
+        if (user != null) {
+          AppNotification newNotification = AppNotification(
+            id: message.messageId ??
+                DateTime.now().millisecondsSinceEpoch.toString(),
+            userId: user.uid,
+            title: notification.title ?? 'No Title',
+            body: notification.body ?? 'No Body',
+            timestamp: DateTime.now(),
+            sentBy: data['sentBy'] ?? 'unknown',
+            type: notifType,
+          );
+          await ClientService().addNotification(user.uid, newNotification);
+        }
       }
     });
   }

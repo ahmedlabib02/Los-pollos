@@ -3,10 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/notification_services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore if needed
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
-import 'package:los_pollos_hermanos/models/notification_model.dart'; // Import AppNotification
 
 class ManagerHome extends StatefulWidget {
   const ManagerHome({Key? key}) : super(key: key);
@@ -19,9 +18,8 @@ class _ManagerHomeState extends State<ManagerHome> {
   final AuthService _auth = AuthService();
   final NotificationService _notificationService = NotificationService();
 
-  // Example FCM token provided (used for testing)
-  final String testFcmToken =
-      "fhHY3iUbT0WSOboq7uGed_:APA91bFnLYmoVx8n3_uNH1FzUAqpylqlN0F2PDu-K7t1hj7l4_F_3ViqtHEfFipbI5InKiIY876ozvmcw1JQxGcCUa1eb-PUj_mVSTRLIlcFkusSdy_G_Xk";
+  // Example User ID for testing
+  final String testUserId = "testUser123";
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +32,10 @@ class _ManagerHomeState extends State<ManagerHome> {
             onPressed: () async {
               try {
                 await _auth.signOut();
-
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Signed out successfully')),
                 );
               } catch (e) {
-                // Handle sign-out errors
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Error signing out')),
                 );
@@ -54,18 +50,18 @@ class _ManagerHomeState extends State<ManagerHome> {
           children: <Widget>[
             const Text('Welcome to the Home Screen!'),
             const SizedBox(height: 20),
+
+            // Button to Create Offer
             ElevatedButton(
               onPressed: () async {
                 try {
-                  // For testing: Create a new offer in Firestore
-                  // This can trigger another Cloud Function if set up
                   await FirebaseFirestore.instance.collection('offers').add({
                     'description': '20% off on all chicken meals!',
                     'createdAt': FieldValue.serverTimestamp(),
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text('Offer created and notification sent!')),
+                        content: Text('Offer created in Firestore!')),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -76,28 +72,55 @@ class _ManagerHomeState extends State<ManagerHome> {
               child: const Text('Create Offer'),
             ),
             const SizedBox(height: 20),
-            // New button to send notification to "offers" topic
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await _notificationService.sendNotificationToTopic(
-                    'offers', // Topic name
-                    'New Offer!',
-                    'Check out our latest 30% discount on all meals.',
-                    'manager123',
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Offers notification sent!')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to send offers notification')),
-                  );
-                }
-              },
-              child: const Text('Send Offers Notification'),
-            ),
+
+            // Button to send Offers Notification to "offers" topic
+            // ElevatedButton(
+            //   onPressed: () async {
+            //     try {
+            //       await _notificationService.sendNotificationToTopic(
+            //         'offers',
+            //         'Hot Deal!',
+            //         'Grab 30% off on all items now!',
+            //         'manager123',
+            //       );
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(
+            //             content:
+            //                 Text('Offers notification sent successfully!')),
+            //       );
+            //     } catch (e) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         SnackBar(content: Text('Error: $e')),
+            //       );
+            //     }
+            //   },
+            //   child: const Text('Send Offers Notification'),
+            // ),
+            const SizedBox(height: 20),
+
+            // Button to send Notification to a specific user
+            // ElevatedButton(
+            //   onPressed: () async {
+            //     try {
+            //       await _notificationService.sendNotificationToTopic(
+            //         'offers',
+            //         'Special Invitation!',
+            //         'fuck off will you',
+            //         'manager123',
+            //       );
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(
+            //             content: Text('Notification sent to specific user!')),
+            //       );
+            //     } catch (e) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         SnackBar(
+            //             content: Text('Failed to send user notification: $e')),
+            //       );
+            //     }
+            //   },
+            //   child: const Text('Send User Notification'),
+            // ),
           ],
         ),
       ),
