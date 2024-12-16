@@ -16,27 +16,21 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  // Form key for validation
   final _formKey = GlobalKey<FormState>();
-
-  // Instance of AuthService
   final AuthService _authService = AuthService();
 
-  // Controllers for text fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  // State variables
   bool _isLoading = false;
   String? _errorMessage;
   File? _selectedImage;
-  String _imageUrl = ''; // Store the URL of the uploaded image
+  String _imageUrl = '';
   late ImagePicker imagePicker;
 
-  // Dispose controllers to free resources
   @override
   void dispose() {
     _nameController.dispose();
@@ -46,35 +40,30 @@ class _RegisterState extends State<Register> {
     super.dispose();
   }
 
-  // Registration method
+  @override
+  void initState() {
+    super.initState();
+    imagePicker = ImagePicker();
+  }
+
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      // Start loading
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
       try {
-        // If there is an image, upload it
         if (_selectedImage != null) {
           String imageUrl = await _uploadImageToFirebase(_selectedImage!);
-          if (imageUrl.isEmpty) {
-            setState(() {
-              _errorMessage = 'Failed to upload image';
-            });
-            _imageUrl = '';
-          } else {
-            _imageUrl = imageUrl;
-          }
+          _imageUrl = imageUrl;
         }
 
-        // Attempt to register the user with the image URL
         await _authService.registerClient(
           email: _emailController.text,
           password: _passwordController.text,
           name: _nameController.text,
-          imageUrl: _imageUrl, // Send the image URL to Firebase
+          imageUrl: _imageUrl,
         );
       } on FirebaseAuthException catch (e) {
         setState(() {
@@ -85,7 +74,6 @@ class _RegisterState extends State<Register> {
           _errorMessage = 'An unexpected error occurred.';
         });
       } finally {
-        // Stop loading
         setState(() {
           _isLoading = false;
         });
@@ -93,45 +81,28 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    imagePicker = ImagePicker(); // Initialize the picker
-  }
-
-  // Method to upload image to Firebase Storage
   Future<String> _uploadImageToFirebase(File image) async {
     try {
-      // Create a unique ID for the image
       String fileName = Uuid().v4();
-      // Create a reference to the Firebase Storage
       Reference storageRef =
           FirebaseStorage.instance.ref().child('profile_images/$fileName.jpg');
-
-      // Upload the image to Firebase Storage
       UploadTask uploadTask = storageRef.putFile(image);
-
-      TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
-      // Get the image URL
-      String imageUrl = await snapshot.ref.getDownloadURL();
-
-      return imageUrl;
+      TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
     } catch (e) {
       print('Failed to upload image: $e');
-      return ''; // Return empty string if upload fails
+      return '';
     }
   }
 
-  // Image picker method
   Future<void> _pickImage() async {
     try {
       final pickedFile = await imagePicker.pickImage(
-        source: ImageSource.gallery, // Or ImageSource.camera
+        source: ImageSource.gallery,
         maxHeight: 300,
         maxWidth: 300,
-        imageQuality: 80, // Compress image
+        imageQuality: 80,
       );
-
       if (pickedFile != null) {
         setState(() {
           _selectedImage = File(pickedFile.path);
@@ -144,156 +115,160 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  // Build method for UI
   @override
   Widget build(BuildContext context) {
+    const Color gradientStart = Color(0xFFFDE68A);
+    const Color gradientEnd = Color(0xFFFFB800);
+    const Color primaryColor = Color(0xFFFFC107);
+    const Color backgroundColor = Colors.white;
+
     return _isLoading
         ? const Loading()
         : Scaffold(
-            appBar: AppBar(
-              title: const Text('Register to Los Pollos'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.person),
-                  tooltip: 'Sign In',
-                  onPressed: () => widget.toggleView(),
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [gradientStart, gradientEnd],
                 ),
-              ],
-            ),
-            body: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Card(
-                  elevation: 8.0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: CircleAvatar(
-             
-                              radius: 50,
-                              backgroundImage: _selectedImage != null
-                                  ? FileImage(_selectedImage!)
-                                  : null,
-                              child: _selectedImage == null
-                                  ? const Icon(Icons.add_a_photo, size: 50)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          // Other form fields go here
-                          // Name Field
-                          TextFormField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Name',
-                              prefixIcon: Icon(Icons.person),
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your name';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          // Email Field
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              prefixIcon: Icon(Icons.email),
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              final emailRegex = RegExp(
-                                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
-                                  r"[a-zA-Z0-9]+\.[a-zA-Z]+");
-                              if (!emailRegex.hasMatch(value)) {
-                                return 'Please enter a valid email';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          // Password Field
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: const InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: Icon(Icons.lock),
-                              border: OutlineInputBorder(),
-                            ),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
-                              if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          // Confirm Password Field
-                          TextFormField(
-                            controller: _confirmPasswordController,
-                            decoration: const InputDecoration(
-                              labelText: 'Confirm Password',
-                              prefixIcon: Icon(Icons.lock),
-                              border: OutlineInputBorder(),
-                            ),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please confirm your password';
-                              }
-                              if (value != _passwordController.text) {
-                                return 'Passwords do not match';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          // Error Message
-                          if (_errorMessage != null)
-                            Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          if (_errorMessage != null) const SizedBox(height: 10),
-                          // Register Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _register,
-                              child: const Text('Register'),
-                              style: ElevatedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16.0),
-                                textStyle: const TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ],
+              ),
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+
+                      // Image Picker
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          backgroundImage: _selectedImage != null
+                              ? FileImage(_selectedImage!)
+                              : null,
+                          child: _selectedImage == null
+                              ? const Icon(Icons.add_a_photo,
+                                  size: 40, color: gradientEnd)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Form Card
+                      Card(
+                        color: backgroundColor,
+                        elevation: 8.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                _buildTextField(
+                                    _nameController, 'Name', Icons.person),
+                                const SizedBox(height: 16),
+                                _buildTextField(
+                                    _emailController, 'Email', Icons.email),
+                                const SizedBox(height: 16),
+                                _buildTextField(
+                                    _passwordController, 'Password', Icons.lock,
+                                    isObscure: true),
+                                const SizedBox(height: 16),
+                                _buildTextField(_confirmPasswordController,
+                                    'Confirm Password', Icons.lock,
+                                    isObscure: true),
+                                const SizedBox(height: 20),
+
+                                // Error Message
+                                if (_errorMessage != null)
+                                  Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+
+                                // Register Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: _register,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryColor,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14.0,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Register',
+                                      style: TextStyle(
+                                          fontSize: 18, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Return to Sign In
+                                TextButton(
+                                  onPressed: () => widget.toggleView(),
+                                  child: const Text(
+                                    'Already have an account? Sign In',
+                                    style: TextStyle(
+                                      color: Colors.blueAccent,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {bool isObscure = false}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isObscure,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your $label';
+        }
+        return null;
+      },
+    );
   }
 }
