@@ -19,6 +19,7 @@ class Client {
 
   Map<String, dynamic> toMap() {
     return {
+      'userID': userID,
       'name': name,
       'email': email,
       'imageUrl': imageUrl,

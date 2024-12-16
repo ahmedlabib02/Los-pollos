@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/widgets/order_item.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
-
+import 'package:provider/provider.dart';
 
 class OrderSummary extends StatefulWidget {
-
   final String tableId;
 
   const OrderSummary({super.key, required this.tableId});
@@ -79,6 +79,8 @@ class _OrderSummaryState extends State<OrderSummary> {
 
   @override
   Widget build(BuildContext context) {
+    String loggedInUserId = Provider.of<CustomUser?>(context)!.uid;
+
     return Scaffold(
       body: FutureBuilder<List<OrderItem>>(
         future: getOrderItems(),
@@ -91,13 +93,18 @@ class _OrderSummaryState extends State<OrderSummary> {
             return const Center(child: Text('No Order Items available'));
           } else {
             orderItems = snapshot.data!;
-
+            // Assign orderItems inside setState if needed
             return Column(children: [
               Expanded(
                 child: ListView.builder(
                   itemCount: orderItems.length,
                   itemBuilder: (context, index) {
-                    return OrderItemCard(orderItem: orderItems[index]);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: OrderItemCard(
+                        orderItem: orderItems[index],
+                      ),
+                    );
                   },
                 ),
               )
@@ -105,10 +112,8 @@ class _OrderSummaryState extends State<OrderSummary> {
           }
         },
       ),
-
-
       // /// For Dummy Data
-      // /// 
+      // ///
       // body: mockOrderItems.isEmpty
       //     ? const Center(child: Text('No Order Items available'))
       //     : Column(

@@ -371,33 +371,39 @@ class ClientService {
     }
   }
 
-    Future<List<OrderItem>> getOrderPerTable(String tableID) async {
+  Future<List<OrderItem>> getOrderPerTable(String tableId) async {
     try {
+      // Fetch table document
       DocumentSnapshot tableDoc =
-          await _firestore.collection('tables').doc(tableID).get();
+          await _firestore.collection('tables').doc(tableId).get();
 
       List<String> orderItemIds =
           List<String>.from(tableDoc.get('orderItemIds'));
 
       List<OrderItem> orderItems = [];
+
       for (String orderItemId in orderItemIds) {
+        // Fetch orderItem document
         DocumentSnapshot orderItemDoc =
-            await _firestore.collection('orders').doc(orderItemId).get();
+            await _firestore.collection('orderItems').doc(orderItemId).get();
+
         Map<String, dynamic> orderItemData =
             orderItemDoc.data() as Map<String, dynamic>;
 
         // Fetch the name of the menu item using its menuItemID
-        DocumentSnapshot menuItemDoc = await _firestore
-            .collection('menuItems')
-            .doc(orderItemData['menuItemId'])
-            .get();
+        String menuItemId = orderItemData['menuItemId'];
+        DocumentSnapshot menuItemDoc =
+            await _firestore.collection('menuItems').doc(menuItemId).get();
+
         String menuItemName = menuItemDoc.get('name');
         String menuItemImage = menuItemDoc.get('imageUrl');
+        Map<String, dynamic> menuItemExtras = menuItemDoc.get('extras');
 
-        // Add the name to the orderItem
-        OrderItem orderItem = OrderItem.fromMap(orderItemData, orderItemDoc.id);
+        // Add the name and image and extras to the orderItem
+        OrderItem orderItem = OrderItem.fromMap(orderItemData, orderItemId);
         orderItem.name = menuItemName; // Dynamically set the name field
         orderItem.imageUrl = menuItemImage;
+        orderItem.extras = menuItemExtras.cast<String, double>();
         orderItems.add(orderItem);
       }
 
@@ -405,6 +411,67 @@ class ClientService {
     } catch (e) {
       print("Error fetching orders for table: $e");
       throw Exception("Failed to fetch orders for the table");
+    }
+  }
+
+  Future<void> removeUserFromOrderItem({
+    required String orderItemId,
+    required String userId,
+  }) async {
+    try {
+      // Get the document reference for the order item
+      DocumentReference orderItemRef =
+          _firestore.collection('orderItems').doc(orderItemId);
+
+      // Fetch the current data of the order item
+      DocumentSnapshot orderItemSnapshot = await orderItemRef.get();
+
+      if (!orderItemSnapshot.exists) {
+        throw Exception('OrderItem with id $orderItemId does not exist.');
+      }
+
+      Map<String, dynamic> orderItemData =
+          orderItemSnapshot.data() as Map<String, dynamic>;
+
+      // Ensure 'userIds' exists and is a list
+      if (orderItemData['userIds'] == null ||
+          !(orderItemData['userIds'] is List<dynamic>)) {
+        throw Exception('Invalid data: userIds field is missing or invalid.');
+      }
+
+      List<dynamic> userIds = List<dynamic>.from(orderItemData['userIds']);
+
+      // Remove the userId from the list
+      userIds.remove(userId);
+
+      // Update Firestore with the modified userIds list
+      await orderItemRef.update({
+        'userIds': userIds,
+      });
+
+      print('Successfully removed userId $userId from orderItem $orderItemId');
+    } catch (e) {
+      print('Error removing user from order item: $e');
+      throw Exception('Failed to remove user from order item');
+    }
+  }
+
+  Future<OrderItem> getOrderItem(String orderItemId) async {
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('orderItems') // Firestore collection
+          .doc(orderItemId) // Firestore document by ID
+          .get(); // Get the document
+
+      if (snapshot.exists) {
+        // Convert Firestore document to OrderItem model
+        return OrderItem.fromMap(
+            snapshot.data() as Map<String, dynamic>, snapshot.id);
+      } else {
+        throw Exception("OrderItem not found");
+      }
+    } catch (e) {
+      throw Exception("Error fetching OrderItem: $e");
     }
   }
 
