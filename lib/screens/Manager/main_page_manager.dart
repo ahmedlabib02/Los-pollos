@@ -49,7 +49,9 @@ class _MainPageManagerState extends State<MainPageManager> {
       TablesScreen(
         restaurantId: user!.uid,
       ),
-      MenuScreen(),
+      const MenuScreen(
+        role: 'manager',
+      ),
       // TablesScreen(),
       AccountScreen(),
     ];

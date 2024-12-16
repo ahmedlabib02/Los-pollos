@@ -41,7 +41,7 @@ class _MainPageState extends State<MainPage> {
   // Screens for each tab
   final List<Widget> _screens = [
     TableScreenWrapper(), // Table (Home)
-    MenuScreen(),
+    const MenuScreen(role: 'user'),
     UpdatesScreen(),
     AccountScreen(),
   ];
