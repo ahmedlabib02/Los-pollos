@@ -312,6 +312,43 @@ class ClientService {
     }
   }
 
+    Future<List<OrderItem>> getOrderPerTable(String tableID) async {
+    try {
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(tableID).get();
+
+      List<String> orderItemIds =
+          List<String>.from(tableDoc.get('orderItemIds'));
+
+      List<OrderItem> orderItems = [];
+      for (String orderItemId in orderItemIds) {
+        DocumentSnapshot orderItemDoc =
+            await _firestore.collection('orders').doc(orderItemId).get();
+        Map<String, dynamic> orderItemData =
+            orderItemDoc.data() as Map<String, dynamic>;
+
+        // Fetch the name of the menu item using its menuItemID
+        DocumentSnapshot menuItemDoc = await _firestore
+            .collection('menuItems')
+            .doc(orderItemData['menuItemId'])
+            .get();
+        String menuItemName = menuItemDoc.get('name');
+        String menuItemImage = menuItemDoc.get('imageUrl');
+
+        // Add the name to the orderItem
+        OrderItem orderItem = OrderItem.fromMap(orderItemData, orderItemDoc.id);
+        orderItem.name = menuItemName; // Dynamically set the name field
+        orderItem.imageUrl = menuItemImage;
+        orderItems.add(orderItem);
+      }
+
+      return orderItems;
+    } catch (e) {
+      print("Error fetching orders for table: $e");
+      throw Exception("Failed to fetch orders for the table");
+    }
+  }
+
 // ------------------------- Bills ---------------------------------------
 //  Bills are created for a user when the user orders for the first time or join someones order
 //  Bills are updated when the user orders more items or joins more orders

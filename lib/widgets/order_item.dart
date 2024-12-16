@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
 
 class OrderItemCard extends StatefulWidget {
   final OrderItem orderItem;
@@ -18,45 +20,103 @@ class _OrderItemCardState extends State<OrderItemCard> {
 
   MenuItem? menuItem;
   bool isExpanded = false; // Track expansion state
+  List<Map<String, dynamic>>? users;
 
-  // // Dummy menu items data
-  // final List<MenuItem> mockMenuItems = [
-  //   MenuItem(
-  //     id: 'menu_001',
-  //     name: 'Cheeseburger',
-  //     price: 150.0,
-  //     description: 'A juicy beef patty with cheese, lettuce, and tomato.',
-  //     extras: ['Extra Cheese', 'Bacon'],
-  //     discount: 10.0,
-  //     reviewIds: ['review_001', 'review_002'],
-  //     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Cheeseburger.jpg',
-  //   ),
-  //   MenuItem(
-  //     id: 'menu_002',
-  //     name: 'Veggie Burger',
-  //     price: 120.0,
-  //     description: 'A delicious plant-based patty with fresh veggies.',
-  //     extras: ['Avocado', 'Extra Sauce'],
-  //     discount: 0.0,
-  //     reviewIds: ['review_003', 'review_004'],
-  //     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Cheeseburger.jpg',
-  //   ),
-  //   MenuItem(
-  //     id: 'menu_003',
-  //     name: 'Garden Salad',
-  //     price: 75.0,
-  //     description: 'A fresh mix of lettuce, tomatoes, cucumbers, and carrots, served with your choice of dressing.',
-  //     extras: ['Olives', 'Feta Cheese', 'Bacon Bits', 'Avocado'],
-  //     discount: 5.0,
-  //     reviewIds: ['review_005', 'review_006'],
-  //     imageUrl: 'https://garlicsaltandlime.com/wp-content/uploads/2022/07/Garden-salad-thumbnail.jpg',
-  //   )
-  // ];
+
+//====================================================
+//                    DUMMY DATA
+//====================================================
+
+// final List<MenuItem> mockMenuItems = [
+//   MenuItem(
+//     id: 'menu_001',
+//     name: 'Cheeseburger',
+//     price: 150.0,
+//     description: 'A juicy beef patty with cheese, lettuce, and tomato.',
+//     variants: ['Regular', 'Large'],
+//     extras: {
+//       'Extra Cheese': 10.0,
+//       'Bacon': 15.0,
+//     },
+//     discount: 10.0,
+//     reviewIds: ['review_001', 'review_002'],
+//     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Cheeseburger.jpg',
+//   ),
+//   MenuItem(
+//     id: 'menu_002',
+//     name: 'Veggie Burger',
+//     price: 120.0,
+//     description: 'A delicious plant-based patty with fresh veggies.',
+//     variants: ['Regular', 'Large'],
+//     extras: {
+//       'Avocado': 5.0,
+//       'Extra Sauce': 2.0,
+//     },
+//     discount: 0.0,
+//     reviewIds: ['review_003', 'review_004'],
+//     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRswygq3C8mTZUXmyl18k8ojtolrjZqVujmWw&s',
+//   ),
+//   MenuItem(
+//     id: 'menu_003',
+//     name: 'Garden Salad',
+//     price: 75.0,
+//     description: 'A fresh mix of lettuce, tomatoes, cucumbers, and carrots, served with your choice of dressing.',
+//     variants: ['Small', 'Large'],
+//     extras: {
+//       'Olives': 3.0,
+//       'Feta Cheese': 4.0,
+//       'Bacon Bits': 2.0,
+//       'Avocado': 5.0,
+//     },
+//     discount: 5.0,
+//     reviewIds: ['review_005', 'review_006'],
+//     imageUrl: 'https://garlicsaltandlime.com/wp-content/uploads/2022/07/Garden-salad-thumbnail.jpg',
+//   ),
+//   MenuItem(
+//     id: 'menu_004',
+//     name: 'Chicken Wings',
+//     price: 100.0,
+//     description: 'Crispy chicken wings served with a side of ranch dipping sauce.',
+//     variants: ['Small', 'Large'],
+//     extras: {
+//       'Blue Cheese': 3.0,
+//       'Hot Sauce': 2.0,
+//     },
+//     discount: 15.0,
+//     reviewIds: ['review_007', 'review_008'],
+//     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY1GcVqpDArKT_8uf8T29In7nVRKirjBur3Q&s',
+//   ),
+//   MenuItem(
+//     id: 'menu_005',
+//     name: 'Spaghetti Bolognese',
+//     price: 200.0,
+//     description: 'Classic Italian pasta with a rich and savory meat sauce.',
+//     variants: ['Regular', 'Large'],
+//     extras: {
+//       'Parmesan Cheese': 5.0,
+//       'Garlic Bread': 4.0,
+//     },
+//     discount: 0.0,
+//     reviewIds: ['review_009', 'review_010'],
+//     imageUrl: 'https://cdn.stoneline.de/media/c5/63/4f/1727429313/spaghetti-bolognese.jpeg',
+//   ),
+// ];
+
+// //   // Dummy Data for users
+//   List<Client> allClients = [
+//     Client(userID: 'user_1', name: 'Alice', email: 'alice@example.com', imageUrl: 'https://cdn-icons-png.flaticon.com/512/6858/6858504.png'),
+//     Client(userID: 'user_2', name: 'Bob', email: 'bob@example.com', imageUrl: 'https://avatar.iran.liara.run/public/29'),
+//     Client(userID: 'user_3', name: 'Charlie', email: 'charlie@example.com', imageUrl: 'https://avatar.iran.liara.run/public/3'),
+//   ];
+
+  //==================================================================================
+
 
    @override
   void initState() {
     super.initState();
     fetchMenuItem();
+    getClientsByIds();
   }
 
   Future<void> fetchMenuItem() async {
@@ -65,6 +125,32 @@ class _OrderItemCardState extends State<OrderItemCard> {
       menuItem = fetchedMenuItem;
     });
   }
+
+
+  // fetch clients by a list of user IDs
+  Future<void> getClientsByIds() async {
+    List<Map<String, dynamic>> clients = [];
+
+    for (String userId in widget.orderItem.userIds) {
+      try {
+        Client? client = await ClientService().getClient(userId);
+        if (client != null) {
+          clients.add(client.toMap());        }
+      } catch (e) {
+        // Handle the error as needed, maybe log or skip
+        print('Error fetching client for userID $userId: $e');
+      }
+    }
+
+    setState(() {
+      users = clients;
+    });
+
+  }
+
+  //======================================================
+  //                Fetch Dummy Data
+  //======================================================
 
   // // Fetch menu item from dummy data
   // void fetchMenuItem() {
@@ -75,7 +161,8 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //       name: 'Unknown Item',
   //       price: 0.0,
   //       description: 'No description available.',
-  //       extras: [],
+  //       variants: [],
+  //       extras: {},
   //       discount: 0.0,
   //       reviewIds: [],
   //       imageUrl: 'https://via.placeholder.com/150',
@@ -86,6 +173,31 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //   });
   // }
 
+  // // //get clients from dummy data
+  // void getClientsByIds() {
+  //   List<Map<String, dynamic>> clients = [];
+    
+  //   for (String userId in widget.orderItem.userIds) {
+  //     Client client = allClients.firstWhere(
+  //       (client) => client.userID == userId,
+  //       orElse: () => Client(userID: 'default', name: 'Unknown', email: '', imageUrl: ''), // Default Client
+  //     );
+      
+  //     // Only add the client if it isn't the default one
+  //     if (client.userID != 'default') {
+  //       clients.add({
+  //         'name': client.name,
+  //         'imageUrl': client.imageUrl,
+  //       });
+  //     }
+  //   }
+
+  //   setState(() {
+  //     users = clients;
+  //   });
+  // }
+
+  //=======================================================================
 
   Color _getStatusColor(OrderStatus status) {
   switch (status) {
@@ -116,6 +228,9 @@ Color _getTextColor(OrderStatus status) {
 
    @override
   Widget build(BuildContext context) {
+
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
       padding: EdgeInsets.all(16.0),
       margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -162,10 +277,11 @@ Color _getTextColor(OrderStatus status) {
                           ),
                         ),
                         SizedBox(height: 4.0),
-                        Text(
-                          'User IDs: ${widget.orderItem.userIds.join(", ")}',   //change to user avatars
-                          style: TextStyle(fontSize: 14.0, color: Colors.grey[600]),
-                        ),
+                        // Text(
+                        //   'User IDs: ${widget.orderItem.userIds.join(", ")}',   //change to user avatars
+                        //   style: TextStyle(fontSize: 14.0, color: Colors.grey[600]),
+                        // ),
+                        AvatarGroup(content: users!, spacing: screenWidth * -0.015, radius: screenWidth * 0.025, cutoff: 3)
                       ],
                     ),
                     SizedBox(width: 16.0),

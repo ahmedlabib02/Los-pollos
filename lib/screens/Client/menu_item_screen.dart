@@ -17,61 +17,66 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   Set<String> removedVariants = {};
   Set<String> selectedExtras = {};
 
-  // Dummy menu items data
-final List<MenuItem> mockMenuItems = [
-  MenuItem(
-    id: "1",
-    name: "Cheese Burger",
-    price: 200.0,
-    description: "Juicy beef patty with cheese and fresh veggies.",
-    variants: ["No tomato", "No lettuce", "No onion"],
-    extras: {
-      "Extra cheese": 20.0,
-      "Extra patty": 50.0,
-      "Bacon": 30.0,
-    },
-    discount: 0.0,
-    reviewIds: [],
-    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEJiNX0GZfl21raOShpI3p-W8CkdBITCCwAQ&s",
-  ),
-  MenuItem(
-    id: "103",
-    name: "Pepperoni Pizza",
-    price: 250.0,
-    description:
-        "A classic pepperoni pizza with a crispy crust, tangy tomato sauce, gooey mozzarella cheese, and plenty of spicy pepperoni slices.",
-    variants: ["No pepperoni", "No cheese", "No sauce"],
-    extras: {
-      "Extra cheese": 40.0,
-      "Extra pepperoni": 50.0,
-      "Mushrooms": 30.0,
-      "Olives": 20.0,
-      "Jalapenos": 25.0,
-    },
-    discount: 10.0, // Example: 10% discount
-    reviewIds: ["review6", "review7", "review8"],
-    imageUrl: "https://via.placeholder.com/300x200.png?text=Pepperoni+Pizza",
-  ),
-  MenuItem(
-    id: "102",
-    name: "Garden Salad",
-    price: 150.0,
-    description:
-        "A fresh and healthy salad with mixed greens, cherry tomatoes, cucumbers, shredded carrots, and a light vinaigrette dressing.",
-    variants: ["No tomato", "No cucumber", "No dressing"],
-    extras: {
-      "Grilled chicken": 60.0,
-      "Avocado": 40.0,
-      "Feta cheese": 30.0,
-      "Croutons": 15.0,
-      "Boiled egg": 20.0,
-    },
-    discount: 0.0,
-    reviewIds: ["review4", "review5"],
-    imageUrl: "https://via.placeholder.com/300x200.png?text=Garden+Salad",
-  ),
-];
+//====================================================
+//                    DUMMY DATA
+//====================================================
 
+//   // Dummy menu items data
+// final List<MenuItem> mockMenuItems = [
+//   MenuItem(
+//     id: "1",
+//     name: "Cheese Burger",
+//     price: 200.0,
+//     description: "Juicy beef patty with cheese and fresh veggies.",
+//     variants: ["No tomato", "No lettuce", "No onion"],
+//     extras: {
+//       "Extra cheese": 20.0,
+//       "Extra patty": 50.0,
+//       "Bacon": 30.0,
+//     },
+//     discount: 0.0,
+//     reviewIds: [],
+//     imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEJiNX0GZfl21raOShpI3p-W8CkdBITCCwAQ&s",
+//   ),
+//   MenuItem(
+//     id: "103",
+//     name: "Pepperoni Pizza",
+//     price: 250.0,
+//     description:
+//         "A classic pepperoni pizza with a crispy crust, tangy tomato sauce, gooey mozzarella cheese, and plenty of spicy pepperoni slices.",
+//     variants: ["No pepperoni", "No cheese", "No sauce"],
+//     extras: {
+//       "Extra cheese": 40.0,
+//       "Extra pepperoni": 50.0,
+//       "Mushrooms": 30.0,
+//       "Olives": 20.0,
+//       "Jalapenos": 25.0,
+//     },
+//     discount: 10.0, // Example: 10% discount
+//     reviewIds: ["review6", "review7", "review8"],
+//     imageUrl: "https://via.placeholder.com/300x200.png?text=Pepperoni+Pizza",
+//   ),
+//   MenuItem(
+//     id: "102",
+//     name: "Garden Salad",
+//     price: 150.0,
+//     description:
+//         "A fresh and healthy salad with mixed greens, cherry tomatoes, cucumbers, shredded carrots, and a light vinaigrette dressing.",
+//     variants: ["No tomato", "No cucumber", "No dressing"],
+//     extras: {
+//       "Grilled chicken": 60.0,
+//       "Avocado": 40.0,
+//       "Feta cheese": 30.0,
+//       "Croutons": 15.0,
+//       "Boiled egg": 20.0,
+//     },
+//     discount: 0.0,
+//     reviewIds: ["review4", "review5"],
+//     imageUrl: "https://via.placeholder.com/300x200.png?text=Garden+Salad",
+//   ),
+// ];
+
+//=========================================================================
 
   @override
   void initState() {
@@ -85,6 +90,11 @@ final List<MenuItem> mockMenuItems = [
       menuItem = fetchedMenuItem;
     });
   }
+
+
+  //======================================================
+  //                Fetch Dummy Data
+  //======================================================
 
   //   // Fetch menu item from dummy data
   // void fetchMenuItem() {
