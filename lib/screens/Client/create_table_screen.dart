@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:provider/provider.dart';
 import '../../services/client_services.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart' as custom_table;
@@ -65,9 +67,18 @@ class CreateTableScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        custom_table.Table table =
-                            await _clientServices.createTable(user!.uid);
+                        String restaurantId =
+                            Provider.of<SelectedRestaurantProvider?>(context,
+                                        listen: false)
+                                    ?.selectedRestaurantId ??
+                                '';
+                        custom_table.Table table = await _clientServices
+                            .createTable(user!.uid, restaurantId);
                         String createdTableCode = table.tableCode;
+                        Provider.of<TableState>(
+                          context,
+                          listen: false,
+                        ).joinTable();
 
                         // Show Bill Splitting Mode Popup
                         showBillSplittingPopup(context, table.id);
@@ -174,6 +185,10 @@ class CreateTableScreen extends StatelessWidget {
                                     try {
                                       String tableId = await _clientServices
                                           .joinTable(inputTableCode, user!.uid);
+                                      Provider.of<TableState>(
+                                        context,
+                                        listen: false,
+                                      ).joinTable();
                                       onTableCreated(
                                           tableId); // Pass joined table code
                                       Navigator.pop(

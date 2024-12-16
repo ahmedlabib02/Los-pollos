@@ -40,7 +40,7 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Bill Summary',
           style: TextStyle(
             fontWeight: FontWeight.bold,

@@ -145,7 +145,7 @@ class ClientService {
   }
 
 // ------------------------ Table Operations ------------------------
-  Future<Table> createTable(String userID) async {
+  Future<Table> createTable(String userID, String restaurantId) async {
     try {
       Table table = Table(
         id: "",
@@ -156,6 +156,7 @@ class ClientService {
         totalAmount: 0.0,
         tableCode: Table.generateTableCode(),
         isOngoing: true,
+        restaurantId: restaurantId,
       );
       DocumentReference tableRef = _firestore.collection('tables').doc();
       table.id = tableRef.id;
@@ -351,7 +352,9 @@ class ClientService {
           orderItemIds: [orderItemID],
           restaurantId: restaurantId,
         );
-        await billRef.set(bill.toMap());
+
+        await billRef
+            .set({...bill.toMap(), 'timestamp': FieldValue.serverTimestamp()});
         await _firestore.collection('tables').doc(currentTableID).update({
           'billIds': FieldValue.arrayUnion([billRef.id])
         });

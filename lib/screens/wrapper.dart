@@ -43,6 +43,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/bill_summary_screen_dummy_data.dart';
 import 'package:los_pollos_hermanos/screens/Client/choose_restaurant_screen.dart';
@@ -87,6 +88,10 @@ class Wrapper extends StatelessWidget {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (ongoingTable != null) {
                   Provider.of<TableState?>(context, listen: false)?.joinTable();
+                  Provider.of<SelectedRestaurantProvider?>(context,
+                          listen: false)
+                      ?.setRestaurantId(ongoingTable.restaurantId);
+                      print("Restaurant ID SET TO: ${ongoingTable.restaurantId}");
                 }
               });
               // Conditionally return MainPage or ChooseRestaurantScreen
