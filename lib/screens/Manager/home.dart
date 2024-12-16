@@ -14,18 +14,6 @@ class _ManagerHomeState extends State<ManagerHome> {
   final AuthService _auth = AuthService();
   final NotificationService _notificationService = NotificationService();
 
-  @override
-  void initState() {
-    super.initState();
-    _notificationService.init(context);
-  }
-
-  @override
-  void dispose() {
-    _notificationService.dispose();
-    super.dispose();
-  }
-
   // Example FCM token provided (used for testing)
   final String testFcmToken =
       "fhHY3iUbT0WSOboq7uGed_:APA91bFnLYmoVx8n3_uNH1FzUAqpylqlN0F2PDu-K7t1hj7l4_F_3ViqtHEfFipbI5InKiIY876ozvmcw1JQxGcCUa1eb-PUj_mVSTRLIlcFkusSdy_G_Xk";
@@ -60,26 +48,6 @@ class _ManagerHomeState extends State<ManagerHome> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text('Welcome to the Home Screen!'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  // Removed userIds as it's no longer needed
-                  // If you still want to send to specific users, keep this button
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content:
-                            Text('Use the Offers Notification button instead')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to send discount notifications')),
-                  );
-                }
-              },
-              child: const Text('Send Discount Notifications (Deprecated)'),
-            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {

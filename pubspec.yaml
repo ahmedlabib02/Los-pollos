@@ -43,6 +43,7 @@ dependencies:
   googleapis: ^13.2.0
   googleapis_auth: ^1.6.0
   flutter_animate: ^4.5.2
+  firebase_app_check: ^0.3.1+7
 
 
 dev_dependencies:

@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -153,8 +154,12 @@ class NotificationService {
 
   // 8. Subscribe to Offers Topic
   Future<void> _subscribeToOffers() async {
-    await _messaging.subscribeToTopic('offers');
-    print('Subscribed to offers topic');
+    try {
+      await _messaging.subscribeToTopic('offers');
+      print('Subscribed to offers topic');
+    } catch (e) {
+      print('Error subscribing to offers topic: $e');
+    }
   }
 
   // Optional: Delete FCM Token
@@ -175,6 +180,13 @@ class NotificationService {
     required String body,
   }) async {
     try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('User is not authenticated');
+        return;
+      } else {
+        print('User is authenticated');
+      }
       HttpsCallable callable =
           _functions.httpsCallable('sendDiscountNotification');
       final result = await callable.call(<String, dynamic>{

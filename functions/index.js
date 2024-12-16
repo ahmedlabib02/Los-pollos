@@ -9,13 +9,7 @@ admin.initializeApp();
 
 // Callable function to send discount notifications
 exports.sendDiscountNotification = onCall(async (data, context) => {
-    // 1. Authentication Check
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "The function must be called while authenticated."
-      );
-    }
+    
   
     // 2. Validate Input Data
     const { title, body } = data;
