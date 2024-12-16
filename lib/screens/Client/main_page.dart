@@ -4,6 +4,7 @@ import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_screen.dart';
+import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/chat/chat_overlay.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';

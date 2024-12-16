@@ -8,14 +8,13 @@ class OrderItemCard extends StatefulWidget {
 
   const OrderItemCard({
     required this.orderItem,
-  }); 
+  });
 
   @override
   State<OrderItemCard> createState() => _OrderItemCardState();
 }
 
 class _OrderItemCardState extends State<OrderItemCard> {
-
   MenuItem? menuItem;
   bool isExpanded = false; // Track expansion state
 
@@ -53,14 +52,15 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //   )
   // ];
 
-   @override
+  @override
   void initState() {
     super.initState();
     fetchMenuItem();
   }
 
   Future<void> fetchMenuItem() async {
-    MenuItem? fetchedMenuItem = await ClientService().getMenuItem(widget.orderItem.menuItemId);
+    MenuItem? fetchedMenuItem =
+        await ClientService().getMenuItem(widget.orderItem.menuItemId);
     setState(() {
       menuItem = fetchedMenuItem;
     });
@@ -86,35 +86,34 @@ class _OrderItemCardState extends State<OrderItemCard> {
   //   });
   // }
 
-
   Color _getStatusColor(OrderStatus status) {
-  switch (status) {
-    case OrderStatus.accepted:
-      return Colors.blue.withOpacity(0.4); // Pending status color
-    case OrderStatus.inProgress:
-      return Colors.orange.withOpacity(0.4); // Completed status color
-    case OrderStatus.served:
-      return Colors.green.withOpacity(0.4); // Cancelled status color
-    default:
-      return Colors.grey.withOpacity(0.4); // Default color
+    switch (status) {
+      case OrderStatus.accepted:
+        return Colors.blue.withOpacity(0.4); // Pending status color
+      case OrderStatus.inProgress:
+        return Colors.orange.withOpacity(0.4); // Completed status color
+      case OrderStatus.served:
+        return Colors.green.withOpacity(0.4); // Cancelled status color
+      default:
+        return Colors.grey.withOpacity(0.4); // Default color
+    }
   }
-}
 
-Color _getTextColor(OrderStatus status) {
-  switch (status) {
-    case OrderStatus.accepted:
-      return Colors.blue; // Text color for pending
-    case OrderStatus.inProgress:
-      return Colors.orange; // Text color for completed
-    case OrderStatus.served:
-      return Colors.green; // Text color for cancelled
-    default:
-      return Colors.grey; // Default text color
+  Color _getTextColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.accepted:
+        return Colors.blue; // Text color for pending
+      case OrderStatus.inProgress:
+        return Colors.orange; // Text color for completed
+      case OrderStatus.served:
+        return Colors.green; // Text color for cancelled
+      default:
+        return Colors.grey; // Default text color
+    }
   }
-}
 
-
-   @override
+  @override
+  @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16.0),
@@ -130,15 +129,15 @@ Color _getTextColor(OrderStatus status) {
           ),
         ],
       ),
-
       child: menuItem == null
           ? Center(child: CircularProgressIndicator()) // Loading indicator
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Menu Item Image
                     Container(
                       width: 50,
                       height: 50,
@@ -150,119 +149,125 @@ Color _getTextColor(OrderStatus status) {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          menuItem!.name,
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4.0),
-                        Text(
-                          'User IDs: ${widget.orderItem.userIds.join(", ")}',   //change to user avatars
-                          style: TextStyle(fontSize: 14.0, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                    SizedBox(width: 16.0),
+                    SizedBox(width: 12.0),
+
+                    // Menu Item Details
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${menuItem!.price.toStringAsFixed(2)} EGP',
-                            style: TextStyle(fontSize: 14.0, color: Colors.black),
+                            menuItem!.name,
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 4.0),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                            // margin: EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(30),
+                          Text(
+                            'User IDs: ${widget.orderItem.userIds.join(", ")}',
+                            style: TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.grey[600],
                             ),
-                            child: Text(
-                              'x${widget.orderItem.itemCount}',
-                              style: TextStyle(color: Colors.black),
-                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                  ],
-                  
-                ),
-                SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+
+                    // Price and Quantity
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
                         Text(
-                          'Total: ${(menuItem!.price * widget.orderItem.itemCount).toStringAsFixed(2)} EGP',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                          '${menuItem!.price.toStringAsFixed(2)} EGP',
+                          style: TextStyle(fontSize: 14.0, color: Colors.black),
                         ),
-                        SizedBox(width: 16.0),
-                        IconButton(
-                          icon: Icon(
-                            isExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.black,
+                        SizedBox(height: 4.0),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isExpanded = !isExpanded; // Toggle expansion state
-                            });
-                          },
+                          child: Text(
+                            'x${widget.orderItem.itemCount}',
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+
+                SizedBox(height: 8.0),
+
+                // Total and Expand Icon
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total: ${(menuItem!.price * widget.orderItem.itemCount).toStringAsFixed(2)} EGP',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isExpanded = !isExpanded; // Toggle expansion state
+                        });
+                      },
+                    ),
+                  ],
+                ),
 
                 // Expanded Details
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300), // Smooth animation
                   padding: EdgeInsets.only(top: 8.0),
                   child: isExpanded
-                      ? IntrinsicHeight( // This will let the container size depend on the content
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Notes: ${widget.orderItem.notes.length>0? widget.orderItem.notes.join(", "): 'None'}',
-                                style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Notes: ${widget.orderItem.notes.isNotEmpty ? widget.orderItem.notes.join(", ") : 'None'}',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: Colors.grey[700],
                               ),
-                              SizedBox(height: 4.0),
-                              // Text(
-                              //   'Status: ${widget.orderItem.status.toString().split('.').last}',
-                              //   style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
-                              // ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(widget.orderItem.status),
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Text(
-                                  'Status: ${widget.orderItem.status.toString().split('.').last}',
-                                  style: TextStyle(
-                                    fontSize: 14.0,
-                                    // color: _getTextColor(widget.orderItem.status),
-                                    color: Colors.black
-                                  ),
+                            ),
+                            SizedBox(height: 4.0),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.0, vertical: 4.0),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(widget.orderItem.status),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Text(
+                                'Status: ${widget.orderItem.status.toString().split('.').last}',
+                                style: TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         )
                       : Container(), // Empty container when collapsed
                 ),
-              ]
-          )
+              ],
+            ),
     );
   }
 }
