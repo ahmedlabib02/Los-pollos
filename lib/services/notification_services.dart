@@ -103,7 +103,7 @@ class NotificationService {
         _localNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
-          notification.body,
+          notfication.body,
           NotificationDetails(
             android: AndroidNotificationDetails(
               'default_channel', // Ensure this matches your channel ID
