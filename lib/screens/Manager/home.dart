@@ -1,7 +1,12 @@
+// lib/screens/manager_home.dart
+
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/notification_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore if needed
+import 'package:provider/provider.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/models/notification_model.dart'; // Import AppNotification
 
 class ManagerHome extends StatefulWidget {
   const ManagerHome({Key? key}) : super(key: key);
@@ -75,9 +80,11 @@ class _ManagerHomeState extends State<ManagerHome> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await _notificationService.sendOffersNotification(
-                    title: 'New Offer!',
-                    body: 'Check out our latest 30% discount on all meals.',
+                  await _notificationService.sendNotificationToTopic(
+                    'offers', // Topic name
+                    'New Offer!',
+                    'Check out our latest 30% discount on all meals.',
+                    'manager123',
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Offers notification sent!')),

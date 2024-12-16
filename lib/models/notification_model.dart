@@ -1,13 +1,13 @@
 // lib/models/notification_model.dart
 
-class Notification {
+class AppNotification {
   final String id;
   final String title;
   final String body;
   final DateTime timestamp;
   final String sentBy; // manager or restaurant ID
 
-  Notification({
+  AppNotification({
     required this.id,
     required this.title,
     required this.body,
@@ -25,8 +25,8 @@ class Notification {
   }
 
   // Create AppNotification from a Map retrieved from Firestore
-  factory Notification.fromMap(Map<String, dynamic> map, String id) {
-    return Notification(
+  factory AppNotification.fromMap(Map<String, dynamic> map, String id) {
+    return AppNotification(
       id: id,
       title: map['title'],
       body: map['body'],

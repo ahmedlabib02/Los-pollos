@@ -749,7 +749,8 @@ class ClientService {
     }
   }
 
-  Future<void> addNotification(String userId, Notification notification) async {
+  Future<void> addNotification(
+      String userId, AppNotification notification) async {
     try {
       await _firestore
           .collection(collectionPath)
@@ -763,7 +764,7 @@ class ClientService {
   }
 
   /// Retrieves all past notifications for a client
-  Future<List<Notification>> getNotifications(String userId) async {
+  Future<List<AppNotification>> getNotifications(String userId) async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection(collectionPath)
@@ -773,7 +774,8 @@ class ClientService {
           .get();
 
       return snapshot.docs.map((doc) {
-        return Notification.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return AppNotification.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       throw Exception('Error fetching notifications: $e');
