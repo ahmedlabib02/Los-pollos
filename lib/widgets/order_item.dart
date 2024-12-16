@@ -1,381 +1,525 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
+import 'package:provider/provider.dart';
 
 class OrderItemCard extends StatefulWidget {
   final OrderItem orderItem;
 
   const OrderItemCard({
     required this.orderItem,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<OrderItemCard> createState() => _OrderItemCardState();
 }
 
 class _OrderItemCardState extends State<OrderItemCard> {
-  MenuItem? menuItem;
-  bool isExpanded = false; // Track expansion state
-  List<Map<String, dynamic>>? users;
-
-
-// //====================================================
-// //                    DUMMY DATA
-// //====================================================
-
-// final List<MenuItem> mockMenuItems = [
-//   MenuItem(
-//     id: 'menu_001',
-//     name: 'Cheeseburger',
-//     price: 150.0,
-//     description: 'A juicy beef patty with cheese, lettuce, and tomato.',
-//     variants: ['Regular', 'Large'],
-//     extras: {
-//       'Extra Cheese': 10.0,
-//       'Bacon': 15.0,
-//     },
-//     discount: 10.0,
-//     reviewIds: ['review_001', 'review_002'],
-//     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Cheeseburger.jpg',
-//   ),
-//   MenuItem(
-//     id: 'menu_002',
-//     name: 'Veggie Burger',
-//     price: 120.0,
-//     description: 'A delicious plant-based patty with fresh veggies.',
-//     variants: ['Regular', 'Large'],
-//     extras: {
-//       'Avocado': 5.0,
-//       'Extra Sauce': 2.0,
-//     },
-//     discount: 0.0,
-//     reviewIds: ['review_003', 'review_004'],
-//     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRswygq3C8mTZUXmyl18k8ojtolrjZqVujmWw&s',
-//   ),
-//   MenuItem(
-//     id: 'menu_003',
-//     name: 'Garden Salad',
-//     price: 75.0,
-//     description: 'A fresh mix of lettuce, tomatoes, cucumbers, and carrots, served with your choice of dressing.',
-//     variants: ['Small', 'Large'],
-//     extras: {
-//       'Olives': 3.0,
-//       'Feta Cheese': 4.0,
-//       'Bacon Bits': 2.0,
-//       'Avocado': 5.0,
-//     },
-//     discount: 5.0,
-//     reviewIds: ['review_005', 'review_006'],
-//     imageUrl: 'https://garlicsaltandlime.com/wp-content/uploads/2022/07/Garden-salad-thumbnail.jpg',
-//   ),
-//   MenuItem(
-//     id: 'menu_004',
-//     name: 'Chicken Wings',
-//     price: 100.0,
-//     description: 'Crispy chicken wings served with a side of ranch dipping sauce.',
-//     variants: ['Small', 'Large'],
-//     extras: {
-//       'Blue Cheese': 3.0,
-//       'Hot Sauce': 2.0,
-//     },
-//     discount: 15.0,
-//     reviewIds: ['review_007', 'review_008'],
-//     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY1GcVqpDArKT_8uf8T29In7nVRKirjBur3Q&s',
-//   ),
-//   MenuItem(
-//     id: 'menu_005',
-//     name: 'Spaghetti Bolognese',
-//     price: 200.0,
-//     description: 'Classic Italian pasta with a rich and savory meat sauce.',
-//     variants: ['Regular', 'Large'],
-//     extras: {
-//       'Parmesan Cheese': 5.0,
-//       'Garlic Bread': 4.0,
-//     },
-//     discount: 0.0,
-//     reviewIds: ['review_009', 'review_010'],
-//     imageUrl: 'https://cdn.stoneline.de/media/c5/63/4f/1727429313/spaghetti-bolognese.jpeg',
-//   ),
-// ];
-
-// //   // Dummy Data for users
-//   List<Client> allClients = [
-//     Client(userID: 'user_1', name: 'Alice', email: 'alice@example.com', imageUrl: 'https://cdn-icons-png.flaticon.com/512/6858/6858504.png'),
-//     Client(userID: 'user_2', name: 'Bob', email: 'bob@example.com', imageUrl: 'https://avatar.iran.liara.run/public/29'),
-//     Client(userID: 'user_3', name: 'Charlie', email: 'charlie@example.com', imageUrl: 'https://avatar.iran.liara.run/public/3'),
-//   ];
-
-  //==================================================================================
-
+  late Future<Map<String, dynamic>> _fetchFuture;
+  OrderItem? _orderItem;
 
   @override
   void initState() {
     super.initState();
-    fetchMenuItem();
-    getClientsByIds();
+    _orderItem = widget.orderItem;
+    _fetchFuture = _fetchData();
   }
 
-  Future<void> fetchMenuItem() async {
-    MenuItem? fetchedMenuItem =
-        await ClientService().getMenuItem(widget.orderItem.menuItemId);
-    setState(() {
-      menuItem = fetchedMenuItem;
-    });
-  }
+  Future<Map<String, dynamic>> _fetchData() async {
+    final clientService = ClientService();
 
+    // Fetch the updated OrderItem from the backend to ensure userIds are up to date
+    OrderItem? updatedOrderItem =
+        await clientService.getOrderItem(_orderItem!.id);
+    if (updatedOrderItem == null) {
+      throw 'Order item not found on re-fetch';
+    }
 
-  // fetch clients by a list of user IDs
-  Future<void> getClientsByIds() async {
-    List<Map<String, dynamic>> clients = [];
+    _orderItem = updatedOrderItem; // Update the local state reference
 
-    for (String userId in widget.orderItem.userIds) {
-      try {
-        Client? client = await ClientService().getClient(userId);
-        if (client != null) {
-          clients.add(client.toMap());        }
-      } catch (e) {
-        // Handle the error as needed, maybe log or skip
-        print('Error fetching client for userID $userId: $e');
+    // Fetch menuItem
+    MenuItem? menuItem =
+        await clientService.getMenuItem(_orderItem!.menuItemId);
+
+    // Fetch users based on updated _orderItem
+    List<Map<String, dynamic>> users = [];
+    for (String userId in _orderItem!.userIds) {
+      Client? client = await clientService.getClient(userId);
+      if (client != null) {
+        users.add(client.toMap());
       }
     }
 
-    setState(() {
-      users = clients;
-    });
-
+    return {
+      'orderItem': _orderItem,
+      'menuItem': menuItem,
+      'users': users,
+    };
   }
 
-  // //======================================================
-  // //                Fetch Dummy Data
-  // //======================================================
+  void _showBottomDrawer(BuildContext context, MenuItem menuItem,
+      List<Map<String, dynamic>> users, String loggedInUserId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (context) {
+        return BottomSheetContent(
+          menuItem: menuItem,
+          users: users,
+          orderItem: _orderItem!,
+          loggedInUserId: loggedInUserId,
+          onOrderItemChanged: () async {
+            // Re-fetch data after the user leaves the order
+            setState(() {
+              _fetchFuture = _fetchData();
+            });
+          },
+        );
+      },
+    );
+  }
 
-  // // Fetch menu item from dummy data
-  // void fetchMenuItem() {
-  //   MenuItem? fetchedMenuItem = mockMenuItems.firstWhere(
-  //     (item) => item.id == widget.orderItem.menuItemId,
-  //     orElse: () => MenuItem(
-  //       id: widget.orderItem.menuItemId,
-  //       name: 'Unknown Item',
-  //       price: 0.0,
-  //       description: 'No description available.',
-  //       variants: [],
-  //       extras: {},
-  //       discount: 0.0,
-  //       reviewIds: [],
-  //       imageUrl: 'https://via.placeholder.com/150',
-  //     ),
-  //   );
-  //   setState(() {
-  //     menuItem = fetchedMenuItem;
-  //   });
-  // }
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    String loggedInUserId = Provider.of<CustomUser?>(context)!.uid;
 
-  // // //get clients from dummy data
-  // void getClientsByIds() {
-  //   List<Map<String, dynamic>> clients = [];
-    
-  //   for (String userId in widget.orderItem.userIds) {
-  //     Client client = allClients.firstWhere(
-  //       (client) => client.userID == userId,
-  //       orElse: () => Client(userID: 'default', name: 'Unknown', email: '', imageUrl: ''), // Default Client
-  //     );
-      
-  //     // Only add the client if it isn't the default one
-  //     if (client.userID != 'default') {
-  //       clients.add({
-  //         'name': client.name,
-  //         'imageUrl': client.imageUrl,
-  //       });
-  //     }
-  //   }
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _fetchFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData ||
+            snapshot.data!['menuItem'] == null ||
+            snapshot.data!['orderItem'] == null) {
+          return const Center(child: Text('Menu item or order item not found'));
+        }
 
-  //   setState(() {
-  //     users = clients;
-  //   });
-  // }
+        final orderItem = snapshot.data!['orderItem'] as OrderItem;
+        final menuItem = snapshot.data!['menuItem'] as MenuItem;
+        final users = snapshot.data!['users'] as List<Map<String, dynamic>>;
 
-  //=======================================================================
+        // Use the newly fetched orderItem instead of _orderItem
+        return Container(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+          margin: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 1.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 6.0,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.network(
+                      menuItem.imageUrl!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          menuItem.name,
+                          style: const TextStyle(
+                              fontSize: 18.0, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2.0),
+                        AvatarGroup(
+                          content: users,
+                          spacing: screenWidth * -0.015,
+                          radius: screenWidth * 0.025,
+                          cutoff: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('${menuItem.price.toStringAsFixed(2)} EGP'),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6.0, vertical: 2.0),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          'x${orderItem.itemCount}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8.0),
+
+              // Details Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total  ${(orderItem.price).toStringAsFixed(2)} EGP',
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _showBottomDrawer(
+                          context, menuItem, users, loggedInUserId);
+                    },
+                    child: Text(
+                      'Details',
+                      style: TextStyle(
+                        color: Styles.primaryYellow,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0.0, vertical: 0.0),
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class BottomSheetContent extends StatefulWidget {
+  final MenuItem menuItem;
+  final List<Map<String, dynamic>> users;
+  final OrderItem orderItem;
+  final String loggedInUserId;
+  final VoidCallback onOrderItemChanged;
+
+  const BottomSheetContent({
+    Key? key,
+    required this.menuItem,
+    required this.users,
+    required this.orderItem,
+    required this.loggedInUserId,
+    required this.onOrderItemChanged,
+  }) : super(key: key);
+
+  @override
+  _BottomSheetContentState createState() => _BottomSheetContentState();
+}
+
+class _BottomSheetContentState extends State<BottomSheetContent> {
+  late OrderItem _localOrderItem;
+  late List<Map<String, dynamic>> _localUsers;
+
+  @override
+  void initState() {
+    super.initState();
+    _localOrderItem = widget.orderItem;
+    _localUsers = List<Map<String, dynamic>>.from(widget.users);
+  }
+
+  Future<void> _leaveOrder() async {
+    try {
+      await ClientService().removeUserFromOrderItem(
+        orderItemId: _localOrderItem.id,
+        userId: widget.loggedInUserId,
+      );
+
+      setState(() {
+        // Update order item
+        final updatedUserIds = List<String>.from(_localOrderItem.userIds);
+        updatedUserIds.remove(widget.loggedInUserId);
+        var updatedMap = _localOrderItem.toMap();
+        updatedMap['userIds'] = updatedUserIds;
+        _localOrderItem = OrderItem.fromMap(updatedMap, _localOrderItem.id);
+
+        // Remove user from local users
+        _localUsers
+            .removeWhere((user) => user['userID'] == widget.loggedInUserId);
+      });
+
+      // Notify parent so it can refetch
+      widget.onOrderItemChanged();
+
+      // Close bottom sheet
+      // Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have left the shared order successfully.'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to leave the order: $e')),
+      );
+    }
+  }
 
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return Colors.blue.withOpacity(0.4); // Pending status color
+        return Colors.blue.withOpacity(0.4);
       case OrderStatus.inProgress:
-        return Colors.orange.withOpacity(0.4); // Completed status color
+        return Colors.orange.withOpacity(0.4);
       case OrderStatus.served:
-        return Colors.green.withOpacity(0.4); // Cancelled status color
+        return Colors.green.withOpacity(0.4);
       default:
-        return Colors.grey.withOpacity(0.4); // Default color
+        return Colors.grey.withOpacity(0.4);
     }
   }
 
-  Color _getTextColor(OrderStatus status) {
+  String _getStatusText(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
-        return Colors.blue; // Text color for pending
+        return 'Pending';
       case OrderStatus.inProgress:
-        return Colors.orange; // Text color for completed
+        return 'In Progress';
       case OrderStatus.served:
-        return Colors.green; // Text color for cancelled
+        return 'Served';
       default:
-        return Colors.grey; // Default text color
+        return 'Unknown';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
-    double screenWidth = MediaQuery.of(context).size.width;
-
     return Container(
-      padding: EdgeInsets.all(16.0),
-      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6.0,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: menuItem == null
-          ? Center(child: CircularProgressIndicator()) // Loading indicator
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header - Name
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Menu Item Image
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.0),
-                        image: DecorationImage(
-                          image: NetworkImage(menuItem!.imageUrl!),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.0),
-
-                    // Menu Item Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            menuItem!.name,
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4.0),
-                          AvatarGroup(content: users!, spacing: screenWidth * -0.015, radius: screenWidth * 0.025, cutoff: 3)
-                        ],
-                      ),
-                    ),
-
-                    // Price and Quantity
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${menuItem!.price.toStringAsFixed(2)} EGP',
-                          style: TextStyle(fontSize: 14.0, color: Colors.black),
-                        ),
-                        SizedBox(height: 4.0),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6.0, vertical: 2.0),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            'x${widget.orderItem.itemCount}',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Text(
+                  widget.menuItem.name,
+                  style: const TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-
-                SizedBox(height: 8.0),
-
-                // Total and Expand Icon
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total: ${(menuItem!.price * widget.orderItem.itemCount).toStringAsFixed(2)} EGP',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: Colors.black,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isExpanded = !isExpanded; // Toggle expansion state
-                        });
-                      },
-                    ),
-                  ],
-                ),
-
-                // Expanded Details
-                AnimatedContainer(
-                  duration: Duration(milliseconds: 300), // Smooth animation
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: isExpanded
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Notes: ${widget.orderItem.notes.isNotEmpty ? widget.orderItem.notes.join(", ") : 'None'}',
-                              style: TextStyle(
-                                fontSize: 14.0,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(widget.orderItem.status),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Text(
-                                'Status: ${widget.orderItem.status.toString().split('.').last}',
-                                style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Container(), // Empty container when collapsed
+                Text(
+                  'x${_localOrderItem.itemCount}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
+            const SizedBox(height: 12.0),
+
+            // Image
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.network(
+                  widget.menuItem.imageUrl!,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Status",
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 4.0),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(_localOrderItem.status),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    _getStatusText(_localOrderItem.status),
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+
+            // People Involved
+            const Text(
+              "Shared With",
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            AvatarGroup(
+              content: _localUsers,
+              radius: 20.0,
+              spacing: -10.0,
+              cutoff: 5,
+            ),
+            const SizedBox(height: 16.0),
+
+            // Extras
+            if (widget.menuItem.extras.isNotEmpty) ...[
+              const Text(
+                "Extras",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              ...widget.menuItem.extras.entries.map((entry) => Text(
+                    "${entry.key}: (+${entry.value.toStringAsFixed(2)} EGP)",
+                    style: const TextStyle(fontSize: 14.0),
+                  )),
+              const SizedBox(height: 16.0),
+            ],
+
+            // Notes
+            const Text(
+              "Notes",
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              _localOrderItem.notes.isNotEmpty
+                  ? _localOrderItem.notes.join(", ")
+                  : "No notes provided.",
+              style: const TextStyle(fontSize: 14.0),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Variations
+            if (widget.menuItem.variants.isNotEmpty) ...[
+              const Text(
+                "Variations",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                widget.menuItem.variants.join(", "),
+                style: const TextStyle(fontSize: 14.0),
+              ),
+              const SizedBox(height: 16.0),
+            ],
+
+            // Total Price
+            Text(
+              "Total: ${(widget.menuItem.price * _localOrderItem.itemCount).toStringAsFixed(2)} EGP",
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Buttons: Invite and Leave
+            Row(
+              children: [
+                _localOrderItem.userIds.contains(widget.loggedInUserId)
+                    ? Expanded(
+                        child: ElevatedButton(
+                          onPressed: _leaveOrder,
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6.0),
+                            ),
+                          ),
+                          child: const Text(
+                            "Leave shared order",
+                            style:
+                                TextStyle(fontSize: 16.0, color: Colors.white),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            print("Join button pressed");
+                            // Add invite functionality here
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            backgroundColor: Styles.primaryYellow,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6.0),
+                            ),
+                          ),
+                          child: const Text(
+                            "Send a join request",
+                            style:
+                                TextStyle(fontSize: 16.0, color: Colors.black),
+                          ),
+                        ),
+                      ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

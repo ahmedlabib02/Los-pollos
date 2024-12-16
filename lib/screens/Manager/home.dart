@@ -1,18 +1,28 @@
+// lib/screens/manager_home.dart
+
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/notification_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
 
-class ManagerHome extends StatelessWidget {
-  const ManagerHome({super.key});
+class ManagerHome extends StatefulWidget {
+  const ManagerHome({Key? key}) : super(key: key);
 
-  // Example FCM token provided
-  final String fcmToken =
-      "fhHY3iUbT0WSOboq7uGed_:APA91bEng5Dtmqgiy9DODYuPy7z_nPqH76zNcnoYYvLSP_0SXt303Dv_PtHLCD2DK7rY1FEuXzFsaBQNig2e0JsT58WQCuN9Y0TE7IYr9QixFHsXVJXmSEE";
+  @override
+  _ManagerHomeState createState() => _ManagerHomeState();
+}
+
+class _ManagerHomeState extends State<ManagerHome> {
+  final AuthService _auth = AuthService();
+  final NotificationService _notificationService = NotificationService();
+
+  // Example User ID for testing
+  final String testUserId = "testUser123";
 
   @override
   Widget build(BuildContext context) {
-    final AuthService _auth = AuthService();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hey Boss'),
@@ -40,27 +50,76 @@ class ManagerHome extends StatelessWidget {
           children: <Widget>[
             const Text('Welcome to the Home Screen!'),
             const SizedBox(height: 20),
+
+            // Button to Create Offer
             ElevatedButton(
               onPressed: () async {
                 try {
-                  // We assume tripId can be anything for testing, e.g. "testTripId"
-                  await NotificationService.sendNotificationToSelectedDriver(
-                    fcmToken,
-                    context,
-                    "testTripId",
-                  );
+                  await FirebaseFirestore.instance.collection('offers').add({
+                    'description': '20% off on all chicken meals!',
+                    'createdAt': FieldValue.serverTimestamp(),
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Notification sent!')),
+                    const SnackBar(
+                        content: Text('Offer created in Firestore!')),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to send notification')),
+                    const SnackBar(content: Text('Failed to create offer')),
                   );
                 }
               },
-              child: const Text('Send Test Notification'),
+              child: const Text('Create Offer'),
             ),
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await _notificationService.sendNotificationToTopic(
+                    'offers',
+                    'Hot Deal!',
+                    'Grab 30% off on all items now!',
+                    'manager123',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content:
+                            Text('Offers notification sent successfully!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+              child: const Text('Send Offers Notification'),
+            ),
+            const SizedBox(height: 20),
+
+            // Button to send Notification to a specific user
+            // ElevatedButton(
+            //   onPressed: () async {
+            //     try {
+            //       await _notificationService.sendNotificationToTopic(
+            //         'offers',
+            //         'Special Invitation!',
+            //         'fuck off will you',
+            //         'manager123',
+            //       );
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(
+            //             content: Text('Notification sent to specific user!')),
+            //       );
+            //     } catch (e) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         SnackBar(
+            //             content: Text('Failed to send user notification: $e')),
+            //       );
+            //     }
+            //   },
+            //   child: const Text('Send User Notification'),
+            // ),
           ],
         ),
       ),

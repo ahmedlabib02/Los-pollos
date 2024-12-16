@@ -51,7 +51,7 @@ class AvatarGroup extends StatelessWidget {
                     .inputFieldBorderColor, // Set your desired border color here
                 width: 1.0), // Set your desired border width here
           ),
-          child: element.containsKey('imageUrl')
+          child: element.containsKey('imageUrl') && element['imageUrl'] != ''
               ? CircleAvatar(
                   radius: radius,
                   backgroundColor: const Color.fromARGB(255, 250, 250, 250),
