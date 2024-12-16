@@ -187,6 +187,26 @@ class ClientService {
     return null;
   }
 
+  Future<Table?> getTableByCode(String tableCode) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection(
+              'tables') // Ensure this matches your Firestore collection name
+          .where('tableCode', isEqualTo: tableCode)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return Table.fromMap(
+            snapshot.docs.first.data() as Map<String, dynamic>);
+      } else {
+        return null; // Table with the provided code not found
+      }
+    } catch (e) {
+      print("Error fetching table: $e");
+      return null;
+    }
+  }
+
   Future<String> joinTable(String tableCode, String userId) async {
     try {
       // Query Firestore for a table with the specified table code
@@ -567,5 +587,4 @@ class ClientService {
       throw Exception('Error fetching Menu Item: $e');
     }
   }
-  
 }
