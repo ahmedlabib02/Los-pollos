@@ -1,6 +1,7 @@
 // lib/services/client_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/menu_model.dart';
@@ -749,35 +750,42 @@ class ClientService {
     }
   }
 
-  Future<void> addNotification(
-      String userId, AppNotification notification) async {
+  Future<void> addNotification(String uid, AppNotification notification) async {
     try {
-      await _firestore
+      // Reference to the user's notifications subcollection
+      DocumentReference notifRef = _firestore
           .collection(collectionPath)
-          .doc(userId)
+          .doc(uid)
           .collection('notifications')
-          .doc(notification.id)
-          .set(notification.toMap());
+          .doc(notification.id);
+
+      // Set the notification data
+      await notifRef.set(notification.toMap());
+      print('Notification added successfully for user: ${uid}');
     } catch (e) {
       throw Exception('Error adding notification: $e');
     }
   }
 
   /// Retrieves all past notifications for a client
-  Future<List<AppNotification>> getNotifications(String userId) async {
+
+  Future<List<AppNotification>> getNotifications(String uid) async {
     try {
+      print('Fetching notifications for user: $uid');
       QuerySnapshot snapshot = await _firestore
-          .collection(collectionPath)
-          .doc(userId)
+          .collection('clients')
+          .doc(uid)
           .collection('notifications')
           .orderBy('timestamp', descending: true)
           .get();
 
+      print('Number of notifications: ${snapshot.docs.length}');
       return snapshot.docs.map((doc) {
-        return AppNotification.fromMap(
-            doc.data() as Map<String, dynamic>, doc.id);
+        print('Notification document: ${doc.data()}');
+        return AppNotification.fromDocument(doc);
       }).toList();
     } catch (e) {
+      print('Error fetching notifications: $e');
       throw Exception('Error fetching notifications: $e');
     }
   }

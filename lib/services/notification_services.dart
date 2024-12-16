@@ -1,7 +1,7 @@
-import 'dart:convert';
+// lib/services/notification_service.dart
 
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import '../models/notification_model.dart';
@@ -30,9 +30,6 @@ class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-
-  // Initialize FirebaseFunctions instance
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   // Initialize notifications
   Future<void> init(BuildContext context) async {
@@ -76,8 +73,8 @@ class NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // Handle notification tap
-        // Example: Navigate to a specific screen
-        // Navigator.of(context).pushNamed('/specificRoute');
+        // Example: Navigate to a specific screen based on notification type
+        // You might need to pass the 'type' as part of the payload
       },
     );
   }
@@ -104,12 +101,27 @@ class NotificationService {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       Map<String, dynamic> data = message.data;
-
+      final user = Provider.of<CustomUser?>(context);
       if (notification != null && android != null) {
+        // Extract the 'type' from the data payload
+        String typeStr =
+            data['type'] ?? 'invite'; // Default to 'invite' if not specified
+        NotificationType notifType;
+
+        switch (typeStr) {
+          case 'discount':
+            notifType = NotificationType.discount;
+            break;
+          case 'invite':
+          default:
+            notifType = NotificationType.invite;
+        }
+
+        // Show the notification
         _localNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
-          notification.body, // Corrected typo from 'notfication.body'
+          notification.body,
           NotificationDetails(
             android: AndroidNotificationDetails(
               'default_channel', // Ensure this matches your channel ID
@@ -120,25 +132,29 @@ class NotificationService {
               icon: '@mipmap/ic_launcher',
             ),
           ),
+          payload: jsonEncode({
+            'type': typeStr,
+            // Add other data fields if necessary
+          }),
         );
 
-        // Save the notification to Firestore
-        final user = Provider.of<CustomUser?>(context, listen: false);
-        if (user != null) {
-          // Create a new Notification object
-          AppNotification newNotification = AppNotification(
-            id: message.messageId ??
-                DateTime.now().millisecondsSinceEpoch.toString(),
-            title: notification.title ?? '',
-            body: notification.body ?? '',
-            timestamp: DateTime.now(),
-            sentBy: data['sentBy'] ?? 'unknown',
-          );
+        // Save the notification to Firestore using ClientService
+        AppNotification newNotification = AppNotification(
+          id: message.messageId ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: '',
+          title: notification.title ?? '',
+          body: notification.body ?? '',
+          timestamp: DateTime.now(),
+          sentBy:
+              data['sentBy'] ?? 'manager', // Assuming 'manager' is the sender
+          type: notifType,
+        );
 
-          // Add the notification to Firestore
-          await ClientService().addNotification(user.uid, newNotification);
-          print('Notification saved to Firestore');
-        }
+        // Instantiate ClientService and add the notification
+        ClientService clientService = ClientService();
+        await clientService.addNotification(user!.uid, newNotification);
+        print('Notification saved to Firestore with type: $typeStr');
       }
     });
   }
@@ -196,7 +212,7 @@ class NotificationService {
     _localNotificationsPlugin.cancelAll();
   }
 
-  // Updated method sending to the "offers" topic
+  // Helper method to get access token
   Future<String> getAccessToken() async {
     final serviceAccountJson = {
       "type": "service_account",
@@ -250,6 +266,7 @@ class NotificationService {
         },
         'data': {
           'sentBy': sentBy, // Include 'sentBy' in data payload
+          'type': 'discount', // Specify the type
         }
       }
     };
@@ -265,17 +282,75 @@ class NotificationService {
 
     if (response.statusCode == 200) {
       print("Notification sent to topic '$topic'");
-      // Save the notification to Firestore
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
-      await firestore.collection('notifications').add({
-        'title': title,
-        'body': body,
-        'timestamp': FieldValue.serverTimestamp(),
-        'sentBy': sentBy,
-      });
-      print("Notification saved to Firestore");
+      // **Removed**: Do not save the notification to Firestore here
     } else {
       print("Failed to send notification to topic '$topic': ${response.body}");
+    }
+  }
+
+  // 9. Send Discount Notification to Topic
+  Future<void> sendNotificationToUser(
+      String userId, String title, String body, String sentBy) async {
+    try {
+      // 1. Retrieve the user's FCM token from Firestore
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      DocumentSnapshot userDoc =
+          await firestore.collection('users').doc(userId).get();
+
+      if (!userDoc.exists) {
+        print("User with ID '$userId' does not exist.");
+        return;
+      }
+
+      String? userToken = userDoc.get('fcmToken');
+
+      if (userToken == null) {
+        print("No FCM token found for user with ID '$userId'.");
+        return;
+      }
+
+      // 2. Get the access token for FCM API
+      final String serverAccessToken = await getAccessToken();
+
+      // 3. Define the FCM endpoint
+      String endPointFireBaseCloudMessaging =
+          "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages:send";
+
+      // 4. Construct the message payload
+      final Map<String, dynamic> message = {
+        'message': {
+          'token': userToken, // Targeting the specific user token
+          'notification': {
+            'title': title,
+            'body': body,
+          },
+          'data': {
+            'sentBy': sentBy, // Additional data payload
+            'type': 'invite', // Specify the type
+          }
+        }
+      };
+
+      // 5. Send the HTTP POST request to FCM
+      final http.Response response = await http.post(
+        Uri.parse(endPointFireBaseCloudMessaging),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $serverAccessToken'
+        },
+        body: jsonEncode(message),
+      );
+
+      // 6. Handle the response
+      if (response.statusCode == 200) {
+        print("Notification sent to user '$userId'");
+        // **Removed**: Do not save the notification to Firestore here
+      } else {
+        print(
+            "Failed to send notification to user '$userId': ${response.statusCode} ${response.body}");
+      }
+    } catch (e) {
+      print("Error sending notification to user '$userId': $e");
     }
   }
 }
