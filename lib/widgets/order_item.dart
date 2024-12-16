@@ -148,9 +148,9 @@ class _OrderItemCardState extends State<OrderItemCard> {
 
   }
 
-  //======================================================
-  //                Fetch Dummy Data
-  //======================================================
+  // //======================================================
+  // //                Fetch Dummy Data
+  // //======================================================
 
   // // Fetch menu item from dummy data
   // void fetchMenuItem() {
