@@ -56,26 +56,38 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       _discountController.text = data['discount']?.toString() ?? '';
       _category = data['category'];
 
-      // Populate variants and extras
-      if (data['variants'] != null) {
+      // Handle variants
+      if (data['variants'] != null && (data['variants'] as List).isNotEmpty) {
         for (var variant in data['variants']) {
           _variantControllers.add(TextEditingController(text: variant));
         }
+      } else {
+        // Ensure at least one empty controller
+        _variantControllers.add(TextEditingController());
       }
-      // Populate extras
-      if (data['extras'] != null) {
+
+      // Handle extras
+      if (data['extras'] != null && (data['extras'] as Map).isNotEmpty) {
         data['extras'].forEach((key, value) {
           _extrasControllers.add(TextEditingController(text: key));
           _extrasPriceControllers
               .add(TextEditingController(text: value.toString()));
         });
+      } else {
+        // Ensure at least one empty controller for extras
+        _extrasControllers.add(TextEditingController());
+        _extrasPriceControllers.add(TextEditingController());
       }
 
-      // Load the image if provided
-      if (data['image'] != null) {
-        _selectedImage =
-            File(data['image']); // Assumes the image is a file path
+      // Ignore remote image URLs
+      if (data['image'] != null && !data['image'].startsWith('http')) {
+        _selectedImage = File(data['image']); // Set only local image paths
       }
+    } else {
+      // Default initialization when no initialData is provided
+      _variantControllers.add(TextEditingController());
+      _extrasControllers.add(TextEditingController());
+      _extrasPriceControllers.add(TextEditingController());
     }
   }
 
