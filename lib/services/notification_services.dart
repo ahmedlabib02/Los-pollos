@@ -54,14 +54,12 @@ class NotificationService {
             auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
             scopes,
             client);
-
     client.close();
-
     return credentials.accessToken.data;
   }
 
   static sendNotificationToSelectedDriver(
-      String deviceToken, BuildContext context, String tripId) async {
+      String deviceToken, BuildContext context) async {
     final String serverAccessToken = await getAccessToken();
     String endPointFireBaseCloudMessaging =
         "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages:send";

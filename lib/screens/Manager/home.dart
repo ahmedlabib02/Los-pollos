@@ -47,7 +47,6 @@ class ManagerHome extends StatelessWidget {
                   await NotificationService.sendNotificationToSelectedDriver(
                     fcmToken,
                     context,
-                    "testTripId",
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Notification sent!')),
