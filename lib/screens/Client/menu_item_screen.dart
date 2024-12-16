@@ -5,7 +5,7 @@ import 'package:los_pollos_hermanos/services/client_services.dart';
 class MenuItemScreen extends StatefulWidget {
   final String menuItemId;
 
-  const MenuItemScreen({required this.menuItemId});
+  const MenuItemScreen(String s, {required this.menuItemId});
 
   @override
   _MenuItemScreenState createState() => _MenuItemScreenState();
@@ -142,177 +142,180 @@ final List<MenuItem> mockMenuItems = [
             children: [
               // Item Image
               if (menuItem!.imageUrl != null)
-                Image.network(
-                  menuItem!.imageUrl!,
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+              Image.network(
+                menuItem!.imageUrl!,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
 
               // Item Details
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          menuItem!.name,
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),  
-                        Text(
-                          "${menuItem!.price.toStringAsFixed(2)} LE",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color.fromRGBO(239, 180, 7, 1)),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      menuItem!.description,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 16),
-                  ],
-                ),
-              ),
-        
-              // Variants Section (Items to remove for free)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Customize order item",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-        
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 0.5,
-                    ),
-                    const SizedBox(height: 8),
-        
-                    Text(
-                      "Remove Items",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    for (var variant in menuItem!.variants)
-                      CheckboxListTile(
-                        title: Text(variant),
-                        activeColor: Color.fromRGBO(239, 180, 7, 1),
-                        value: removedVariants.contains(variant),
-                        onChanged: (value) {
-                          setState(() {
-                            if (value!) {
-                              removedVariants.add(variant);
-                            } else {
-                              removedVariants.remove(variant);
-                            }
-                          });
-                        },
-                      ),
-                  ],
-                ),
-              ),
-        
-              Divider(
-                color: Colors.grey,
-                thickness: 0.5,
-              ),
-              const SizedBox(height: 8),
-        
-              // Extras Section (Add ingredients with prices)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Add extras",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    for (var extra in menuItem!.extras.entries)
-                      CheckboxListTile(
-                        title: Text("${extra.key} (+${extra.value.toStringAsFixed(2)} LE)"),
-                        activeColor: Color.fromRGBO(239, 180, 7, 1),
-                        value: selectedExtras.contains(extra.key),
-                        onChanged: (value) {
-                          setState(() {
-                            if (value!) {
-                              selectedExtras.add(extra.key);
-                            } else {
-                              selectedExtras.remove(extra.key);
-                            }
-                          });
-                        },
-                      )
-                  ],
-                ),
-              ),
-        
-              // Quantity Selector
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "Quantity order",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.remove),
-                          onPressed: () {
-                            if (quantity > 1) {
-                              setState(() {
-                                quantity--;
-                              });
-                            }
-                          },
-                        ),
-                        Text(
-                          quantity.toString(),
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.add),
-                          onPressed: () {
-                            setState(() {
-                              quantity++;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
+                  Text(
+                    menuItem!.name,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),  
+                  Text(
+                    "${menuItem!.price.toStringAsFixed(2)} LE",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color.fromRGBO(239, 180, 7, 1)),
+                  ),
                   ],
                 ),
+                SizedBox(height: 8),
+                Text(
+                  menuItem!.description,
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(height: 16),
+                ],
               ),
-        
+              ),
+          
+              // Variants Section (Items to remove for free)
+              Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text(
+                  "Customize order item",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+          
+                Divider(
+                  color: Colors.grey,
+                  thickness: 0.5,
+                ),
+                const SizedBox(height: 8),
+          
+                Text(
+                  "Remove Items",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                for (var variant in menuItem!.variants)
+                  CheckboxListTile(
+                  title: Text(variant),
+                  activeColor: Color.fromRGBO(239, 180, 7, 1),
+                  value: removedVariants.contains(variant),
+                  onChanged: (value) {
+                    setState(() {
+                    if (value!) {
+                      removedVariants.add(variant);
+                    } else {
+                      removedVariants.remove(variant);
+                    }
+                    });
+                  },
+                  ),
+                ],
+              ),
+              ),
+          
+              Divider(
+              color: Colors.grey,
+              thickness: 0.5,
+              ),
+              const SizedBox(height: 8),
+          
+              // Extras Section (Add ingredients with prices)
+              Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text(
+                  "Add extras",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                for (var extra in menuItem!.extras.entries)
+                  CheckboxListTile(
+                  title: Text("${extra.key} (+${extra.value.toStringAsFixed(2)} LE)"),
+                  activeColor: Color.fromRGBO(239, 180, 7, 1),
+                  value: selectedExtras.contains(extra.key),
+                  onChanged: (value) {
+                    setState(() {
+                    if (value!) {
+                      selectedExtras.add(extra.key);
+                    } else {
+                      selectedExtras.remove(extra.key);
+                    }
+                    });
+                  },
+                  )
+                ],
+              ),
+              ),
+          
+              // Quantity Selector
+              Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                Text(
+                  "Quantity order",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Row(
+                  children: [
+                  IconButton(
+                    icon: Icon(Icons.remove),
+                    onPressed: () {
+                    if (quantity > 1) {
+                      setState(() {
+                      quantity--;
+                      });
+                    }
+                    },
+                  ),
+                  Text(
+                    quantity.toString(),
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () {
+                    setState(() {
+                      quantity++;
+                    });
+                    },
+                  ),
+                  ],
+                ),
+                ],
+              ),
+              ),
+          
               // Add to Order Button
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    //Add Item To Order Backend
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                //Add Item To Order Backend
 
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(239, 180, 7, 1),
-                    minimumSize: Size(double.infinity, 50),
-                  ),
-                  child: Text(
-                    "Add to order - ${calculateTotal()} LE",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
+                },
+                style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(239, 180, 7, 1),
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Reduced roundness
                 ),
+                ),
+                child: Text(
+                "Add to order - ${calculateTotal()} LE",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
               ),
             ],
           ),

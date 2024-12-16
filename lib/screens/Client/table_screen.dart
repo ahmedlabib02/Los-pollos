@@ -22,6 +22,8 @@ class _TableScreenState extends State<TableScreen> {
   final ClientService _clientService = ClientService();
   TableModel.Table? currentTable;
   bool isLoading = true;
+  List<Map<String, dynamic>> users = []; // Store fetched user data
+  double paidPercentage = 0.0;
 
   @override
   void initState() {
@@ -33,10 +35,23 @@ class _TableScreenState extends State<TableScreen> {
     try {
       TableModel.Table? table =
           await _clientService.getTableByCode(widget.tableCode);
-      setState(() {
-        currentTable = table;
-        isLoading = false;
-      });
+      if (table != null) {
+        // Fetch users for the given user IDs
+        List<Map<String, dynamic>> fetchedUsers =
+            await _fetchUsers(table.userIds);
+        double percentage =
+            await _clientService.calculatePaidPercentage(table.id);
+
+        setState(() {
+          currentTable = table;
+          users = fetchedUsers; // Assign fetched users
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error loading table: $e');
       setState(() {
@@ -45,7 +60,20 @@ class _TableScreenState extends State<TableScreen> {
     }
   }
 
-  static const List<Map<String, dynamic>> users = TempVars.users;
+  // static const List<Map<String, dynamic>> users = TempVars.users;
+
+  Future<List<Map<String, dynamic>>> _fetchUsers(List<String> userIds) async {
+    List<Map<String, dynamic>> fetchedUsers = [];
+    for (String userId in userIds) {
+      try {
+        Map<String, dynamic> user = await _clientService.getUserById(userId);
+        fetchedUsers.add(user);
+      } catch (e) {
+        print('Error fetching user $userId: $e');
+      }
+    }
+    return fetchedUsers;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,17 +91,8 @@ class _TableScreenState extends State<TableScreen> {
                         const SizedBox(height: 8),
                         TableRing(
                           tableCode: widget.tableCode,
-                          progressValue: 0.70,
-                          members: [
-                            users[0],
-                            users[1],
-                            users[6],
-                            users[4],
-                            users[2],
-                            users[7],
-                            users[5],
-                            users[3],
-                          ],
+                          progressValue: paidPercentage / 100,
+                          members: users,
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -91,7 +110,8 @@ class _TableScreenState extends State<TableScreen> {
                                   ),
                                 ),
                                 alignment: Alignment.center,
-                                child: CustomChip('80% paid'),
+                                child: CustomChip(
+                                    '${paidPercentage.toStringAsFixed(1)}% paid'),
                               ),
                             ),
                             Expanded(
