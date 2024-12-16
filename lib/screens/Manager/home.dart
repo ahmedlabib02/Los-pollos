@@ -73,29 +73,28 @@ class _ManagerHomeState extends State<ManagerHome> {
             ),
             const SizedBox(height: 20),
 
-            // Button to send Offers Notification to "offers" topic
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     try {
-            //       await _notificationService.sendNotificationToTopic(
-            //         'offers',
-            //         'Hot Deal!',
-            //         'Grab 30% off on all items now!',
-            //         'manager123',
-            //       );
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         const SnackBar(
-            //             content:
-            //                 Text('Offers notification sent successfully!')),
-            //       );
-            //     } catch (e) {
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         SnackBar(content: Text('Error: $e')),
-            //       );
-            //     }
-            //   },
-            //   child: const Text('Send Offers Notification'),
-            // ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await _notificationService.sendNotificationToTopic(
+                    'offers',
+                    'Hot Deal!',
+                    'Grab 30% off on all items now!',
+                    'manager123',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content:
+                            Text('Offers notification sent successfully!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+              child: const Text('Send Offers Notification'),
+            ),
             const SizedBox(height: 20),
 
             // Button to send Notification to a specific user
