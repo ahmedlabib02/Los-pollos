@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/table_screen.dart';
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
 import 'package:los_pollos_hermanos/shared/PaymentProgressIndicator.dart';
 
-Widget TableCard(
-    {required double screenWidth,
-    required String tableName,
-    required String startTime,
-    required List<Map<String, dynamic>> members,
-    required double paidPercentage,
-    required String orderStatus}) {
+Widget TableCard({
+  required double screenWidth,
+  required String tableName,
+  required String startTime,
+  required List<Map<String, dynamic>> members,
+  required double paidPercentage,
+  required String orderStatus,
+  required String tableCode, // Add tableCode as a parameter
+  required BuildContext context, // Pass BuildContext for navigation
+}) {
   Map<String, Color> colorMap = {
     'No orders placed': const Color.fromARGB(255, 235, 235, 235),
     'Orders in progress': const Color(0xFFFFEBAE).withOpacity(0.5),
     'All orders served': const Color(0xFFF2C230),
   };
-  // Entire card
+
   return Container(
     margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
     decoration: BoxDecoration(
@@ -25,7 +29,6 @@ Widget TableCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Table Header with Bottom Divider
         Container(
           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
           child: Container(
@@ -61,21 +64,18 @@ Widget TableCard(
             ),
           ),
         ),
-        // Start Time, Members, and Status
         Padding(
           padding: EdgeInsets.symmetric(
               horizontal: screenWidth * 0.03, vertical: screenWidth * 0.02),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Start Time and Chip
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Container(
-                        // color: Colors.purple,
                         height: screenWidth * 0.04,
                         width: screenWidth * 0.04,
                         child: const FittedBox(
@@ -90,29 +90,12 @@ Widget TableCard(
                       ),
                     ],
                   ),
-                  // Order Status
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.02,
-                        vertical: screenWidth * 0.004),
-                    decoration: BoxDecoration(
-                      color: colorMap[orderStatus],
-                      borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                    ),
-                    child: Text(
-                      orderStatus,
-                      style: TextStyle(
-                          color: Colors.black, fontSize: screenWidth * 0.025),
-                    ),
-                  ),
                 ],
               ),
               SizedBox(height: screenWidth * 0.015),
-              // Members Info
               Row(
                 children: [
                   Container(
-                    // color: Colors.blue,
                     height: screenWidth * 0.04,
                     width: screenWidth * 0.04,
                     child: const FittedBox(
@@ -128,7 +111,6 @@ Widget TableCard(
                 ],
               ),
               SizedBox(height: screenWidth * 0.015),
-              // Paid Status and Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -151,13 +133,22 @@ Widget TableCard(
                       ),
                     ],
                   ),
-                  // View Button
                   ConstrainedBox(
                     constraints: BoxConstraints(
                       maxHeight: screenWidth * 0.06,
                     ),
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Navigate to TableScreen with the tableCode
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TableScreen(
+                              tableCode: tableCode,
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         padding: EdgeInsets.zero,
