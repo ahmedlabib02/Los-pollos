@@ -195,8 +195,9 @@ class _TableScreenState extends State<TableScreen> {
                         ),
                         const SizedBox(height: 8),
                         // Replace placeholders with OrderSummary widgets dynamically
-                        ...currentTable!.billIds.map(
-                          (billId) => Padding(
+                        // ...currentTable!.billIds.map(
+                        //   (billId) => 
+                        Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Container(
                               height: 80, // Keeps consistent height
@@ -204,10 +205,9 @@ class _TableScreenState extends State<TableScreen> {
                                 color: Styles.inputFieldBgColor,
                                 borderRadius: BorderRadius.circular(4.0),
                               ),
-                              child: OrderSummary(billID: billId),
+                              child: OrderSummary(tableId: currentTable!.id),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),

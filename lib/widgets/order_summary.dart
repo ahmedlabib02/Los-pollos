@@ -25,9 +25,9 @@ class _OrderSummaryState extends State<OrderSummary> {
     return await _clientService.getOrderPerTable(widget.tableId);
   }
 
-  //=============================================
-  // DUMMY DATA
-  //=============================================
+  // //=============================================
+  // // DUMMY DATA
+  // //=============================================
   //   final Map<String, dynamic> mockTable = {
   //   'id': 'table_123',
   //   'isTableSplit': false,
@@ -107,8 +107,8 @@ class _OrderSummaryState extends State<OrderSummary> {
       ),
 
 
-      /// For Dummy Data
-      /// 
+      // /// For Dummy Data
+      // /// 
       // body: mockOrderItems.isEmpty
       //     ? const Center(child: Text('No Order Items available'))
       //     : Column(
