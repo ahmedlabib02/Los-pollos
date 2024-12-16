@@ -4,9 +4,7 @@ import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/widgets/order_item.dart';
 
-
 class OrderSummary extends StatefulWidget {
-
   final String billID;
 
   const OrderSummary({super.key, required this.billID});
@@ -16,16 +14,13 @@ class OrderSummary extends StatefulWidget {
 }
 
 class _OrderSummaryState extends State<OrderSummary> {
-
   final ClientService _clientService = ClientService();
 
   List<OrderItem> orderItems = [];
 
   Future<List<OrderItem>> getOrderItems() async {
-    return await _clientService
-        .getOrderPerBill(widget.billID);
+    return await _clientService.getOrderPerBill(widget.billID);
   }
-
 
   // // Dummy data for the bill
   // final Map<String, dynamic> mockBill = {
@@ -73,22 +68,9 @@ class _OrderSummaryState extends State<OrderSummary> {
   //   ),
   // ];
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Order Summary',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        // backgroundColor: Colors.yellow[700],
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back),
-        //   onPressed: () {
-        //     Navigator.pop(context);
-        //   },
-        // ),
-      ),
       body: FutureBuilder<List<OrderItem>>(
         future: getOrderItems(),
         builder: (context, snapshot) {
@@ -101,18 +83,16 @@ class _OrderSummaryState extends State<OrderSummary> {
           } else {
             orderItems = snapshot.data!;
 
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: orderItems.length,
-                    itemBuilder: (context, index) {
-                      return OrderItemCard(orderItem: orderItems[index]);
-                    },
-                  ),
-                )
-              ]
-            );
+            return Column(children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: orderItems.length,
+                  itemBuilder: (context, index) {
+                    return OrderItemCard(orderItem: orderItems[index]);
+                  },
+                ),
+              )
+            ]);
           }
         },
       ),
