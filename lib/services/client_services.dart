@@ -346,6 +346,10 @@ class ClientService {
         }
       }
 
+      if (table.totalAmount == 0) {
+        return 0.0; // Avoid division by zero
+      }
+
       // Calculate the percentage of the total amount that has been paid
       return (totalPaid / table.totalAmount) * 100;
     } catch (e) {
@@ -371,7 +375,7 @@ class ClientService {
     }
   }
 
-    Future<List<OrderItem>> getOrderPerTable(String tableID) async {
+  Future<List<OrderItem>> getOrderPerTable(String tableID) async {
     try {
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(tableID).get();

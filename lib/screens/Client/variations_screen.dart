@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/shared/GreyTextField.dart';
 
 class ItemCustomization extends StatefulWidget {
