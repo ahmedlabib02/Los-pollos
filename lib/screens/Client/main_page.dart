@@ -5,6 +5,7 @@ import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Client/notification_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
 import 'package:los_pollos_hermanos/screens/chat/chat_overlay.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
@@ -42,7 +43,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _screens = [
     TableScreenWrapper(), // Table (Home)
     MenuScreen(),
-    UpdatesScreen(),
+    NotificationsScreen(),
     AccountScreen(),
   ];
 
