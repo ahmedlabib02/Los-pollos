@@ -1,50 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
-import 'package:los_pollos_hermanos/shared/PaymentProgressIndicator.dart';
-import 'package:los_pollos_hermanos/shared/Styles.dart';
+import 'package:los_pollos_hermanos/models/table_model.dart' as TableModel;
+import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:los_pollos_hermanos/shared/TableCard.dart';
-import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 
 class TablesScreen extends StatefulWidget {
-  TablesScreen({super.key});
+  final String restaurantId;
 
-  static const List<Map<String, String>> users = TempVars.users;
-  List<Map<String, dynamic>> tables = [
-    {
-      'tableNumber': 1,
-      'code': 'BFR193',
-      'startTime': 'Jan 30, 2024 - 5:40 PM',
-      'paidPercentage': 0.8,
-      'orderStatus': 'No orders placed',
-      'members': [users[0], users[1], users[2]]
-    },
-    {
-      'tableNumber': 2,
-      'code': 'FKS385',
-      'startTime': 'Jan 30, 2024 - 7:00 PM',
-      'paidPercentage': 0,
-      'orderStatus': 'Orders in progress',
-      'members': [users[3], users[4]]
-    },
-    {
-      'tableNumber': 3,
-      'code': 'KDS265',
-      'startTime': 'Jan 30, 2024 - 7:20 PM',
-      'paidPercentage': 1,
-      'orderStatus': 'All orders served',
-      'members': [users[5], users[6], users[7], users[8], users[0], users[1]]
-    }
-  ];
+  const TablesScreen({super.key, required this.restaurantId});
 
   @override
   State<TablesScreen> createState() => _TablesScreenState();
 }
 
 class _TablesScreenState extends State<TablesScreen> {
-  List<Map<String, dynamic>> _tables = [];
+  final ManagerServices _managerServices = ManagerServices();
+  final ClientService _clientService = ClientService();
+  List<Map<String, dynamic>> _currentTables = [];
+  List<Map<String, dynamic>> _pastTables = [];
+  bool isLoading = true;
+
+  @override
   void initState() {
-    _tables = widget.tables;
+    super.initState();
+    _loadTablesData();
+  }
+
+  Future<void> _loadTablesData() async {
+    try {
+      // Fetch current tables
+      List<TableModel.Table> currentTables =
+          await _managerServices.getCurrentTables(widget.restaurantId);
+      // Fetch past tables
+      List<TableModel.Table> pastTables =
+          await _managerServices.getPastTables(widget.restaurantId);
+
+      // Process and fetch users for each table
+      List<Map<String, dynamic>> processedCurrentTables =
+          await _processTables(currentTables);
+      List<Map<String, dynamic>> processedPastTables =
+          await _processTables(pastTables);
+
+      setState(() {
+        _currentTables = processedCurrentTables;
+        _pastTables = processedPastTables;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading tables: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _processTables(
+      List<TableModel.Table> tables) async {
+    List<Map<String, dynamic>> processedTables = [];
+    for (var table in tables) {
+      try {
+        // Fetch users for the table
+        List<Map<String, dynamic>> users = await _fetchUsers(table.userIds);
+        double paidPercentage =
+            await _clientService.calculatePaidPercentage(table.id);
+
+        processedTables.add({
+          'tableNumber': table.tableCode,
+          'code': table.tableCode,
+          'startTime':
+              'Jan 30, 2024 - 7:00 PM', // Replace with real start time if available
+          'paidPercentage': paidPercentage,
+          'orderStatus': table.isOngoing ? 'On-going' : 'Completed',
+          'members': users,
+        });
+      } catch (e) {
+        print('Error processing table ${table.id}: $e');
+      }
+    }
+    return processedTables;
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchUsers(List<String> userIds) async {
+    List<Map<String, dynamic>> fetchedUsers = [];
+    for (String userId in userIds) {
+      try {
+        Map<String, dynamic> user = await _clientService.getUserById(userId);
+        fetchedUsers.add(user);
+      } catch (e) {
+        print('Error fetching user $userId: $e');
+      }
+    }
+    return fetchedUsers;
   }
 
   @override
@@ -81,34 +127,52 @@ class _TablesScreenState extends State<TablesScreen> {
             ),
           ),
         ),
-        body: TabBarView(
-          children: [
-            // On-going Tab
-            ListView.separated(
-              padding: EdgeInsets.all(screenWidth * 0.03),
-              itemCount: _tables.length,
-              separatorBuilder: (context, index) => Container(
-                  // color: Colors.transparent,
-                  height: 10.0), // Adjust height as needed
-              itemBuilder: (context, index) {
-                final table = _tables[index];
-
-                return TableCard(
-                  screenWidth: screenWidth,
-                  tableName: 'Table ${table['tableNumber']} - ' + table['code'],
-                  startTime: table['startTime'],
-                  members: table['members'],
-                  paidPercentage: table['paidPercentage'].toDouble(),
-                  orderStatus: table['orderStatus'],
-                );
-              },
-            ),
-            // Past Tab
-            const Center(
-              child: Text('Past Tables'),
-            ),
-          ],
-        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  // On-going Tab
+                  ListView.separated(
+                    padding: EdgeInsets.all(screenWidth * 0.03),
+                    itemCount: _currentTables.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final table = _currentTables[index];
+                      return TableCard(
+                        screenWidth: screenWidth,
+                        tableName: 'Table - ${table['code']}',
+                        startTime: table['startTime'],
+                        members: table['members'],
+                        paidPercentage: table['paidPercentage'],
+                        orderStatus: table['orderStatus'],
+                        tableCode: table['code'], // Pass the table code
+                        context: context,
+                      );
+                    },
+                  ),
+                  // Past Tab
+                  ListView.separated(
+                    padding: EdgeInsets.all(screenWidth * 0.03),
+                    itemCount: _pastTables.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final table = _pastTables[index];
+                      return TableCard(
+                        screenWidth: screenWidth,
+                        tableName: 'Table - ${table['code']}',
+                        startTime: table['startTime'],
+                        members: table['members'],
+                        paidPercentage: table['paidPercentage'],
+                        orderStatus: table['orderStatus'],
+                        tableCode: table['code'], // Pass the table code
+                        context: context,
+                      );
+                    },
+                  ),
+                ],
+              ),
       ),
     );
   }

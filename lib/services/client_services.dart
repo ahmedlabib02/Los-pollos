@@ -1,6 +1,7 @@
 // lib/services/client_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/menu_model.dart';
@@ -8,6 +9,7 @@ import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
+import 'package:los_pollos_hermanos/models/notification_model.dart';
 
 class ClientService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -346,6 +348,10 @@ class ClientService {
         }
       }
 
+      if (table.totalAmount == 0) {
+        return 0.0; // Avoid division by zero
+      }
+
       // Calculate the percentage of the total amount that has been paid
       return (totalPaid / table.totalAmount) * 100;
     } catch (e) {
@@ -358,11 +364,17 @@ class ClientService {
   Future<void> addOrderItemToTable(
       String tableID, OrderItem orderItem, String restaurantId) async {
     try {
+
+      DocumentReference orderItemDoc = _firestore.collection('orderItems').doc();
+      orderItem.id = orderItemDoc.id;
+      await orderItemDoc.set(orderItem.toMap());
+
       DocumentReference tableRef = _firestore.collection('tables').doc(tableID);
       await tableRef.update({
         'orderItemIds': FieldValue.arrayUnion([orderItem.id]),
         'totalAmount': FieldValue.increment(orderItem.price),
       });
+
       createOrUpdateBill(orderItem.userIds[0], orderItem.id, restaurantId);
       updateAllBills(tableID);
       print("Order item added to table successfully");
@@ -482,11 +494,11 @@ class ClientService {
       String userID, String orderItemID, String restaurantId) async {
     try {
       DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(userID).get();
+          await _firestore.collection('clients').doc(userID).get();
       String currentTableID = userDoc.get('currentTableID');
       DocumentSnapshot orderItemDoc =
           await _firestore.collection('orderItems').doc(orderItemID).get();
-      double orderItemAmount = orderItemDoc.get('amount') /
+      double orderItemAmount = orderItemDoc.get('price') /
           orderItemDoc.get('userIds').length as double;
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(currentTableID).get();
@@ -504,7 +516,7 @@ class ClientService {
         await _firestore
             .collection('bills')
             .doc(userBillId)
-            .update({'amount': newAmount});
+            .update({'amount': newAmount, 'orderItemIds': FieldValue.arrayUnion([orderItemID])});
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -812,6 +824,46 @@ class ClientService {
       return null;
     } catch (e) {
       throw Exception('Error fetching Menu Item: $e');
+    }
+  }
+
+  Future<void> addNotification(String uid, AppNotification notification) async {
+    try {
+      // Reference to the user's notifications subcollection
+      DocumentReference notifRef = _firestore
+          .collection(collectionPath)
+          .doc(uid)
+          .collection('notifications')
+          .doc(notification.id);
+
+      // Set the notification data
+      await notifRef.set(notification.toMap());
+      print('Notification added successfully for user: ${uid}');
+    } catch (e) {
+      throw Exception('Error adding notification: $e');
+    }
+  }
+
+  /// Retrieves all past notifications for a client
+
+  Future<List<AppNotification>> getNotifications(String uid) async {
+    try {
+      print('Fetching notifications for user: $uid');
+      QuerySnapshot snapshot = await _firestore
+          .collection('clients')
+          .doc(uid)
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      print('Number of notifications: ${snapshot.docs.length}');
+      return snapshot.docs.map((doc) {
+        print('Notification document: ${doc.data()}');
+        return AppNotification.fromDocument(doc);
+      }).toList();
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      throw Exception('Error fetching notifications: $e');
     }
   }
 }

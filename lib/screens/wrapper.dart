@@ -52,6 +52,7 @@ import 'package:los_pollos_hermanos/screens/Client/table_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/test_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/view_tables_screen.dart';
 import 'package:los_pollos_hermanos/screens/Dummy/dummy_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/main_page_manager.dart';
 import 'package:los_pollos_hermanos/screens/Manager/view_tables_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/main_page.dart';
 import 'package:los_pollos_hermanos/screens/Manager/home.dart';
@@ -115,7 +116,7 @@ class Wrapper extends StatelessWidget {
           },
         );
       } else {
-        return const ManagerHome();
+        return MainPageManager();
       }
     }
   }

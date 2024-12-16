@@ -81,7 +81,6 @@ class ManagerServices {
     }
   }
 
-  // ------------------  Tables Operations ---------------------------
   Future<List<Table>> getCurrentTables(String restaurantId) async {
     try {
       QuerySnapshot tablesSnapshot = await _firestore
@@ -184,6 +183,4 @@ class ManagerServices {
       throw e;
     }
   }
-
-  
 }
