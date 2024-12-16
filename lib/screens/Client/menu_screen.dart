@@ -21,6 +21,22 @@ class MenuScreen extends StatelessWidget {
           role: role, // Pass the role to MenuList
         ),
       ),
+      // Floating Action Button for Managers to Add a New Menu Item
+      floatingActionButton: role == 'manager'
+          ? FloatingActionButton(
+              backgroundColor: const Color(0xFFF2C230), // Yellow color
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddMenuItemScreen(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add New Menu Item',
+            )
+          : null, // Null if the role is not "manager"
     );
   }
 }
@@ -398,16 +414,16 @@ class MenuItemWidget extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AddMenuItemScreen(
-                          initialData: {
-                            'title': item.name,
-                            'description': item.description,
-                            'image': item.imageUrl,
-                            'variants': item.variants ?? [],
-                            'extras': item.extras ?? [],
-                            'basePrice': item.price,
-                            'discount': item.discount,
-                          },
-                        ),
+                            // initialData: {
+                            //   'title': item.name,
+                            //   'description': item.description,
+                            //   'image': item.imageUrl,
+                            //   'variants': item.variants ?? [],
+                            //   'extras': item.extras ?? [],
+                            //   'basePrice': item.price,
+                            //   'discount': item.discount,
+                            // },
+                            ),
                       ),
                     );
                   }

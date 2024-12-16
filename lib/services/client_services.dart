@@ -1,6 +1,7 @@
 // lib/services/client_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/menu_model.dart';
@@ -8,6 +9,7 @@ import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
+import 'package:los_pollos_hermanos/models/notification_model.dart';
 
 class ClientService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -755,6 +757,46 @@ class ClientService {
       return null;
     } catch (e) {
       throw Exception('Error fetching Menu Item: $e');
+    }
+  }
+
+  Future<void> addNotification(String uid, AppNotification notification) async {
+    try {
+      // Reference to the user's notifications subcollection
+      DocumentReference notifRef = _firestore
+          .collection(collectionPath)
+          .doc(uid)
+          .collection('notifications')
+          .doc(notification.id);
+
+      // Set the notification data
+      await notifRef.set(notification.toMap());
+      print('Notification added successfully for user: ${uid}');
+    } catch (e) {
+      throw Exception('Error adding notification: $e');
+    }
+  }
+
+  /// Retrieves all past notifications for a client
+
+  Future<List<AppNotification>> getNotifications(String uid) async {
+    try {
+      print('Fetching notifications for user: $uid');
+      QuerySnapshot snapshot = await _firestore
+          .collection('clients')
+          .doc(uid)
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      print('Number of notifications: ${snapshot.docs.length}');
+      return snapshot.docs.map((doc) {
+        print('Notification document: ${doc.data()}');
+        return AppNotification.fromDocument(doc);
+      }).toList();
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      throw Exception('Error fetching notifications: $e');
     }
   }
 }
