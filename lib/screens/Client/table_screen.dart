@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/screens/Client/bill_summary_screen.dart';
 
 import 'package:los_pollos_hermanos/shared/CustomChip.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
@@ -75,6 +76,12 @@ class TableScreen extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () {
                                   // Handle "Track bill" button press
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BillSummaryScreen(),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFF2C230),
@@ -103,6 +110,7 @@ class TableScreen extends StatelessWidget {
                                       ),
                                     ),
                                     // Space between text and icon
+
                                     Icon(
                                       Icons.chevron_right, // Chevron icon
                                       color: Styles

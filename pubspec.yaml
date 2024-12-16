@@ -40,9 +40,7 @@ dependencies:
   dropdown_button2: ^2.3.9
   googleapis: ^13.2.0
   googleapis_auth: ^1.6.0
-  
-
-  # image_picker: ^0.8.6
+  flutter_animate: ^4.5.2
 
 
 dev_dependencies:

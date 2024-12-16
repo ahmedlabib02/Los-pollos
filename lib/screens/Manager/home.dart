@@ -7,7 +7,7 @@ class ManagerHome extends StatelessWidget {
 
   // Example FCM token provided
   final String fcmToken =
-      "fhHY3iUbT0WSOboq7uGed_:APA91bFnLYmoVx8n3_uNH1FzUAqpylqlN0F2PDu-K7t1hj7l4_F_3ViqtHEfFipbI5InKiIY876ozvmcw1JQxGcCUa1eb-PUj_mVSTRLIlcFkusSdy_G_Xk";
+      "fhHY3iUbT0WSOboq7uGed_:APA91bEng5Dtmqgiy9DODYuPy7z_nPqH76zNcnoYYvLSP_0SXt303Dv_PtHLCD2DK7rY1FEuXzFsaBQNig2e0JsT58WQCuN9Y0TE7IYr9QixFHsXVJXmSEE";
 
   @override
   Widget build(BuildContext context) {

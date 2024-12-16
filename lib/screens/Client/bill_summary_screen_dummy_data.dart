@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/widgets/payment_button.dart';
 import 'package:los_pollos_hermanos/widgets/bill_card_widget.dart';
 
@@ -17,7 +18,7 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
       'id': '1',
       'name': 'Emily',
       "imageUrl":
-          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2F9eada6aa-7af5-4329-9da5-b5b99944c32b.jpg?alt=media&token=127596d0-cef3-4a5b-a659-928d0a551e29",
+          "https://firebasestorage.googleapis.com/v0/b/los-pollos-a9354.firebasestorage.app/o/profile_images%2Fdec02e79-50f7-4050-a563-5666c1017ce8.jpg?alt=media&token=c222f82e-1379-4689-9f28-84c531ac954a",
       'amount': 420.0,
       'orderItems': [
         {'itemCount': 1, 'itemName': 'Caesar Salad'},
@@ -122,17 +123,32 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Bill Summary',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
+          ),
         ),
-        backgroundColor: Colors.yellow[700],
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back), // Back icon
+          tooltip: 'Back',
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context); // Navigate back to the Account Screen
           },
         ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
+        scrolledUnderElevation: 0,
+        centerTitle: true,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: fetchBills(),

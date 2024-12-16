@@ -4,6 +4,7 @@ import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
 import 'package:los_pollos_hermanos/screens/Client/add_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/order_history_screen.dart';
+import 'package:los_pollos_hermanos/screens/chat/chat_overlay.dart';
 // import 'package:los_pollos_hermanos/screens/Client/../../shared/TableRing_wrapper.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
@@ -68,7 +69,7 @@ class _MainPageState extends State<MainPage> {
             fontSize: 26.0,
           ),
         ),
-        leading: tableState.isInTable
+        leading: tableState.isInTable || tableState.isInTable == null
             ? null
             : IconButton(
                 icon: Icon(Icons.arrow_back), // Back icon
@@ -88,11 +89,11 @@ class _MainPageState extends State<MainPage> {
             onPressed: () async {
               try {
                 await AuthService().signOut();
-                // Navigator.of(context).pushAndRemoveUntil(
-                //   MaterialPageRoute(builder: (context) => const Wrapper()),
-                //   (route) =>
-                //       false, // This removes all previous routes from the stack
-                // );
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const Wrapper()),
+                  (route) =>
+                      false, // This removes all previous routes from the stack
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Signed out successfully')),
                 );
@@ -105,6 +106,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         bottom: PreferredSize(
@@ -117,6 +119,15 @@ class _MainPageState extends State<MainPage> {
         centerTitle: true,
       ),
       body: _screens[_selectedIndex],
+      floatingActionButton: tableState.isInTable
+          ? FloatingActionButton(
+              onPressed: () {
+              showDialog(context: context, builder: (context) => ChatOverlay());
+              },
+              child: Icon(Icons.auto_awesome),
+              backgroundColor: Color.fromRGBO(239, 180, 7, 1),
+            )
+          : null,
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           splashFactory: NoSplash.splashFactory, // Removes ripple effect
@@ -143,6 +154,7 @@ class _MainPageState extends State<MainPage> {
               label: 'Account',
             ),
           ],
+          backgroundColor: Colors.white,
           currentIndex: _selectedIndex,
           selectedItemColor:
               Color.fromRGBO(239, 180, 7, 1), // Highlighted color

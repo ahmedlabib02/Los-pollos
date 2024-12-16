@@ -145,7 +145,7 @@ class ClientService {
   }
 
 // ------------------------ Table Operations ------------------------
-  Future<Table> createTable(String userID) async {
+  Future<Table> createTable(String userID, String restaurantId) async {
     try {
       Table table = Table(
         id: "",
@@ -156,6 +156,7 @@ class ClientService {
         totalAmount: 0.0,
         tableCode: Table.generateTableCode(),
         isOngoing: true,
+        restaurantId: restaurantId,
       );
       DocumentReference tableRef = _firestore.collection('tables').doc();
       table.id = tableRef.id;
@@ -185,6 +186,26 @@ class ClientService {
       print("Failed to retrieve table: $e");
     }
     return null;
+  }
+
+  Future<Table?> getTableByCode(String tableCode) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection(
+              'tables') // Ensure this matches your Firestore collection name
+          .where('tableCode', isEqualTo: tableCode)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return Table.fromMap(
+            snapshot.docs.first.data() as Map<String, dynamic>);
+      } else {
+        return null; // Table with the provided code not found
+      }
+    } catch (e) {
+      print("Error fetching table: $e");
+      return null;
+    }
   }
 
   Future<String> joinTable(String tableCode, String userId) async {
@@ -331,7 +352,9 @@ class ClientService {
           orderItemIds: [orderItemID],
           restaurantId: restaurantId,
         );
-        await billRef.set(bill.toMap());
+
+        await billRef
+            .set({...bill.toMap(), 'timestamp': FieldValue.serverTimestamp()});
         await _firestore.collection('tables').doc(currentTableID).update({
           'billIds': FieldValue.arrayUnion([billRef.id])
         });
@@ -567,5 +590,4 @@ class ClientService {
       throw Exception('Error fetching Menu Item: $e');
     }
   }
-  
 }
