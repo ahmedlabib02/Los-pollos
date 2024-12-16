@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/models/order_item_model.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:provider/provider.dart';
+import 'package:los_pollos_hermanos/models/table_model.dart' as TableModel;
 
 class MenuItemScreen extends StatefulWidget {
   final String menuItemId;
@@ -13,6 +18,9 @@ class MenuItemScreen extends StatefulWidget {
 
 class _MenuItemScreenState extends State<MenuItemScreen> {
   MenuItem? menuItem;
+  TableModel.Table? ongoingTable;
+  bool isLoading = true;
+
   int quantity = 1;
   Set<String> removedVariants = {};
   Set<String> selectedExtras = {};
@@ -24,7 +32,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 //   // Dummy menu items data
 // final List<MenuItem> mockMenuItems = [
 //   MenuItem(
-//     id: "1",
+//     id: "menu_001",
 //     name: "Cheese Burger",
 //     price: 200.0,
 //     description: "Juicy beef patty with cheese and fresh veggies.",
@@ -39,7 +47,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 //     imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEJiNX0GZfl21raOShpI3p-W8CkdBITCCwAQ&s",
 //   ),
 //   MenuItem(
-//     id: "103",
+//     id: "menu_002",
 //     name: "Pepperoni Pizza",
 //     price: 250.0,
 //     description:
@@ -57,7 +65,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 //     imageUrl: "https://via.placeholder.com/300x200.png?text=Pepperoni+Pizza",
 //   ),
 //   MenuItem(
-//     id: "102",
+//     id: "menu_003",
 //     name: "Garden Salad",
 //     price: 150.0,
 //     description:
@@ -82,6 +90,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   void initState() {
     super.initState();
     fetchMenuItem();
+    _fetchOngoingTable();
   }
 
   Future<void> fetchMenuItem() async {
@@ -90,6 +99,89 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
     setState(() {
       menuItem = fetchedMenuItem;
     });
+  }
+
+  Future<void> _fetchOngoingTable() async {
+    try {
+      // Access userId and restaurantId from the provider
+      final userId = Provider.of<CustomUser>(context, listen: false).uid;
+
+      // Fetch the ongoing table
+      final table = await ClientService().getOngoingTableForUser(userId);
+
+      if (table != null) {
+        setState(() {
+          ongoingTable = table;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No ongoing table found for this user.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching table: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  
+  int calculateTotal() {
+    double total = menuItem!.price;
+
+    // Add extras prices
+    for (var extra in selectedExtras) {
+      if (menuItem!.extras.containsKey(extra)) {
+        total += menuItem!.extras[extra]!;
+      }
+    }
+
+    // Apply quantity
+    total *= quantity;
+
+    return total.toInt();
+  }
+
+  Future<void> _addToOrder() async {
+    try {
+      final userId = Provider.of<CustomUser>(context, listen: false).uid;
+      final restaurantId = Provider.of<SelectedRestaurantProvider?>(context,
+                                        listen: false)
+                                    ?.selectedRestaurantId ?? '';
+
+      final orderItem = OrderItem(
+        id: "",
+        userIds: [userId],
+        menuItemId: menuItem!.id,
+        tableId: ongoingTable!.id,
+        status: OrderStatus.accepted,
+        itemCount: quantity, // Replace with actual quantity
+        notes: [...removedVariants, ...selectedExtras], 
+        price: calculateTotal().toDouble(),
+        name: menuItem!.name,
+        imageUrl: menuItem!.imageUrl, // Replace with actual image URL
+      );
+
+      await ClientService().addOrderItemToTable(
+        ongoingTable!.id,
+        orderItem,
+        restaurantId,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item added to order successfully!')),
+      );
+
+      Navigator.pop(context); // Go back after adding the item
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding to order: $e')),
+      );
+    }
   }
 
 
@@ -118,24 +210,61 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   //   });
   // }
 
-  int calculateTotal() {
-    double total = menuItem!.price;
+  //   Future<void> _fetchOngoingTable() async {
+  //   await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+  //   final TableModel.Table mockTable = TableModel.Table(
+  //   id: 'table_123',
+  //   isTableSplit: false,
+  //   userIds: ['user_1', 'user_2', 'user_3'],
+  //   orderItemIds: ['order_001', 'order_002', 'order_003'],
+  //   billIds: ['bill_1'],
+  //   totalAmount: 45.50,
+  //   tableCode: 'ABCD',
+  //   isOngoing: true,
+  //   restaurantId: 'restaurant_123',
+  //   );
 
-    // Add extras prices
-    for (var extra in selectedExtras) {
-      if (menuItem!.extras.containsKey(extra)) {
-        total += menuItem!.extras[extra]!;
-      }
-    }
+  //   setState(() {
+  //     ongoingTable = mockTable;
+  //   });
+  // }
 
-    // Apply quantity
-    total *= quantity;
+  // Future<void> _addToOrder() async {
 
-    return total.toInt();
-  }
+  //   final userId = "user_1";
+  //   final restaurantId = "restaurant_123";
+
+  //   final orderItem = OrderItem(
+  //       id: "",
+  //       userIds: [userId],
+  //       menuItemId: menuItem!.id,
+  //       tableId: ongoingTable!.id,
+  //       status: OrderStatus.accepted,
+  //       itemCount: quantity, // Replace with actual quantity
+  //       notes: [...removedVariants, ...selectedExtras], 
+  //       price: calculateTotal().toDouble(),
+  //       name: menuItem!.name,
+  //       imageUrl: menuItem!.imageUrl, // Replace with actual image URL
+  //   );
+
+  //   print("Mock Add Order Item to Table:");
+  //   print("Table ID: ${ongoingTable!.id}");
+  //   print("Order Item: ${orderItem.toMap()}");
+  //   print("Restaurant ID: $restaurantId");
+  //   await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text('Item added to order successfully!')),
+  //   );
+
+  //   Navigator.pop(context); // Go back after adding the item
+  // }
+
+  //=========================================================================
 
   @override
   Widget build(BuildContext context) {
+
     if (menuItem == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -316,8 +445,8 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
-                  onPressed: () {
-                    //Add Item To Order Backend
+                  onPressed: () async {
+                    await _addToOrder();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(239, 180, 7, 1),
