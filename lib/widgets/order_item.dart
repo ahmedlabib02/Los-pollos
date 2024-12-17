@@ -343,9 +343,20 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'x${_localOrderItem.itemCount}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 4.0),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(_localOrderItem.status),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    _getStatusText(_localOrderItem.status),
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -377,20 +388,9 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     color: Colors.black,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 4.0),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(_localOrderItem.status),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Text(
-                    _getStatusText(_localOrderItem.status),
-                    style: const TextStyle(
-                      fontSize: 14.0,
-                      color: Colors.black,
-                    ),
-                  ),
+                Text(
+                  'x${_localOrderItem.itemCount}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
