@@ -381,7 +381,9 @@ class _MenuListState extends State<MenuList> {
                                                     padding: const EdgeInsets
                                                         .symmetric(
                                                         vertical: 12),
-                                                    backgroundColor: const Color.fromARGB(255, 212, 76, 66), // Red background
+                                                    backgroundColor: const Color
+                                                        .fromARGB(255, 212, 76,
+                                                        66), // Red background
                                                     shape:
                                                         RoundedRectangleBorder(
                                                       borderRadius:
@@ -608,26 +610,21 @@ class MenuItemWidget extends StatelessWidget {
               flex: 3,
               child: MenuItemImageWidget(
                 imageUrl: item.imageUrl,
-                icon: role == "user" ? Icons.add : Icons.edit,
-                onIconTap: () {
-                  if (role == "user") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MenuItemScreen(menuItemId: item.id),
-                      ),
-                    );
-                  } else if (role == "manager") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AddMenuItemScreen(restaurantId: user!.uid),
-                      ),
-                    );
-                  }
-                },
+                icon: role == "user"
+                    ? Icons.add
+                    : null, // <-- pass null for manager
+                onIconTap: role == "user"
+                    ? () {
+                        // user click behavior
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MenuItemScreen(menuItemId: item.id),
+                          ),
+                        );
+                      }
+                    : null,
               ),
             ),
           ],
@@ -639,8 +636,8 @@ class MenuItemWidget extends StatelessWidget {
 
 class MenuItemImageWidget extends StatelessWidget {
   final String imageUrl;
-  final IconData icon;
-  final void Function() onIconTap;
+  final IconData? icon; // make it nullable
+  final void Function()? onIconTap;
 
   const MenuItemImageWidget({
     required this.imageUrl,
@@ -660,9 +657,7 @@ class MenuItemImageWidget extends StatelessWidget {
             width: 100,
             height: 100,
             loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
+              if (loadingProgress == null) return child;
               return const Center(child: CircularProgressIndicator());
             },
             errorBuilder: (context, error, stackTrace) {
@@ -670,35 +665,38 @@ class MenuItemImageWidget extends StatelessWidget {
             },
           ),
         ),
-        Positioned(
-          bottom: 5,
-          right: 5,
-          child: GestureDetector(
-            onTap: onIconTap,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Styles.primaryYellow,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 6,
-                    spreadRadius: 2,
+
+        // Only show the icon overlay if icon != null
+        if (icon != null)
+          Positioned(
+            bottom: 5,
+            right: 5,
+            child: GestureDetector(
+              onTap: onIconTap,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Styles.primaryYellow,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  radius: 18,
+                  child: Icon(
+                    icon,
+                    color: Colors.black,
+                    size: 18,
                   ),
-                ],
-              ),
-              child: CircleAvatar(
-                backgroundColor: Colors.transparent,
-                radius: 18,
-                child: Icon(
-                  icon,
-                  color: Colors.black,
-                  size: 18,
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

@@ -10,8 +10,13 @@ import 'package:los_pollos_hermanos/models/table_model.dart' as TableModel;
 
 class TableScreen extends StatefulWidget {
   final String tableCode;
+  final String role; // "user" or "manager"
 
-  const TableScreen({Key? key, required this.tableCode}) : super(key: key);
+  const TableScreen({
+    Key? key,
+    required this.tableCode,
+    required this.role, // pass the role as well
+  }) : super(key: key);
 
   @override
   State<TableScreen> createState() => _TableScreenState();
@@ -22,7 +27,7 @@ class _TableScreenState extends State<TableScreen> {
   final ClientService _clientService = ClientService();
   TableModel.Table? currentTable;
   bool isLoading = true;
-  List<Map<String, dynamic>> users = []; // Store fetched user data
+  List<Map<String, dynamic>> users = [];
   double paidPercentage = 0.0;
 
   @override
@@ -36,15 +41,14 @@ class _TableScreenState extends State<TableScreen> {
       TableModel.Table? table =
           await _clientService.getTableByCode(widget.tableCode);
       if (table != null) {
-        // Fetch users for the given user IDs
         List<Map<String, dynamic>> fetchedUsers =
             await _fetchUsers(table.userIds);
         double percentage =
             await _clientService.calculatePaidPercentage(table.id);
-
         setState(() {
           currentTable = table;
-          users = fetchedUsers; // Assign fetched users
+          users = fetchedUsers;
+          // paidPercentage = percentage; (assign if you need to use the value)
           isLoading = false;
         });
       } else {
@@ -59,8 +63,6 @@ class _TableScreenState extends State<TableScreen> {
       });
     }
   }
-
-  // static const List<Map<String, dynamic>> users = TempVars.users;
 
   Future<List<Map<String, dynamic>>> _fetchUsers(List<String> userIds) async {
     List<Map<String, dynamic>> fetchedUsers = [];
@@ -78,6 +80,35 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Conditionally add an app bar only if role == "manager"
+      appBar: widget.role == 'manager'
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text(
+                'Table',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26.0,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.black),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(10.0),
+                child: Container(
+                  color: Styles.inputFieldBorderColor,
+                  height: 1.0,
+                ),
+              ),
+              centerTitle: true,
+            )
+          : null, // If "user", no app bar
+
       body: Padding(
         padding: EdgeInsets.only(left: pad, right: pad, top: 10),
         child: isLoading
@@ -153,9 +184,7 @@ class _TableScreenState extends State<TableScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFFF2C230),
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0,
-                                        vertical: 0.0,
-                                      ),
+                                          horizontal: 8.0, vertical: 0.0),
                                       elevation: 0,
                                       shadowColor: Colors.transparent,
                                       shape: RoundedRectangleBorder(
@@ -193,13 +222,10 @@ class _TableScreenState extends State<TableScreen> {
                           style: TextStyle(fontSize: 24),
                         ),
                         const SizedBox(height: 8),
-                        // Replace placeholders with OrderSummary widgets dynamically
-                        // ...currentTable!.billIds.map(
-                        //   (billId) =>
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Container(
-                            height: 500, // Keeps consistent height
+                            height: 500,
                             decoration: BoxDecoration(
                               color: Styles.inputFieldBgColor,
                               borderRadius: BorderRadius.circular(4.0),

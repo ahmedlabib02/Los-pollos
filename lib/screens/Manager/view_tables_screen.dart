@@ -146,7 +146,8 @@ class _TablesScreenState extends State<TablesScreen> {
                         members: table['members'],
                         paidPercentage: table['paidPercentage'],
                         orderStatus: table['orderStatus'],
-                        tableCode: table['code'], // Pass the table code
+                        tableCode: table['code'],
+                        role: 'manager',
                         context: context,
                       );
                     },
@@ -167,6 +168,7 @@ class _TablesScreenState extends State<TablesScreen> {
                         paidPercentage: table['paidPercentage'],
                         orderStatus: table['orderStatus'],
                         tableCode: table['code'], // Pass the table code
+                        role: 'manager',
                         context: context,
                       );
                     },
