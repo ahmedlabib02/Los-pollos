@@ -4,7 +4,9 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
+import 'package:los_pollos_hermanos/shared/Dropdown.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
 
@@ -324,6 +326,9 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+
+    String? loggedInUserRole = Provider.of<CustomUser?>(context)!.role;
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(16.0),
@@ -388,10 +393,80 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     color: Colors.black,
                   ),
                 ),
-                Text(
-                  'x${_localOrderItem.itemCount}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+
+                loggedInUserRole == 'manager'
+                ?
+                DropdownButton<OrderStatus>(
+                    value: _localOrderItem.status,
+                    items: OrderStatus.values.map((OrderStatus status) {
+                      return DropdownMenuItem<OrderStatus>(
+                        value: status,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            _getStatusText(status),
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (OrderStatus? newStatus) async {
+                      if (newStatus != null) {
+                        try {
+                          // Update the status locally
+                          setState(() {
+                            _localOrderItem.status = newStatus;
+                          });
+
+                          // Call service to update the status in the backend
+                          await ManagerServices().updateOrderItemStatus(
+                            orderItemId: _localOrderItem.id,
+                            status: newStatus,
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Order status updated to ${_getStatusText(newStatus)}.',
+                              ),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to update status: $e',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  )
+                  : Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(_localOrderItem.status),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      _getStatusText(_localOrderItem.status),
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black,
+                      ),
+                    ),
+                  )
+
               ],
             ),
             const SizedBox(height: 16.0),

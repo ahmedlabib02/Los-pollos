@@ -183,4 +183,14 @@ class ManagerServices {
       throw e;
     }
   }
+
+  Future<void> updateOrderItemStatus({
+      required String orderItemId,
+      required OrderStatus status,
+    }) async {
+      await FirebaseFirestore.instance
+          .collection('orderItems')
+          .doc(orderItemId)
+          .update({'status': status.name});
+  }
 }
