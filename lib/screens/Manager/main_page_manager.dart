@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
-import 'package:los_pollos_hermanos/screens/Client/account_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/account.dart';
 import 'package:los_pollos_hermanos/screens/Client/dummy.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/models/client_model.dart';
@@ -30,7 +30,6 @@ class _MainPageManagerState extends State<MainPageManager> {
   final List<String> _titles = [
     'Tables',
     'Menu',
-    'Tables',
     'Account',
   ];
 
@@ -56,49 +55,56 @@ class _MainPageManagerState extends State<MainPageManager> {
       AccountScreen(),
     ];
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 26.0,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              try {
-                await AuthService().signOut();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const Wrapper()),
-                  (route) =>
-                      false, // This removes all previous routes from the stack
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Signed out successfully')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Error signing out')),
-                );
-              }
-            },
-          ),
-        ],
-        backgroundColor: Colors.white,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(10.0),
-          child: Container(
-            color: Styles.inputFieldBorderColor,
-            height: 1.0,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: _selectedIndex == 0
+          ? null
+          : AppBar(
+              title: Text(
+                _titles[_selectedIndex],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26.0,
+                ),
+              ),
+              actions: _selectedIndex == 2
+                  ? [
+                      IconButton(
+                        icon: const Icon(Icons.logout),
+                        onPressed: () async {
+                          try {
+                            await AuthService().signOut();
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const Wrapper()),
+                              (route) =>
+                                  false, // This removes all previous routes from the stack
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Signed out successfully')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Error signing out')),
+                            );
+                          }
+                        },
+                      ),
+                    ]
+                  : null,
+              backgroundColor: Colors.white,
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.black),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(10.0),
+                child: Container(
+                  color: Styles.inputFieldBorderColor,
+                  height: 1.0,
+                ),
+              ),
+              centerTitle: true,
+            ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(

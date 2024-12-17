@@ -1,6 +1,6 @@
 class Restaurant {
   final String id; // Firestore document ID
-  final String name;
+  String name;
   final String menuId;
   final String category;
   final String? imageUrl; // Nullable imageUrl field

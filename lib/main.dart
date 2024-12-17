@@ -106,28 +106,12 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
             inputDecorationTheme: InputDecorationTheme(
-  
-              // add colors to all texts to be black
-      
-
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
                   color: Color.fromRGBO(242, 194, 48, 1), // Custom golden color
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Colors.grey, // Default border color when not focused
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Colors.grey, // Default border
-                ),
-              ),
+           
             ),
             textTheme: GoogleFonts.madaTextTheme(
               Theme.of(context).textTheme.apply(

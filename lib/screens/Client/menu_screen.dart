@@ -3,6 +3,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/edit_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -526,8 +527,10 @@ class MenuItemWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AddMenuItemScreen(restaurantId: user!.uid),
+                        builder: (context) => EditMenuItemScreen(
+                          restaurantId: user!.uid,
+                          menuItemId: item.id,
+                        ),
                       ),
                     );
                   }
