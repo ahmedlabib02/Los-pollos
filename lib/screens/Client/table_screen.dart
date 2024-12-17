@@ -110,8 +110,7 @@ class _TableScreenState extends State<TableScreen> {
                                   ),
                                 ),
                                 alignment: Alignment.center,
-                                child: CustomChip(
-                                    '${paidPercentage.toStringAsFixed(1)}% paid'),
+                                child: CustomChip('${paidPercentage}% paid'),
                               ),
                             ),
                             Expanded(

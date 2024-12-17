@@ -4,7 +4,9 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
+import 'package:los_pollos_hermanos/shared/Dropdown.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
 
@@ -112,19 +114,20 @@ class _OrderItemCardState extends State<OrderItemCard> {
 
         // Use the newly fetched orderItem instead of _orderItem
         return Container(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+          // color: Colors.green,
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
           margin: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 1.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 6.0,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
+          // decoration: BoxDecoration(
+          //   color: Colors.white,
+          //   borderRadius: BorderRadius.circular(12.0),
+          //   boxShadow: const [
+          //     BoxShadow(
+          //       color: Colors.black12,
+          //       blurRadius: 0.0,
+          //       offset: Offset(0, 0),
+          //     ),
+          //   ],
+          // ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -149,8 +152,7 @@ class _OrderItemCardState extends State<OrderItemCard> {
                       children: [
                         Text(
                           menuItem.name,
-                          style: const TextStyle(
-                              fontSize: 18.0, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 16.0),
                         ),
                         const SizedBox(height: 2.0),
                         AvatarGroup(
@@ -165,7 +167,10 @@ class _OrderItemCardState extends State<OrderItemCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('${menuItem.price.toStringAsFixed(2)} EGP'),
+                      Text(
+                        '${menuItem.price.toStringAsFixed(2)} EGP',
+                        style: TextStyle(fontSize: 14),
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6.0, vertical: 2.0),
@@ -184,34 +189,37 @@ class _OrderItemCardState extends State<OrderItemCard> {
               const SizedBox(height: 8.0),
 
               // Details Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total  ${(orderItem.price).toStringAsFixed(2)} EGP',
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _showBottomDrawer(
-                          context, menuItem, users, loggedInUserId);
-                    },
-                    child: Text(
-                      'Details',
-                      style: TextStyle(
-                        color: Styles.primaryYellow,
-                        fontWeight: FontWeight.bold,
+              Container(
+                // color: Colors.red,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total  ${(orderItem.price).toStringAsFixed(2)} EGP',
+                      style: const TextStyle(
+                        fontSize: 16.0,
                       ),
                     ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 0.0, vertical: 0.0),
-                    ),
-                  )
-                ],
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: 30),
+                      child: TextButton(
+                        onPressed: () {
+                          _showBottomDrawer(
+                              context, menuItem, users, loggedInUserId);
+                        },
+                        child: Text(
+                          'Details',
+                          style: TextStyle(
+                            color: Styles.primaryYellow,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ],
           ),
@@ -318,6 +326,9 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+
+    String? loggedInUserRole = Provider.of<CustomUser?>(context)!.role;
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(16.0),
@@ -337,9 +348,20 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'x${_localOrderItem.itemCount}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 4.0),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(_localOrderItem.status),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    _getStatusText(_localOrderItem.status),
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -371,21 +393,80 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     color: Colors.black,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 4.0),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(_localOrderItem.status),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Text(
-                    _getStatusText(_localOrderItem.status),
-                    style: const TextStyle(
-                      fontSize: 14.0,
-                      color: Colors.black,
+
+                loggedInUserRole == 'manager'
+                ?
+                DropdownButton<OrderStatus>(
+                    value: _localOrderItem.status,
+                    items: OrderStatus.values.map((OrderStatus status) {
+                      return DropdownMenuItem<OrderStatus>(
+                        value: status,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            _getStatusText(status),
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (OrderStatus? newStatus) async {
+                      if (newStatus != null) {
+                        try {
+                          // Update the status locally
+                          setState(() {
+                            _localOrderItem.status = newStatus;
+                          });
+
+                          // Call service to update the status in the backend
+                          await ManagerServices().updateOrderItemStatus(
+                            orderItemId: _localOrderItem.id,
+                            status: newStatus,
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Order status updated to ${_getStatusText(newStatus)}.',
+                              ),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to update status: $e',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  )
+                  : Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(_localOrderItem.status),
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                  ),
-                ),
+                    child: Text(
+                      _getStatusText(_localOrderItem.status),
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black,
+                      ),
+                    ),
+                  )
+
               ],
             ),
             const SizedBox(height: 16.0),
