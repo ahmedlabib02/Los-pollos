@@ -126,7 +126,12 @@ class _OrderItemCardState extends State<OrderItemCard> {
       future: _fetchFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          // empty box of height 50 and margin 16
+          return Container(
+            height: 50,
+            margin: const EdgeInsets.all(20),
+            child: const Center(child: CircularProgressIndicator()),
+          );
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData ||
@@ -361,7 +366,6 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
     }
   }
 
-
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
@@ -389,7 +393,6 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
   }
 
   final NotificationService notificationService = NotificationService();
-
 
   @override
   Widget build(BuildContext context) {

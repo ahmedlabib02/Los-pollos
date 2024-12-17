@@ -94,30 +94,34 @@ class _OrderSummaryState extends State<OrderSummary> {
           } else {
             orderItems = snapshot.data!;
             // Assign orderItems inside setState if needed
-            return Column(children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: orderItems.length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 0.0),
-                          child: OrderItemCard(
-                            orderItem: orderItems[index],
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: orderItems.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 0.0),
+                            child: OrderItemCard(
+                              orderItem: orderItems[index],
+                            ),
                           ),
-                        ),
-                        if (index != orderItems.length - 1)
-                          Divider(
-                            color: Colors.grey.shade200,
-                            thickness: 1,
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              )
-            ]);
+                          if (index != orderItems.length - 1)
+                            Divider(
+                              color: Colors.grey.shade200,
+                              thickness: 1,
+                            ),
+                          if (index == orderItems.length - 1)
+                            const SizedBox(height: 80),
+                        ],
+                      );
+                    },
+                  ),
+                )
+              ],
+            );
           }
         },
       ),

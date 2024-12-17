@@ -229,7 +229,7 @@ class _TableScreenState extends State<TableScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Container(
-                            height: 300, // Keeps consistent height
+                            height: 380, // Keeps consistent height
                             decoration: BoxDecoration(
                               color: Styles.inputFieldBgColor,
                               borderRadius: BorderRadius.circular(4.0),
@@ -237,6 +237,7 @@ class _TableScreenState extends State<TableScreen> {
                             child: OrderSummary(tableId: currentTable!.id),
                           ),
                         ),
+        
                       ],
                     ),
                   ),

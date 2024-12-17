@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/notification_screen.dart';
@@ -7,6 +8,7 @@ import 'package:los_pollos_hermanos/screens/chat/chat_overlay.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen_wrapper.dart'; // Import TableScreenWrapper
 import 'package:los_pollos_hermanos/services/auth.dart';
+import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/services/notification_services.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
@@ -58,63 +60,98 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final tableState = Provider.of<TableState>(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 26.0,
-          ),
-        ),
-        leading: tableState.isInTable || tableState.isInTable == null
-            ? null
-            : IconButton(
-                icon: Icon(Icons.arrow_back), // Back icon
-                tooltip: 'Back to Choose Restaurant',
-                onPressed: () {
-                  // Navigate back to Choose Restaurant screen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ChooseRestaurantScreen()),
-                  );
-                },
+      appBar: _selectedIndex == 2
+          ? null // Hide AppBar on Notifications Screen
+          : AppBar(
+              title: Text(
+                _titles[_selectedIndex],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26.0,
+                ),
               ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              try {
-                await AuthService().signOut();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const Wrapper()),
-                  (route) =>
-                      false, // This removes all previous routes from the stack
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Signed out successfully')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Error signing out')),
-                );
-              }
-            },
-          ),
-        ],
-        backgroundColor: Colors.white,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(10.0),
-          child: Container(
-            color: Styles.inputFieldBorderColor,
-            height: 1.0,
-          ),
-        ),
-        centerTitle: true,
-      ),
+              // Conditional logic for the 'leading' icon
+              leading: (_selectedIndex == 0)
+                  ? (tableState.isInTable
+                      ? IconButton(
+                          icon: const Icon(Icons.keyboard_return,
+                              color: Colors.redAccent, size: 30),
+                          tooltip: 'Exit Table',
+                          onPressed: () async {
+                            tableState.leaveTable();
+                            // call the server to leave the table
+                            try {
+                              final user = Provider.of<CustomUser?>(context,
+                                  listen: false);
+                              await ClientService().leaveTable(user!.uid);
+                              tableState.leaveTable();
+                              setState(() {
+                                _selectedIndex = 0;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Exited the table Successfully')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
+                          },
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          tooltip: 'Back to Choose Restaurant',
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      ChooseRestaurantScreen()), // Navigate back
+                            );
+                          },
+                        ))
+                  : null, // Null for other pages
+              // Logout button only on Account page
+              actions: [
+                if (_selectedIndex == 3) // Show logout on Account Page
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async {
+                      try {
+                        await AuthService().signOut();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (context) => const Wrapper()),
+                          (route) => false, // Clears the navigation stack
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Signed out successfully')),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Error signing out')),
+                        );
+                      }
+                    },
+                  ),
+              ],
+              backgroundColor: Colors.white, // Change color for Table Screen
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              // remove border or bottom border
+              iconTheme: const IconThemeData(color: Colors.black),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(10.0),
+                child: Container(
+                  color: Styles.inputFieldBorderColor,
+                  height: 1.0,
+                ),
+              ),
+              centerTitle: true,
+            ),
       body: _screens[_selectedIndex],
       floatingActionButton: tableState.isInTable
           ? FloatingActionButton(

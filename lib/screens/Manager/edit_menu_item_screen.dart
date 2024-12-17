@@ -90,18 +90,14 @@ class _EditMenuItemScreenState extends State<EditMenuItemScreen> {
       );
 
       ManagerServices _managerServices = ManagerServices();
-      MenuItem createdItem = await _managerServices.createMenuItemForRestaurant(
-        restaurantId: widget.restaurantId,
-        category: "widget.category", // Update the category as required
-        menuItem: newItem,
-        imageFile: _selectedImage, // pass your selected File (if any)
-      );
+
+      await _managerServices.updateMenuItem(newItem);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Created item: ${createdItem.name}')),
+        SnackBar(content: Text('Edit successful')),
       );
 
-      Navigator.pop(context, createdItem);
+      Navigator.pop(context);
     } catch (e) {
       print('Error creating menu item: $e');
       ScaffoldMessenger.of(context).showSnackBar(

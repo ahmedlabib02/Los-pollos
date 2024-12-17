@@ -69,3 +69,4 @@ flutter:
   assets:
     - lib/.env
     - assets/restaurant_background.jpeg
+    - assets/restaurant_background.png

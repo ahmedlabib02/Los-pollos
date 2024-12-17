@@ -238,6 +238,13 @@ class ClientService {
           .limit(1) // Optimize for performance
           .get();
 
+      if (querySnapshot.docs.isNotEmpty) {
+        final tableData =
+            querySnapshot.docs.first.data() as Map<String, dynamic>;
+        if (tableData['isOngoing'] == false) {
+          throw Exception('Table is not ongoing');
+        }
+      }
       // Check if a table was found
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No table found with the provided code.');
@@ -1041,6 +1048,73 @@ class ClientService {
     } catch (e) {
       print('Error fetching reviews for menu item: $e');
       throw Exception('Failed to fetch reviews for menu item');
+    }
+  }
+
+// leave table
+// check if user bills are paid
+//  remove the user from the table
+// remove the user from the table userIds
+// if the table is empty change the isOngoing to false
+// if table has no bills and no orders delete it
+  Future<void> leaveTable(String userID) async {
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('clients').doc(userID).get();
+      String tableID = userDoc.get('currentTableID');
+
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(tableID).get();
+      List<String> userIds = List<String>.from(tableDoc.get('userIds'));
+      List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+      List<String> orderItemIds =
+          List<String>.from(tableDoc.get('orderItemIds'));
+
+      if (userIds.length == 1) {
+        // User is the only one in the table
+        if (billIds.isEmpty && orderItemIds.isEmpty) {
+          // No bills and no orders
+          await _firestore.collection('tables').doc(tableID).delete();
+          print('Table deleted successfully');
+        } else {
+          // Table has bills or orders
+          // check if user payed his bills
+
+          for (String billId in billIds) {
+            DocumentSnapshot billDoc =
+                await _firestore.collection('bills').doc(billId).get();
+            if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
+              throw Exception('Bills are not paid');
+            }
+          }
+          await _firestore.collection('tables').doc(tableID).update({
+            'userIds': FieldValue.arrayRemove([userID]),
+          });
+          print('User removed from table');
+        }
+      } else {
+        // User is not the only one in the table
+        for (String billId in billIds) {
+          DocumentSnapshot billDoc =
+              await _firestore.collection('bills').doc(billId).get();
+          if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
+            throw Exception('Bills are not paid');
+          }
+        }
+        await _firestore.collection('tables').doc(tableID).update({
+          'userIds': FieldValue.arrayRemove([userID]),
+        });
+        print('User removed from table');
+      }
+
+      // Update the user's current table ID
+      await _firestore.collection('clients').doc(userID).update({
+        'currentTableID': '',
+      });
+      print('User removed from table successfully');
+    } catch (e) {
+      print('Error leaving table: $e');
+      throw Exception('Failed to leave table');
     }
   }
 }

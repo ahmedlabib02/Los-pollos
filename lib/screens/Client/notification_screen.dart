@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/notification_model.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/screens/wrapper.dart';
+import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -52,13 +54,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFFFFC107), // Primary Yellow
+          title: const Text("Updates",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 26.0,
+              )),
+          backgroundColor: Colors.white,
+          scrolledUnderElevation: 0, // Primary Yellow
           elevation: 0,
+          centerTitle: true,
           bottom: TabBar(
             controller: _tabController,
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
+            indicatorColor: Color.fromRGBO(239, 180, 7, 1),
+            labelColor: Colors.black,
+            unselectedLabelColor: const Color.fromARGB(137, 47, 47, 47),
             labelStyle: const TextStyle(fontWeight: FontWeight.bold),
             tabs: const [
               Tab(text: 'All Notifications'),

@@ -27,11 +27,13 @@ class _ChooseRestaurantScreenState extends State<ChooseRestaurantScreen> {
     _searchController.addListener(_filterRestaurants);
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+
+
+  // @override
+  // void dispose() {
+  //   _searchController.dispose();
+  //   super.dispose();
+  // }
 
   Future<void> _fetchRestaurants() async {
     try {
