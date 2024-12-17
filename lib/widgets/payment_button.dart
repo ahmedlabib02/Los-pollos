@@ -6,11 +6,13 @@ class PaymentButton extends StatefulWidget {
   final double amount;
   final bool isPaid;
   bool isPaymentInProgress = false;
+  String billId;
   final Function(String) onPaymentSuccess;
   PaymentButton({
     super.key,
     required this.amount,
     required this.isPaid,
+    required this.billId,
     required this.onPaymentSuccess,
   });
 
@@ -35,7 +37,7 @@ class _PaymentButtonState extends State<PaymentButton> {
                   await StripeService.instance
                       .makePayment(widget.amount); // Amount can be dynamic
 
-                  widget.onPaymentSuccess('1');
+                  widget.onPaymentSuccess(widget.billId);
                 } catch (error) {
                   // In case of failure, notify the user through other means
                   ScaffoldMessenger.of(context).showSnackBar(

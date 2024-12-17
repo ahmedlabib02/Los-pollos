@@ -161,6 +161,7 @@ class _BillSummaryScreenState extends State<BillSummaryScreen> {
                 PaymentButton(
                   amount: total,
                   isPaid: isPaid,
+                  billId: bills[0]['id'],
                   onPaymentSuccess: (billId) {
                     _handleSuccesfulPayment(billId);
                   },
