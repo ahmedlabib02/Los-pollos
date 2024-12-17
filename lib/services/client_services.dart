@@ -364,8 +364,8 @@ class ClientService {
   Future<void> addOrderItemToTable(
       String tableID, OrderItem orderItem, String restaurantId) async {
     try {
-
-      DocumentReference orderItemDoc = _firestore.collection('orderItems').doc();
+      DocumentReference orderItemDoc =
+          _firestore.collection('orderItems').doc();
       orderItem.id = orderItemDoc.id;
       await orderItemDoc.set(orderItem.toMap());
 
@@ -509,22 +509,21 @@ class ClientService {
       for (String billId in billIds) {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(billId).get();
-        List<String> userIdsInBill = List<String>.from(billDoc.get('userIds'));
-        if (userIdsInBill.contains(userID)) {
+        if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
           userBillId = billId;
           break;
         }
       }
-    
+
       if (userBillId.isNotEmpty) {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(userBillId).get();
         double currentAmount = billDoc.get('amount');
         double newAmount = currentAmount + orderItemAmount;
-        await _firestore
-            .collection('bills')
-            .doc(userBillId)
-            .update({'amount': newAmount, 'orderItemIds': FieldValue.arrayUnion([orderItemID])});
+        await _firestore.collection('bills').doc(userBillId).update({
+          'amount': newAmount,
+          'orderItemIds': FieldValue.arrayUnion([orderItemID])
+        });
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(

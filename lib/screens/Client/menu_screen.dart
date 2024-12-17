@@ -1,42 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 
-class MenuScreen extends StatelessWidget {
-  final String role; // Role: "user" or "manager"
-
+class MenuScreen extends StatefulWidget {
+  final String role;
   const MenuScreen({Key? key, required this.role}) : super(key: key);
+
+  @override
+  _MenuScreenState createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  late Future<Map<String, List<MenuItem>>> _menuItemsFuture;
+  String? restaurantId;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<CustomUser?>(context, listen: false);
+    if (widget.role == 'manager') {
+      restaurantId = user!.uid;
+    } else {
+      restaurantId =
+          Provider.of<SelectedRestaurantProvider>(context, listen: false)
+              .selectedRestaurantId;
+    }
+    // Initialize the future
+    _menuItemsFuture =
+        ClientService().getMenuItemsByRestaurantId(restaurantId!);
+  }
+
+  /// Re-fetch from Firestore (or update your local data) after adding an item
+  void _refreshMenuItems() {
+    setState(() {
+      _menuItemsFuture =
+          ClientService().getMenuItemsByRestaurantId(restaurantId!);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: MenuList(
-          menuItemsFuture: ClientService()
-              .getMenuItemsByRestaurantId('da3ZRVRibXeFl2Vw30ya'),
-          role: role, // Pass the role to MenuList
+          menuItemsFuture: _menuItemsFuture,
+          role: widget.role,
         ),
       ),
-      // Floating Action Button for Managers to Add a New Menu Item
-      floatingActionButton: role == 'manager'
+      floatingActionButton: widget.role == 'manager'
           ? FloatingActionButton(
-              backgroundColor: const Color(0xFFF2C230), // Yellow color
+              backgroundColor: const Color(0xFFF2C230),
               onPressed: () {
+                final user = Provider.of<CustomUser?>(context, listen: false);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddMenuItemScreen(),
+                    builder: (context) =>
+                        AddMenuItemScreen(restaurantId: user!.uid),
                   ),
-                );
+                ).then((result) {
+                  // result is what we popped from AddMenuItemScreen
+                  if (result != null) {
+                    // We successfully created a new item. Let’s refetch the data:
+                    _refreshMenuItems();
+                  }
+                });
               },
               child: const Icon(Icons.add, color: Colors.black),
               tooltip: 'Add New Menu Item',
             )
-          : null, // Null if the role is not "manager"
+          : null,
     );
   }
 }
@@ -338,6 +378,7 @@ class MenuItemWidget extends StatelessWidget {
     final hasDiscount = item.discount > 0;
     final discountedPrice =
         hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
+    final user = Provider.of<CustomUser?>(context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: vPad, horizontal: hPad),
@@ -413,17 +454,8 @@ class MenuItemWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddMenuItemScreen(
-                            // initialData: {
-                            //   'title': item.name,
-                            //   'description': item.description,
-                            //   'image': item.imageUrl,
-                            //   'variants': item.variants ?? [],
-                            //   'extras': item.extras ?? [],
-                            //   'basePrice': item.price,
-                            //   'discount': item.discount,
-                            // },
-                            ),
+                        builder: (context) =>
+                            AddMenuItemScreen(restaurantId: user!.uid),
                       ),
                     );
                   }
