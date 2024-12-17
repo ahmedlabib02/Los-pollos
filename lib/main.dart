@@ -11,7 +11,6 @@ import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
-//import 'package:firebase_app_check/firebase_app_check.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 

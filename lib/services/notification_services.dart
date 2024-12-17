@@ -1,6 +1,6 @@
 // lib/services/notification_service.dart
-
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
@@ -12,15 +12,34 @@ import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:path_provider/path_provider.dart';
 
 // Top-level background message handler
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 }
 
+Future<String?> _downloadImage(String imageUrl) async {
+  try {
+    final response = await http.get(Uri.parse(imageUrl));
+    final tempDir = await getTemporaryDirectory(); // Correct usage
+    final filePath =
+        '${tempDir.path}/sender_image_${DateTime.now().millisecondsSinceEpoch}.png';
+
+    final file = File(filePath);
+    await file.writeAsBytes(response.bodyBytes);
+    print('Image downloaded: $filePath');
+    return file.path;
+  } catch (e) {
+    print('Error downloading image: $e');
+    return null;
+  }
+}
+
 class NotificationService {
   // Singleton pattern
   static final NotificationService _instance = NotificationService._internal();
+  ClientService clientService = ClientService();
 
   factory NotificationService() => _instance;
 
@@ -64,16 +83,25 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     final InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await _localNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap
-        // Example: Navigate to a specific screen based on notification type
-        // You might need to pass the 'type' as part of the payload
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        if (response.payload != null) {
+          final Map<String, dynamic> payload = jsonDecode(response.payload!);
+          final String orderId = payload['orderId'] ?? '';
+
+          // if (response.actionId == 'accept_action') {
+          //   print('User accepted the invite for Order ID: $orderId');
+          //   await ClientService()
+          //       .acceptOrderInvite(orderId); // Implement this logic
+          // } else if (response.actionId == 'reject_action') {
+          //   print('User rejected the invite for Order ID: $orderId');
+          //   await ClientService()
+          //       .rejectOrderInvite(orderId); // Implement this logic
+          // }
+        }
       },
     );
   }
@@ -97,35 +125,70 @@ class NotificationService {
   void _configureForegroundNotificationListener(BuildContext context) {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print('Foreground message received: ${message.data}');
-
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       Map<String, dynamic> data = message.data;
 
       if (notification != null && android != null) {
         final String typeStr = data['type'] ?? 'invite';
-        NotificationType notifType = (typeStr == 'discount')
-            ? NotificationType.discount
-            : NotificationType.invite;
+        final String senderImageUrl = data['senderImageUrl'] ?? '';
+        final String orderId = data.containsKey('orderId')
+            ? data['orderId']
+            : ''; // Safely retrieve orderId
 
-        // Show notification locally
+        // Download the sender's image
+        String? senderImagePath;
+        if (senderImageUrl.isNotEmpty) {
+          senderImagePath = await _downloadImage(senderImageUrl);
+        }
+
+        // Add actions only for "invite" type
+        final bool isInvite = typeStr == 'invite';
+        AndroidNotificationDetails notificationDetails =
+            AndroidNotificationDetails(
+          'default_channel',
+          'Default Channel',
+          channelDescription: 'This is the default channel',
+          importance: Importance.max,
+          priority: Priority.high,
+          styleInformation: senderImagePath != null
+              ? BigPictureStyleInformation(
+                  FilePathAndroidBitmap(senderImagePath),
+                  contentTitle: notification.title,
+                  summaryText: notification.body,
+                  largeIcon: FilePathAndroidBitmap(senderImagePath),
+                )
+              : null,
+          actions: isInvite
+              ? [
+                  AndroidNotificationAction(
+                    'accept_action',
+                    'Accept',
+                    showsUserInterface: true,
+                  ),
+                  AndroidNotificationAction(
+                    'reject_action',
+                    'Reject',
+                    showsUserInterface: true,
+                  ),
+                ]
+              : [],
+        );
+
+        // Show the notification
         _localNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
           notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              'default_channel',
-              'Default Channel',
-              channelDescription: 'This is the default channel',
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
-            ),
-          ),
+          NotificationDetails(android: notificationDetails),
+          payload: jsonEncode({
+            'type': typeStr,
+            'orderId': orderId,
+            'senderImageUrl': senderImageUrl,
+          }),
         );
 
-        // Save notification to Firestore
+        // Save the notification in Firestore
         final user = Provider.of<CustomUser?>(context, listen: false);
         if (user != null) {
           AppNotification newNotification = AppNotification(
@@ -136,7 +199,8 @@ class NotificationService {
             body: notification.body ?? 'No Body',
             timestamp: DateTime.now(),
             sentBy: data['sentBy'] ?? 'unknown',
-            type: notifType,
+            type: NotificationType.invite,
+            orderId: orderId,
           );
           await ClientService().addNotification(user.uid, newNotification);
         }
@@ -242,6 +306,7 @@ class NotificationService {
     String endPointFireBaseCloudMessaging =
         "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages:send";
 
+    final String senderImageUrl = 'URL_TO_SENDER_IMAGE';
     final Map<String, dynamic> message = {
       'message': {
         'topic': topic, // Specify the topic here
@@ -251,7 +316,8 @@ class NotificationService {
         },
         'data': {
           'sentBy': sentBy, // Include 'sentBy' in data payload
-          'type': 'discount', // Specify the type
+          'type': 'discount',
+          'senderImageUrl': senderImageUrl
         }
       }
     };
@@ -273,69 +339,109 @@ class NotificationService {
     }
   }
 
-  // 9. Send Discount Notification to Topic
-  Future<void> sendNotificationToUser(
-      String userId, String title, String body, String sentBy) async {
+  Future<void> sendNotificationToMultipleUsers(List<String> userIds,
+      String title, String body, String sentBy, String orderId) async {
     try {
-      // 1. Retrieve the user's FCM token from Firestore
+      // 1. Retrieve Firestore instance
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      DocumentSnapshot userDoc =
-          await firestore.collection('users').doc(userId).get();
 
-      if (!userDoc.exists) {
-        print("User with ID '$userId' does not exist.");
+      // 2. Fetch sender's data ONCE
+      Map<String, dynamic>? senderData =
+          await ClientService().getUserById(sentBy);
+      final String senderImageUrl = senderData?['imageUrl'] ?? '';
+
+      if (senderImageUrl.isEmpty) {
+        print("Warning: Sender image URL is empty!");
+      }
+
+      // 3. Get FCM tokens for the provided user IDs
+      List<Map<String, String>> userTokens = [];
+      for (String userId in userIds) {
+        DocumentSnapshot userDoc =
+            await firestore.collection('clients').doc(userId).get();
+
+        if (!userDoc.exists) {
+          print("User with ID '$userId' does not exist.");
+          continue;
+        }
+
+        Map<String, dynamic>? userData =
+            userDoc.data() as Map<String, dynamic>?;
+        String? userToken = userData?['fcmToken'];
+        if (userToken != null) {
+          userTokens.add({'userId': userId, 'token': userToken});
+        } else {
+          print("No FCM token found for user with ID '$userId'.");
+        }
+      }
+
+      if (userTokens.isEmpty) {
+        print("No valid FCM tokens found for the provided user IDs.");
         return;
       }
 
-      String? userToken = userDoc.get('fcmToken');
-
-      if (userToken == null) {
-        print("No FCM token found for user with ID '$userId'.");
-        return;
-      }
-
-      // 2. Get the access token for FCM API
+      // 4. Get the access token for FCM API
       final String serverAccessToken = await getAccessToken();
 
-      // 3. Define the FCM endpoint
+      // 5. Define the FCM endpoint
       String endPointFireBaseCloudMessaging =
           "https://fcm.googleapis.com/v1/projects/los-pollos-a9354/messages:send";
 
-      // 4. Construct the message payload
-      final Map<String, dynamic> message = {
-        'message': {
-          'token': userToken, // Targeting the specific user token
-          'notification': {
-            'title': title,
-            'body': body,
-          },
-          'data': {
-            'sentBy': sentBy, // Additional data payload
-            'type': 'invite', // Specify the type
+      // 6. Construct and send the message payload for each token
+      for (Map<String, String> user in userTokens) {
+        final String userId = user['userId']!;
+        final String userToken = user['token']!;
+
+        final Map<String, dynamic> message = {
+          'message': {
+            'token': userToken,
+            'notification': {
+              'title': title,
+              'body': body,
+            },
+            'data': {
+              'sentBy': sentBy,
+              'type': 'invite',
+              'orderId': orderId,
+              'senderImageUrl': senderImageUrl,
+            },
           }
+        };
+
+        // Send the HTTP POST request to FCM
+        final http.Response response = await http.post(
+          Uri.parse(endPointFireBaseCloudMessaging),
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $serverAccessToken'
+          },
+          body: jsonEncode(message),
+        );
+
+        // 7. Save the notification in Firestore if FCM succeeds
+        if (response.statusCode == 200) {
+          print("Notification sent to user with token '$userToken'");
+
+          // Create a notification object and save it in Firestore
+          AppNotification newNotification = AppNotification(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            userId: userId,
+            title: title,
+            body: body,
+            timestamp: DateTime.now(),
+            sentBy: sentBy,
+            type: NotificationType.invite,
+            orderId: orderId,
+          );
+
+          await ClientService().addNotification(userId, newNotification);
+        } else {
+          print(
+              "Failed to send notification to user with token '$userToken': ${response.statusCode} ${response.body}");
         }
-      };
-
-      // 5. Send the HTTP POST request to FCM
-      final http.Response response = await http.post(
-        Uri.parse(endPointFireBaseCloudMessaging),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $serverAccessToken'
-        },
-        body: jsonEncode(message),
-      );
-
-      // 6. Handle the response
-      if (response.statusCode == 200) {
-        print("Notification sent to user '$userId'");
-        // **Removed**: Do not save the notification to Firestore here
-      } else {
-        print(
-            "Failed to send notification to user '$userId': ${response.statusCode} ${response.body}");
       }
     } catch (e) {
-      print("Error sending notification to user '$userId': $e");
+      print("Error sending notifications to multiple users: $e");
     }
   }
 }

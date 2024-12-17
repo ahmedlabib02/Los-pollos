@@ -4,6 +4,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+import 'package:los_pollos_hermanos/services/notification_services.dart';
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:provider/provider.dart';
@@ -316,6 +317,8 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
     }
   }
 
+  final NotificationService notificationService = NotificationService();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -497,8 +500,33 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     : Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            print("Join button pressed");
-                            // Add invite functionality here
+                            // Prepare the parameters for the notification
+                            List<String> userIds = _localOrderItem
+                                .userIds; // User IDs involved in the order
+                            String title =
+                                "Join Request for Order"; // Title of the notification
+                            String body =
+                                "${widget.menuItem.name} - Shared Order Invite"; // Body content
+                            String sentBy = widget
+                                .loggedInUserId; // ID of the logged-in user
+                            String orderId = _localOrderItem
+                                .id; // The ID of the order being shared
+
+                            // Call the notification service
+                            notificationService.sendNotificationToMultipleUsers(
+                              userIds,
+                              title,
+                              body,
+                              sentBy,
+                              orderId,
+                            );
+
+                            // Show a confirmation snackbar (optional)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Join request notification sent")),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
