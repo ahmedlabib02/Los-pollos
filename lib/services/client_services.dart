@@ -526,12 +526,10 @@ class ClientService {
           'orderItemIds': FieldValue.arrayUnion([orderItemID])
         });
 
-
         // get the new orderItemIds and update the table
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
         print("orderItemIds: $orderItemIds");
-
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -902,7 +900,6 @@ class ClientService {
     }
   }
 
-
   Future<String?> getUserImage(String senderId, NotificationType type) async {
     try {
       String collectionPath = type == NotificationType.discount
@@ -978,6 +975,8 @@ class ClientService {
     } catch (e) {
       print('Error removing notification: $e');
       throw Exception('Failed to remove notification');
+    }
+  }
 
   // Reviews --------------------------------------------------------------
   Future<void> addReview(String menuItemId, String userId, String reviewContent,
@@ -1042,7 +1041,6 @@ class ClientService {
     } catch (e) {
       print('Error fetching reviews for menu item: $e');
       throw Exception('Failed to fetch reviews for menu item');
-
     }
   }
 }
