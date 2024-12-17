@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/notification_model.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/wrapper.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
@@ -216,14 +217,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       onPressed: () async {
                         if (notification.orderId != null) {
                           try {
+                            // get restaurant id
+                            final String restaurantId =
+                                Provider.of<SelectedRestaurantProvider>(context,
+                                            listen: false)
+                                        .selectedRestaurantId ??
+                                    "";
                             await ClientService().acceptInvite(
-                              notification.id,
-                              notification.orderId!,
-                              currentUser
-                                  .uid, // Current User ID (to delete the notification)
-                              notification
-                                  .sentBy, // Sender ID (to add to userIds)
-                            );
+                                notification.id,
+                                notification.orderId!,
+                                currentUser
+                                    .uid, // Current User ID (to delete the notification)
+                                notification.sentBy,
+                                restaurantId // Sender ID (to add to userIds)
+                                );
                             setState(() {}); // Refresh the notifications list
                           } catch (e) {
                             print("Error accepting invite: $e");

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import '../models/notification_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -99,12 +100,18 @@ class NotificationService {
 
             if (response.actionId == 'accept_action') {
               print('User accepted the invite for Order ID: $orderId');
+              final String restaurantId =
+                  Provider.of<SelectedRestaurantProvider>(context,
+                              listen: false)
+                          .selectedRestaurantId ??
+                      "";
               await ClientService().acceptInvite(
-                notificationId,
-                orderId,
-                currentUid, // Current User ID to remove notification
-                senderId, // Sender ID to add to userIds
-              );
+                  notificationId,
+                  orderId,
+                  currentUid, // Current User ID to remove notification
+                  senderId,
+                  restaurantId // Sender ID to add to userIds
+                  );
             } else if (response.actionId == 'reject_action') {
               print('User rejected the invite for Order ID: $orderId');
               await ClientService().rejectInvite(

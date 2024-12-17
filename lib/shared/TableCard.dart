@@ -128,7 +128,7 @@ Widget TableCard({
                       ),
                       SizedBox(width: screenWidth * 0.015),
                       Text(
-                        '${(paidPercentage * 100).round()}% paid',
+                        '${(paidPercentage).round()}% paid',
                         style: TextStyle(
                             color: Colors.black, fontSize: screenWidth * 0.035),
                       ),

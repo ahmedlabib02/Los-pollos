@@ -350,6 +350,7 @@ class ClientService {
         Bill bill = Bill.fromMap(
             billSnapshot.data() as Map<String, dynamic>, billSnapshot.id);
 
+          print('Bill ${bill.id} is paid and total amount is ${bill.amount}');
         // Add to total paid if the bill is marked as paid
         if (bill.isPaid) {
           totalPaid += bill.amount;
@@ -602,7 +603,7 @@ class ClientService {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(billId).get();
         String billUserID = billDoc.get('userId');
-        //  get the bill user 
+        //  get the bill user
         DocumentSnapshot billUserDoc =
             await _firestore.collection('clients').doc(billUserID).get();
         String billUserName = billUserDoc.get('name');
@@ -686,8 +687,7 @@ class ClientService {
       for (String orderItemId in orderItemIds) {
         DocumentSnapshot orderItemDoc =
             await _firestore.collection('orderItems').doc(orderItemId).get();
-        if(!orderItemDoc.exists)
-        continue;
+        if (!orderItemDoc.exists) continue;
         Map<String, dynamic> orderItemData =
             orderItemDoc.data() as Map<String, dynamic>;
 
@@ -934,7 +934,7 @@ class ClientService {
   }
 
   Future<void> acceptInvite(String notificationId, String orderId,
-      String currentUid, String senderId) async {
+      String currentUid, String senderId , String restaurantId) async {
     try {
       // Reference to the specific order document
       DocumentReference orderRef =
@@ -947,13 +947,15 @@ class ClientService {
       });
       print('Sender ID ($senderId) added to order: $orderId');
 
+      createOrUpdateBill(senderId, orderId, restaurantId);
+      createOrUpdateBill(currentUid, orderId, restaurantId);
+
       // 2. Remove the notification from the current user's notification subcollection
       DocumentReference notificationRef = _firestore
           .collection('clients')
           .doc(currentUid)
           .collection('notifications')
           .doc(notificationId);
-    
 
       await notificationRef.delete();
       print('Notification removed for user: $currentUid');
