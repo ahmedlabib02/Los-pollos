@@ -221,7 +221,6 @@ class ManagerServices {
     }
   }
 
-  /// Delete a menu item from Firestore, and remove its ID from the Menu categories.
   Future<void> deleteMenuItemForRestaurant({
     required String restaurantId,
     required MenuItem menuItem,
@@ -254,17 +253,66 @@ class ManagerServices {
       final itemId = menuItem.id;
       if (menu.categories[category] != null) {
         menu.categories[category]!.remove(itemId);
-        // If the category becomes empty, you could also remove the key entirely:
-        if (menu.categories[category]!.isEmpty) {
+
+        // If the category becomes empty, optionally remove it entirely
+        if (category != 'Offers' && menu.categories[category]!.isEmpty) {
           menu.categories.remove(category);
         }
       }
 
-      // 4. Update the Menu doc
+      // 4. Update the Menu doc in Firestore
       await menuDocRef.update({'categories': menu.categories});
 
-      // 5. Delete the menuItem doc from `menuItems` collection
+      // 5. Finally, delete the MenuItem doc
       await _firestore.collection('menuItems').doc(itemId).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Fetch all unique category names from a Menu doc by menuId.
+  Future<List<String>> getAvailableCategories(String restaurantId) async {
+    try {
+      // 1. Fetch Restaurant doc to get menuId
+      final restaurantDoc =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+      if (!restaurantDoc.exists) {
+        throw Exception('Restaurant with ID $restaurantId not found.');
+      }
+      final restaurant = Restaurant.fromMap(
+        restaurantDoc.data() as Map<String, dynamic>,
+        restaurantDoc.id,
+      );
+
+      // 2. Fetch the Menu doc by menuId
+      final menuDocRef = _firestore.collection('menus').doc(restaurant.menuId);
+      final menuDocSnap = await menuDocRef.get();
+      if (!menuDocSnap.exists) {
+        throw Exception('Menu with ID ${restaurant.menuId} not found.');
+      }
+      Menu menu = Menu.fromMap(
+        menuDocSnap.data() as Map<String, dynamic>,
+        menuDocSnap.id,
+      );
+      String menuId = menu.id;
+      DocumentSnapshot menuDoc =
+          await _firestore.collection('menus').doc(menuId).get();
+
+      if (!menuDoc.exists) {
+        return []; // or throw an error, as you prefer
+      }
+
+      Map<String, dynamic>? data = menuDoc.data() as Map<String, dynamic>?;
+      if (data == null || data['categories'] == null) {
+        return [];
+      }
+
+      // 'categories' is presumably a Map<String, dynamic> or Map<String, List<String>>
+      Map<String, dynamic> categoriesMap = data['categories'];
+      // The unique category names are the keys of categoriesMap
+      List<String> categoryNames = categoriesMap.keys.toList();
+
+      return categoryNames;
     } catch (e) {
       rethrow;
     }
@@ -340,12 +388,12 @@ class ManagerServices {
   }
 
   Future<void> updateOrderItemStatus({
-      required String orderItemId,
-      required OrderStatus status,
-    }) async {
-      await FirebaseFirestore.instance
-          .collection('orderItems')
-          .doc(orderItemId)
-          .update({'status': status.name});
+    required String orderItemId,
+    required OrderStatus status,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('orderItems')
+        .doc(orderItemId)
+        .update({'status': status.name});
   }
 }
