@@ -95,7 +95,7 @@ class OrderDetailsScreen extends StatelessWidget {
                     return Text(
                         'Error fetching order items: ${snapshot.error}');
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('No items found in this order.');
+                    return Text('');
                   } else {
                     final items = snapshot.data!;
                     return Container(

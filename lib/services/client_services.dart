@@ -682,7 +682,9 @@ class ClientService {
       List<OrderItem> orderItems = [];
       for (String orderItemId in orderItemIds) {
         DocumentSnapshot orderItemDoc =
-            await _firestore.collection('orders').doc(orderItemId).get();
+            await _firestore.collection('orderItems').doc(orderItemId).get();
+        if(!orderItemDoc.exists)
+        continue;
         Map<String, dynamic> orderItemData =
             orderItemDoc.data() as Map<String, dynamic>;
 

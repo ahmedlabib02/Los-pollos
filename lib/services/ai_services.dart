@@ -83,7 +83,7 @@ class AiServices {
       List<Map<String, String>> pastOrders = [];
       for (String orderId in orderIds) {
         DocumentSnapshot orderDoc =
-            await _firestore.collection('orders').doc(orderId).get();
+            await _firestore.collection('orderItems').doc(orderId).get();
         pastOrders.add({
           'name': orderDoc['name'] as String,
         });
