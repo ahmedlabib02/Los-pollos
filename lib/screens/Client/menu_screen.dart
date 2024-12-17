@@ -1,42 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
+import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 
-class MenuScreen extends StatelessWidget {
-  final String role; // Role: "user" or "manager"
-
+class MenuScreen extends StatefulWidget {
+  final String role;
   const MenuScreen({Key? key, required this.role}) : super(key: key);
+
+  @override
+  _MenuScreenState createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  late Future<Map<String, List<MenuItem>>> _menuItemsFuture;
+  String? restaurantId;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<CustomUser?>(context, listen: false);
+    if (widget.role == 'manager') {
+      restaurantId = user!.uid;
+    } else {
+      restaurantId =
+          Provider.of<SelectedRestaurantProvider>(context, listen: false)
+              .selectedRestaurantId;
+    }
+    // Initialize the future
+    _menuItemsFuture =
+        ClientService().getMenuItemsByRestaurantId(restaurantId!);
+  }
+
+  /// Re-fetch from Firestore (or update your local data) after adding an item
+  void _refreshMenuItems() {
+    setState(() {
+      _menuItemsFuture =
+          ClientService().getMenuItemsByRestaurantId(restaurantId!);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: MenuList(
-          menuItemsFuture: ClientService()
-              .getMenuItemsByRestaurantId('da3ZRVRibXeFl2Vw30ya'),
-          role: role, // Pass the role to MenuList
+          menuItemsFuture: _menuItemsFuture,
+          role: widget.role,
+          refreshCallback: _refreshMenuItems,
         ),
       ),
-      // Floating Action Button for Managers to Add a New Menu Item
-      floatingActionButton: role == 'manager'
+      floatingActionButton: widget.role == 'manager'
           ? FloatingActionButton(
-              backgroundColor: const Color(0xFFF2C230), // Yellow color
+              backgroundColor: const Color(0xFFF2C230),
               onPressed: () {
+                final user = Provider.of<CustomUser?>(context, listen: false);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddMenuItemScreen(),
+                    builder: (context) =>
+                        AddMenuItemScreen(restaurantId: user!.uid),
                   ),
-                );
+                ).then((result) {
+                  // result is what we popped from AddMenuItemScreen
+                  if (result != null) {
+                    // We successfully created a new item. Let’s refetch the data:
+                    _refreshMenuItems();
+                  }
+                });
               },
               child: const Icon(Icons.add, color: Colors.black),
               tooltip: 'Add New Menu Item',
             )
-          : null, // Null if the role is not "manager"
+          : null,
     );
   }
 }
@@ -46,7 +88,12 @@ class MenuList extends StatefulWidget {
 
   final String role;
 
-  const MenuList({required this.menuItemsFuture, required this.role});
+  final VoidCallback? refreshCallback;
+  MenuList(
+      {required this.menuItemsFuture,
+      required this.role,
+      this.refreshCallback,
+      super.key});
 
   @override
   _MenuListState createState() => _MenuListState();
@@ -150,15 +197,20 @@ class _MenuListState extends State<MenuList> {
           return const Center(child: Text('Error loading menu items'));
         }
 
-        // Initialize menu items only once
-        if (_menuItems == null && snapshot.hasData) {
+        if (snapshot.hasData) {
+          // Always update _menuItems from snapshot
           _menuItems = snapshot.data!;
           _filteredMenuItems = Map.from(_menuItems!);
           _categories = _menuItems!.keys.toList();
-          _activeCategory = _categories.isNotEmpty ? _categories.first : null;
+          // Optionally preserve _activeCategory if it's still valid,
+          // or reassign if the categories changed.
+          if (_activeCategory == null ||
+              !_categories.contains(_activeCategory)) {
+            _activeCategory = _categories.isNotEmpty ? _categories.first : null;
+          }
         }
 
-        // Safeguard in case of empty data
+        // Safeguard in case snapshot.data is empty
         if (_menuItems == null || _menuItems!.isEmpty) {
           return const Center(child: Text('No menu items available.'));
         }
@@ -235,10 +287,166 @@ class _MenuListState extends State<MenuList> {
                         ),
                         itemBuilder: (context, itemIndex) {
                           final item = items[itemIndex];
-                          return MenuItemWidget(
-                            item: item,
-                            role: widget.role,
-                          );
+                          // If the user is "manager", wrap in Dismissible
+                          if (widget.role == 'manager') {
+                            return Dismissible(
+                              key: ValueKey(item.id),
+                              direction:
+                                  DismissDirection.endToStart, // Swipe left
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                color: Colors.red,
+                                padding: const EdgeInsets.only(right: 20),
+                                child: const Icon(Icons.delete,
+                                    color: Colors.white),
+                              ),
+                              confirmDismiss: (direction) async {
+                                // Optionally prompt for confirmation
+                                return await showDialog(
+                                  context: context,
+                                  builder: (ctx) => Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          16.0), // Rounded corners
+                                    ),
+                                    elevation: 0,
+                                    backgroundColor: Colors.white,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // Title
+                                          Text(
+                                            'Delete ${item.name}?',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          // Content
+                                          const Text(
+                                            'Do you want to permanently delete this menu item?',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black54,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          // Buttons
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              // Cancel Button
+                                              Expanded(
+                                                child: TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 12),
+                                                    backgroundColor:
+                                                        Colors.grey[
+                                                            200], // Light gray
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(false),
+                                                  child: const Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              //Delete Button
+                                              Expanded(
+                                                child: TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 12),
+                                                    backgroundColor: const Color.fromARGB(255, 212, 76, 66), // Red background
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(true),
+                                                  child: const Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              onDismissed: (direction) async {
+                                // 1. Call the manager service to delete the item from Firestore
+                                try {
+                                  final user = Provider.of<CustomUser?>(context,
+                                      listen: false);
+                                  await ManagerServices()
+                                      .deleteMenuItemForRestaurant(
+                                    restaurantId: user!
+                                        .uid, // if manager ID is the restaurantId
+                                    menuItem: item,
+                                    category: category, // from your code
+                                  );
+                                  // 2. Optionally remove the item from local list:
+                                  items.removeAt(itemIndex);
+                                  widget.refreshCallback
+                                      ?.call(); // if the parent provides a callback
+                                } catch (e) {
+                                  print('Deletion error: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('Error deleting item: $e')),
+                                  );
+                                }
+                              },
+                              child: MenuItemWidget(
+                                item: item,
+                                role: widget.role,
+                              ),
+                            );
+                          } else {
+                            // If role is user, just show the normal item (no dismissible)
+                            return MenuItemWidget(
+                              item: item,
+                              role: widget.role,
+                            );
+                          }
                         },
                       ),
                       Container(
@@ -338,6 +546,7 @@ class MenuItemWidget extends StatelessWidget {
     final hasDiscount = item.discount > 0;
     final discountedPrice =
         hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
+    final user = Provider.of<CustomUser?>(context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: vPad, horizontal: hPad),
@@ -413,17 +622,8 @@ class MenuItemWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddMenuItemScreen(
-                            // initialData: {
-                            //   'title': item.name,
-                            //   'description': item.description,
-                            //   'image': item.imageUrl,
-                            //   'variants': item.variants ?? [],
-                            //   'extras': item.extras ?? [],
-                            //   'basePrice': item.price,
-                            //   'discount': item.discount,
-                            // },
-                            ),
+                        builder: (context) =>
+                            AddMenuItemScreen(restaurantId: user!.uid),
                       ),
                     );
                   }

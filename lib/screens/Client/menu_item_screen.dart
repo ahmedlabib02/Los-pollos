@@ -3,6 +3,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
+import 'package:los_pollos_hermanos/screens/Client/reviews_screen.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart' as TableModel;
@@ -129,7 +130,6 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
     }
   }
 
-  
   int calculateTotal() {
     double total = menuItem!.price;
 
@@ -149,9 +149,10 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   Future<void> _addToOrder() async {
     try {
       final userId = Provider.of<CustomUser>(context, listen: false).uid;
-      final restaurantId = Provider.of<SelectedRestaurantProvider?>(context,
-                                        listen: false)
-                                    ?.selectedRestaurantId ?? '';
+      final restaurantId =
+          Provider.of<SelectedRestaurantProvider?>(context, listen: false)
+                  ?.selectedRestaurantId ??
+              '';
 
       final orderItem = OrderItem(
         id: "",
@@ -160,7 +161,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
         tableId: ongoingTable!.id,
         status: OrderStatus.accepted,
         itemCount: quantity, // Replace with actual quantity
-        notes: [...removedVariants, ...selectedExtras], 
+        notes: [...removedVariants, ...selectedExtras],
         price: calculateTotal().toDouble(),
         name: menuItem!.name,
         imageUrl: menuItem!.imageUrl, // Replace with actual image URL
@@ -183,7 +184,6 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
       );
     }
   }
-
 
   //======================================================
   //                Fetch Dummy Data
@@ -241,7 +241,7 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
   //       tableId: ongoingTable!.id,
   //       status: OrderStatus.accepted,
   //       itemCount: quantity, // Replace with actual quantity
-  //       notes: [...removedVariants, ...selectedExtras], 
+  //       notes: [...removedVariants, ...selectedExtras],
   //       price: calculateTotal().toDouble(),
   //       name: menuItem!.name,
   //       imageUrl: menuItem!.imageUrl, // Replace with actual image URL
@@ -264,7 +264,6 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     if (menuItem == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -288,7 +287,8 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
 
               // Item Details
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding:
+                    const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -315,14 +315,48 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                       menuItem!.description,
                       style: TextStyle(fontSize: 16),
                     ),
-                    SizedBox(height: 16),
+                    Container(
+                        // color: Colors.red,
+                        child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ReviewsScreen(
+                                  menuItemId: menuItem!.id,
+                                  menuItemName: menuItem!.name,
+                                ),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12.0, vertical: 0.0),
+                          ),
+                          child: Text(
+                            "View Reviews",
+                            style: TextStyle(
+                              color: Color.fromRGBO(0, 0, 0, 1),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )),
+                    // SizedBox(height: 16),
                   ],
                 ),
               ),
 
               // Variants Section (Items to remove for free)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -336,36 +370,37 @@ class _MenuItemScreenState extends State<MenuItemScreen> {
                       thickness: 0.5,
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      "Remove Items",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    for (var variant in menuItem!.variants)
-                      CheckboxListTile(
-                        title: Text(variant),
-                        activeColor: Color.fromRGBO(239, 180, 7, 1),
-                        value: removedVariants.contains(variant),
-                        onChanged: (value) {
-                          setState(() {
-                            if (value!) {
-                              removedVariants.add(variant);
-                            } else {
-                              removedVariants.remove(variant);
-                            }
-                          });
-                        },
+                    if (menuItem!.variants.isNotEmpty) ...[
+                      Text(
+                        "Remove Items",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+                      SizedBox(height: 8),
+                      for (var variant in menuItem!.variants)
+                        CheckboxListTile(
+                          title: Text(variant),
+                          activeColor: Color.fromRGBO(239, 180, 7, 1),
+                          value: removedVariants.contains(variant),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value!) {
+                                removedVariants.add(variant);
+                              } else {
+                                removedVariants.remove(variant);
+                              }
+                            });
+                          },
+                        ),
+                      Divider(
+                        color: Colors.grey,
+                        thickness: 0.5,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ],
                 ),
               ),
-
-              Divider(
-                color: Colors.grey,
-                thickness: 0.5,
-              ),
-              const SizedBox(height: 8),
 
               // Extras Section (Add ingredients with prices)
               Padding(

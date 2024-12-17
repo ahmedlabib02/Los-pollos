@@ -110,7 +110,7 @@ class _TableScreenState extends State<TableScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: CustomChip(
-                                    '${paidPercentage.toStringAsFixed(1)}% paid'),
+                                    '${paidPercentage.round()}% paid'),
                               ),
                             ),
                             Expanded(
@@ -128,7 +128,7 @@ class _TableScreenState extends State<TableScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: CustomChip(
-                                  '${currentTable!.totalAmount} EGP due',
+                                  '${currentTable!.totalAmount.round()} EGP due',
                                 ),
                               ),
                             ),

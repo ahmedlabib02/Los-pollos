@@ -1,7 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:los_pollos_hermanos/screens/Client/category_dropdown.dart';
 import 'package:los_pollos_hermanos/screens/Client/variations_screen.dart';
 import 'package:los_pollos_hermanos/shared/Dropdown.dart';
@@ -10,6 +11,11 @@ import 'package:los_pollos_hermanos/shared/ImageUploader.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 
 class AddMenuItemScreen extends StatefulWidget {
+  /// The ID of the Restaurant we want to add items to.
+  final String restaurantId;
+
+  AddMenuItemScreen({required this.restaurantId});
+
   @override
   _AddMenuItemScreenState createState() => _AddMenuItemScreenState();
 }
@@ -21,51 +27,132 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   final TextEditingController _basePriceController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
-  final List<TextEditingController> _variantControllers =
-      []; // Controllers for input fields
-
+  final List<TextEditingController> _variantControllers = [];
   final List<TextEditingController> _extrasControllers = [];
   final List<TextEditingController> _extrasPriceControllers = [];
+
+  List<String> _categories = [];
 
   String? _category;
   File? _selectedImage;
 
-  final List<String> _categories = const [
-    'Option 1',
-    'Option 2',
-    'Option 3',
-    'Option 4',
-    'Option 5',
-    'Option 6',
-    'Option 7'
-  ];
+  // final List<String> _categories = const [
+  //   'Option 1',
+  //   'Option 2',
+  //   'Option 3',
+  //   'Option 4',
+  //   'Option 5',
+  //   'Option 6',
+  //   'Option 7'
+  // ];
 
   double pad = 24.0;
 
-  void _onSavePressed() {
-    List<String> controllersToList(List<TextEditingController> controllers) {
-      return controllers.map((controller) => controller.text).toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      // 1. We need a menuId. Possibly fetch it from the Restaurant doc, or if you already have it, pass it in.
+      // For example, if you only have restaurantId, fetch the restaurant doc, get menuId, then fetch categories:
+      // But let's suppose we have a ManagerServices method that does it in one step or we have the menuId directly.
+
+      // ManagerServices _managerServices = ManagerServices();
+      // String menuId = await _managerServices.getMenuIdForRestaurant(widget.restaurantId);
+      // List<String> fetchedCategories = await _managerServices.getAvailableCategories(menuId);
+
+      List<String> fetchedCategories =
+          await ManagerServices().getAvailableCategories(widget.restaurantId);
+
+      setState(() {
+        _categories = fetchedCategories;
+      });
+    } catch (e) {
+      print('Error fetching categories: $e');
+      // Show error or keep _categories empty
     }
+  }
 
-    Map<String, dynamic> formValues = {
-      'title': _titleController.text,
-      'category': _category,
-      'description': _descriptionController.text,
-      'image': _selectedImage,
-      'variants': controllersToList(_variantControllers),
-      'extras': controllersToList(_extrasControllers),
-      'extrasPrices': controllersToList(_extrasPriceControllers),
-      'basePrice': _basePriceController.text,
-      'discount': _discountController.text,
-    };
+  /// Handles saving the new MenuItem to Firestore.
+  void _onSavePressed() async {
+    try {
+      // 1. Validate user input
+      if (_category == null || _category!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please select a category.')),
+        );
+        return;
+      }
+      if (_titleController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Title cannot be empty.')),
+        );
+        return;
+      }
 
-    print(formValues);
+      // 2. Parse numeric fields
+      double basePrice = double.tryParse(_basePriceController.text) ?? 0.0;
+      double discount = double.tryParse(_discountController.text) ?? 0.0;
+
+      // 3. Build variants list
+      List<String> variants = _variantControllers
+          .map((c) => c.text.trim())
+          .where((text) => text.isNotEmpty)
+          .toList();
+
+      // 4. Build extras map (extraName -> extraPrice)
+      Map<String, double> extras = {};
+      for (int i = 0; i < _extrasControllers.length; i++) {
+        final extraName = _extrasControllers[i].text.trim();
+        final extraPrice =
+            double.tryParse(_extrasPriceControllers[i].text.trim()) ?? 0.0;
+        if (extraName.isNotEmpty) {
+          extras[extraName] = extraPrice;
+        }
+      }
+
+      // 5. Create a MenuItem model with placeholder ID (Firestore will assign one)
+      MenuItem newItem = MenuItem(
+        id: '', // will be assigned by Firestore
+        name: _titleController.text.trim(),
+        price: basePrice,
+        description: _descriptionController.text.trim(),
+        variants: variants,
+        extras: extras,
+        discount: discount,
+        reviewIds: [], // starting empty
+        imageUrl: '', // to be replaced if we upload an image
+      );
+
+      ManagerServices _managerServices = ManagerServices();
+      MenuItem createdItem = await _managerServices.createMenuItemForRestaurant(
+        restaurantId: widget.restaurantId,
+        category: _category!,
+        menuItem: newItem,
+        imageFile: _selectedImage, // pass your selected File (if any)
+      );
+
+      // 8. Show success and optionally navigate away
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Created item: ${createdItem.name}')),
+      );
+
+      Navigator.pop(context, createdItem); // or any other navigation
+    } catch (e) {
+      // Handle exceptions from services
+      print('Error creating menu item: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.white, // Set the background color explicitly
       appBar: PreferredSize(
           preferredSize:
               const Size.fromHeight(kToolbarHeight), // Add height for padding
@@ -84,8 +171,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.black),
               bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(
-                    10.0), // Adjusted for padding and border height
+                preferredSize: const Size.fromHeight(10.0),
                 child: Container(
                   color: Styles.inputFieldBorderColor, // Border color
                   height: 1.0, // Border height
@@ -93,7 +179,6 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
               ),
             ),
           )),
-
       body: Padding(
         padding: EdgeInsets.only(left: pad, right: pad, top: 10),
         child: SingleChildScrollView(
@@ -122,10 +207,11 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
 
               // Description
               GreyTextField(
-                  label: 'Description',
-                  controller: _descriptionController,
-                  minHeight: 120,
-                  maxHeight: 120),
+                label: 'Description',
+                controller: _descriptionController,
+                minHeight: 120,
+                maxHeight: 120,
+              ),
               const SizedBox(height: 24),
 
               // MEDIA
@@ -142,9 +228,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                   onPickImage: () async {
                     final returnedImage = await ImagePicker()
                         .pickImage(source: ImageSource.gallery);
-
                     if (returnedImage == null) return;
-
                     setState(() {
                       _selectedImage = File(returnedImage.path);
                     });
@@ -153,11 +237,11 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
               const SizedBox(height: 24),
 
               // VARIATIONS
+              // (from your custom widget `ItemCustomization`)
               ItemCustomization(
                 variantControllers: _variantControllers,
                 isExtrasSection: false,
               ),
-
               const SizedBox(height: 24),
 
               // EXTRAS
@@ -166,36 +250,38 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 priceControllers: _extrasPriceControllers,
                 isExtrasSection: true,
               ),
-
               const SizedBox(height: 24),
 
               // PRICING
-              // Base Price
               const Text('Pricing',
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
-
               const SizedBox(height: 8),
 
-              // Discount
               Row(
                 children: [
                   Expanded(
-                      child: GreyTextField(
-                          label: 'Base Price',
-                          controller: _basePriceController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: false))),
+                    child: GreyTextField(
+                      label: 'Base Price',
+                      controller: _basePriceController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: false,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
-                      child: GreyTextField(
-                          label: 'Discount (%)',
-                          controller: _discountController,
-                          keyboardType: TextInputType.number)),
+                    child: GreyTextField(
+                      label: 'Discount (%)',
+                      controller: _discountController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
                 ],
               ),
+
               const SizedBox(height: 18),
 
               // ACTION BUTTONS
@@ -217,10 +303,12 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                         style: TextStyle(fontSize: 18, color: Colors.black)),
                   ),
 
-                  const SizedBox(width: 10), // Spacing between buttons
+                  const SizedBox(width: 10),
                   // Discard Button
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -235,9 +323,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 18,
-              )
+              const SizedBox(height: 18),
             ],
           ),
         ),
