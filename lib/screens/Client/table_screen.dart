@@ -45,6 +45,7 @@ class _TableScreenState extends State<TableScreen> {
         double percentage =
             await _clientService.calculatePaidPercentage(table.id);
         setState(() {
+          paidPercentage = percentage;
           currentTable = table;
           users = fetchedUsers;
           // paidPercentage = percentage; (assign if you need to use the value)
@@ -237,7 +238,6 @@ class _TableScreenState extends State<TableScreen> {
                             child: OrderSummary(tableId: currentTable!.id),
                           ),
                         ),
-        
                       ],
                     ),
                   ),
