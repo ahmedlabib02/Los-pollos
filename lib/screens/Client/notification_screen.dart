@@ -1,70 +1,39 @@
-// lib/screens/notifications_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/models/notification_model.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
+import 'package:los_pollos_hermanos/screens/wrapper.dart';
+import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({Key? key}) : super(key: key);
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen>
+class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late TabController _tabController;
 
   @override
   void initState() {
+    _tabController = TabController(length: 2, vsync: this);
     super.initState();
-    _controller = AnimationController(vsync: this);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
-  }
-}
-
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
-
   /// Formats the timestamp to a readable string.
   String _formatTimestamp(DateTime timestamp) {
-    final DateFormat formatter = DateFormat('yyyy-MM-dd – kk:mm');
+    final DateFormat formatter = DateFormat('h:mm a · MMM d');
     return formatter.format(timestamp);
-  }
-
-  /// Returns the appropriate icon based on the notification type.
-  IconData _getNotificationIcon(NotificationType type) {
-    switch (type) {
-      case NotificationType.discount:
-        return Icons.local_offer; // Icon for discounts
-      case NotificationType.invite:
-      default:
-        return Icons.person_add; // Icon for invites
-    }
-  }
-
-  /// Returns the appropriate color based on the notification type.
-  Color _getNotificationColor(NotificationType type, BuildContext context) {
-    switch (type) {
-      case NotificationType.discount:
-        return Colors.green; // Color for discounts
-      case NotificationType.invite:
-      default:
-        return Theme.of(context).primaryColor; // Color for invites
-    }
   }
 
   @override
@@ -73,164 +42,228 @@ class NotificationsScreen extends StatelessWidget {
 
     if (currentUser == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Notifications'),
-        ),
         body: const Center(
           child: Text('You must be logged in to view notifications.'),
         ),
       );
     }
 
-    final user = Provider.of<CustomUser?>(context);
-
-    // Instantiate ClientService
     final ClientService clientService = ClientService();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
-      body: FutureBuilder<List<AppNotification>>(
-        future: clientService.getNotifications(user!.uid),
-        builder: (BuildContext context,
-            AsyncSnapshot<List<AppNotification>> snapshot) {
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Something went wrong while fetching notifications.'),
-            );
-          }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          // Check if there are notifications
-          if (snapshot.data == null || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text('No notifications available.'),
-            );
-          }
-
-          // Retrieve notifications
-          List<AppNotification> notifications = snapshot.data!;
-
-          // Optionally, separate notifications by type
-          List<AppNotification> discountNotifications = notifications
-              .where((notif) => notif.type == NotificationType.discount)
-              .toList();
-          List<AppNotification> inviteNotifications = notifications
-              .where((notif) => notif.type == NotificationType.invite)
-              .toList();
-
-          return ListView(
-            children: [
-              if (discountNotifications.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Discounts',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green[700],
-                    ),
-                  ),
-                ),
-                ...discountNotifications.map((notification) =>
-                    _buildNotificationTile(notification, context)),
-              ],
-              if (inviteNotifications.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Invites',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ),
-                ...inviteNotifications.map((notification) =>
-                    _buildNotificationTile(notification, context)),
-              ],
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Updates",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 26.0,
+              )),
+          backgroundColor: Colors.white,
+          scrolledUnderElevation: 0, // Primary Yellow
+          elevation: 0,
+          centerTitle: true,
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: Color.fromRGBO(239, 180, 7, 1),
+            labelColor: Colors.black,
+            unselectedLabelColor: const Color.fromARGB(137, 47, 47, 47),
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            tabs: const [
+              Tab(text: 'All Notifications'),
+              Tab(text: 'Invites'),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  /// Builds a notification tile widget.
-  Widget _buildNotificationTile(
-      AppNotification notification, BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: ListTile(
-        leading: Icon(
-          _getNotificationIcon(notification.type),
-          color: _getNotificationColor(notification.type, context),
-          size: 30,
-        ),
-        title: Text(
-          notification.title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: _getNotificationColor(notification.type, context),
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(notification.body),
-            const SizedBox(height: 5),
-            Row(
+        body: FutureBuilder<List<AppNotification>>(
+          future: clientService.getNotifications(currentUser.uid),
+          builder: (BuildContext context,
+              AsyncSnapshot<List<AppNotification>> snapshot) {
+            if (snapshot.hasError) {
+              return const Center(
+                child:
+                    Text('Something went wrong while fetching notifications.'),
+              );
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.data == null || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text('No notifications available.'),
+              );
+            }
+
+            // Notifications list
+            List<AppNotification> notifications = snapshot.data!;
+            notifications.sort(
+                (a, b) => b.timestamp.compareTo(a.timestamp)); // Sort by time
+
+            // Separate invites for the second tab
+            List<AppNotification> invites = notifications
+                .where((notif) => notif.type == NotificationType.invite)
+                .toList();
+
+            return TabBarView(
+              controller: _tabController,
               children: [
-                Text(
-                  'From: ${notification.sentBy}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  _formatTimestamp(notification.timestamp),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
+                _buildNotificationsList(notifications, context, currentUser),
+                _buildNotificationsList(invites, context, currentUser),
               ],
-            ),
-          ],
+            );
+          },
         ),
-        onTap: () {
-          // Optional: Handle tap on notification
-          // For example, navigate to a detailed view based on notification type
-          _handleNotificationTap(notification, context);
-        },
       ),
     );
   }
 
-  /// Handles the tap action on a notification tile.
-  void _handleNotificationTap(
-      AppNotification notification, BuildContext context) {
-    switch (notification.type) {
-      case NotificationType.discount:
-        // Navigate to Discount Details Screen
-        Navigator.of(context)
-            .pushNamed('/discountDetails', arguments: notification);
-        break;
-      case NotificationType.invite:
-        // Navigate to Invite Details Screen
-        Navigator.of(context)
-            .pushNamed('/inviteDetails', arguments: notification);
-        break;
-      default:
-        // Handle other types or default action
-        break;
-    }
+  /// Builds the notification list view.
+  Widget _buildNotificationsList(List<AppNotification> notifications,
+      BuildContext context, CustomUser currentUser) {
+    return ListView.builder(
+      itemCount: notifications.length,
+      itemBuilder: (context, index) {
+        AppNotification notification = notifications[index];
+        return _buildNotificationTile(notification, context, currentUser);
+      },
+    );
+  }
+
+  /// Builds a single notification tile.
+  Widget _buildNotificationTile(AppNotification notification,
+      BuildContext context, CustomUser currentUser) {
+    return FutureBuilder<String?>(
+      future: ClientService()
+          .getUserImage(notification.sentBy, notification.type), // Pass type
+      builder: (context, snapshot) {
+        String imageUrl = snapshot.data ??
+            'https://via.placeholder.com/150'; // Placeholder for missing images
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Notification Image
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundImage: NetworkImage(imageUrl),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Notification Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          notification.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          notification.body,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatTimestamp(notification.timestamp),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // Accept and Reject Buttons for Invite Type
+              if (notification.type == NotificationType.invite) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Accept Button
+                    TextButton(
+                      onPressed: () async {
+                        if (notification.orderId != null) {
+                          try {
+                            await ClientService().acceptInvite(
+                              notification.id,
+                              notification.orderId!,
+                              currentUser
+                                  .uid, // Current User ID (to delete the notification)
+                              notification
+                                  .sentBy, // Sender ID (to add to userIds)
+                            );
+                            setState(() {}); // Refresh the notifications list
+                          } catch (e) {
+                            print("Error accepting invite: $e");
+                          }
+                        } else {
+                          print("Order ID is null. Cannot accept invite.");
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.green,
+                      ),
+                      child: const Text('Accept'),
+                    ),
+
+                    // Reject Button
+                    TextButton(
+                      onPressed: () async {
+                        try {
+                          await ClientService().rejectInvite(
+                            notification.id,
+                            currentUser
+                                .uid, // Pass senderId instead of currentUser.uid
+                          );
+                          setState(() {}); // Refresh the notifications list
+                        } catch (e) {
+                          print("Error rejecting invite: $e");
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      child: const Text('Reject'),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }

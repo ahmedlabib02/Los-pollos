@@ -29,7 +29,7 @@ class CreateTableScreen extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage('assets/restaurant_background.jpeg'),
+                        image: AssetImage('assets/restaurant_background.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -102,8 +102,10 @@ class CreateTableScreen extends StatelessWidget {
                     },
                     child: Text(
                       'Create Table',
-                      style: TextStyle(
-                        color: Color.fromRGBO(128, 123, 123, 1),
+                        style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -240,7 +242,12 @@ class CreateTableScreen extends StatelessWidget {
                     },
                     child: Text(
                       'Join Table',
-                      style: TextStyle(color: Color.fromRGBO(128, 123, 123, 1)),
+                      // style black , bold and 22
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(239, 193, 52, 1),

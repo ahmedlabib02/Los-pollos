@@ -4,7 +4,11 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+
+import 'package:los_pollos_hermanos/services/notification_services.dart';
+
 import 'package:los_pollos_hermanos/services/manager_services.dart';
+
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
 import 'package:los_pollos_hermanos/shared/Dropdown.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
@@ -122,7 +126,12 @@ class _OrderItemCardState extends State<OrderItemCard> {
       future: _fetchFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          // empty box of height 50 and margin 16
+          return Container(
+            height: 50,
+            margin: const EdgeInsets.all(20),
+            child: const Center(child: CircularProgressIndicator()),
+          );
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData ||
@@ -362,6 +371,34 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
       );
     }
   }
+
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.accepted:
+        return Colors.blue.withOpacity(0.4);
+      case OrderStatus.inProgress:
+        return Colors.orange.withOpacity(0.4);
+      case OrderStatus.served:
+        return Colors.green.withOpacity(0.4);
+      default:
+        return Colors.grey.withOpacity(0.4);
+    }
+  }
+
+  String _getStatusText(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.accepted:
+        return 'Pending';
+      case OrderStatus.inProgress:
+        return 'In Progress';
+      case OrderStatus.served:
+        return 'Served';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  final NotificationService notificationService = NotificationService();
 
   @override
   Widget build(BuildContext context) {
@@ -604,8 +641,33 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     : Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            print("Join button pressed");
-                            // Add invite functionality here
+                            // Prepare the parameters for the notification
+                            List<String> userIds = _localOrderItem
+                                .userIds; // User IDs involved in the order
+                            String title =
+                                "Join Request for Order"; // Title of the notification
+                            String body =
+                                "${widget.menuItem.name} - Shared Order Invite"; // Body content
+                            String sentBy = widget
+                                .loggedInUserId; // ID of the logged-in user
+                            String orderId = _localOrderItem
+                                .id; // The ID of the order being shared
+
+                            // Call the notification service
+                            notificationService.sendNotificationToMultipleUsers(
+                              userIds,
+                              title,
+                              body,
+                              sentBy,
+                              orderId,
+                            );
+
+                            // Show a confirmation snackbar (optional)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Join request notification sent")),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,

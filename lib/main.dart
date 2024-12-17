@@ -11,7 +11,6 @@ import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/shared/loadingScreen.dart';
-//import 'package:firebase_app_check/firebase_app_check.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 
@@ -106,28 +105,12 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
             inputDecorationTheme: InputDecorationTheme(
-  
-              // add colors to all texts to be black
-      
-
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
                   color: Color.fromRGBO(242, 194, 48, 1), // Custom golden color
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Colors.grey, // Default border color when not focused
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Colors.grey, // Default border
-                ),
-              ),
+           
             ),
             textTheme: GoogleFonts.madaTextTheme(
               Theme.of(context).textTheme.apply(

@@ -238,6 +238,13 @@ class ClientService {
           .limit(1) // Optimize for performance
           .get();
 
+      if (querySnapshot.docs.isNotEmpty) {
+        final tableData =
+            querySnapshot.docs.first.data() as Map<String, dynamic>;
+        if (tableData['isOngoing'] == false) {
+          throw Exception('Table is not ongoing');
+        }
+      }
       // Check if a table was found
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No table found with the provided code.');
@@ -525,6 +532,7 @@ class ClientService {
           'amount': newAmount,
           'orderItemIds': FieldValue.arrayUnion([orderItemID])
         });
+
         // get the new orderItemIds and update the table
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
@@ -872,14 +880,108 @@ class ClientService {
           .orderBy('timestamp', descending: true)
           .get();
 
-      print('Number of notifications: ${snapshot.docs.length}');
-      return snapshot.docs.map((doc) {
-        print('Notification document: ${doc.data()}');
-        return AppNotification.fromDocument(doc);
+      List<AppNotification> notifications = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        return AppNotification(
+          id: doc.id,
+          userId: data['userId'] ?? uid, // Default to the current userId
+          title: data['title'] ?? 'No Title',
+          body: data['body'] ?? 'No Body',
+          timestamp:
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          sentBy: data['sentBy'] ?? 'Unknown',
+          type: data.containsKey('type')
+              ? NotificationType.values.firstWhere(
+                  (e) => e.toString() == 'NotificationType.${data['type']}',
+                  orElse: () => NotificationType.discount)
+              : NotificationType.discount,
+          orderId: data['orderId'] ?? '', // Safely handle missing 'orderId'
+        );
       }).toList();
+
+      return notifications;
     } catch (e) {
       print('Error fetching notifications: $e');
       throw Exception('Error fetching notifications: $e');
+    }
+  }
+
+  Future<String?> getUserImage(String senderId, NotificationType type) async {
+    try {
+      String collectionPath = type == NotificationType.discount
+          ? 'restaurants' // For discount notifications
+          : 'clients'; // For invite notifications
+
+      DocumentSnapshot senderDoc = await FirebaseFirestore.instance
+          .collection(collectionPath)
+          .doc(senderId)
+          .get();
+
+      if (senderDoc.exists) {
+        return senderDoc['imageUrl'] as String?; // Assuming 'imageUrl' exists
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching sender image: $e");
+      return null; // Return null if there's an error
+    }
+  }
+
+  Future<void> acceptInvite(String notificationId, String orderId,
+      String currentUid, String senderId) async {
+    try {
+      // Reference to the specific order document
+      DocumentReference orderRef =
+          _firestore.collection('orderItems').doc(orderId);
+
+      // 1. Add the sender's ID to the `userIds` array in the order
+      await orderRef.update({
+        'userIds':
+            FieldValue.arrayUnion([senderId]) // Add senderId, NOT currentUid
+      });
+      print('Sender ID ($senderId) added to order: $orderId');
+
+      // 2. Remove the notification from the current user's notification subcollection
+      DocumentReference notificationRef = _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId);
+
+      await notificationRef.delete();
+      print('Notification removed for user: $currentUid');
+    } catch (e) {
+      print('Error accepting invite: $e');
+      throw Exception('Failed to accept invite');
+    }
+  }
+
+  /// Reject Invite: Removes the notification
+  Future<void> rejectInvite(String notificationId, String currentUid) async {
+    try {
+      await removeNotification(notificationId, currentUid);
+      print('Notification removed after rejecting.');
+    } catch (e) {
+      print('Error rejecting invite: $e');
+      throw Exception('Failed to reject invite');
+    }
+  }
+
+  /// Remove Notification: Deletes the notification from the user's subcollection
+  Future<void> removeNotification(
+      String notificationId, String currentUid) async {
+    try {
+      await _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId)
+          .delete();
+      print('Notification removed: $notificationId');
+    } catch (e) {
+      print('Error removing notification: $e');
+      throw Exception('Failed to remove notification');
     }
   }
 
@@ -946,6 +1048,73 @@ class ClientService {
     } catch (e) {
       print('Error fetching reviews for menu item: $e');
       throw Exception('Failed to fetch reviews for menu item');
+    }
+  }
+
+// leave table
+// check if user bills are paid
+//  remove the user from the table
+// remove the user from the table userIds
+// if the table is empty change the isOngoing to false
+// if table has no bills and no orders delete it
+  Future<void> leaveTable(String userID) async {
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('clients').doc(userID).get();
+      String tableID = userDoc.get('currentTableID');
+
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(tableID).get();
+      List<String> userIds = List<String>.from(tableDoc.get('userIds'));
+      List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+      List<String> orderItemIds =
+          List<String>.from(tableDoc.get('orderItemIds'));
+
+      if (userIds.length == 1) {
+        // User is the only one in the table
+        if (billIds.isEmpty && orderItemIds.isEmpty) {
+          // No bills and no orders
+          await _firestore.collection('tables').doc(tableID).delete();
+          print('Table deleted successfully');
+        } else {
+          // Table has bills or orders
+          // check if user payed his bills
+
+          for (String billId in billIds) {
+            DocumentSnapshot billDoc =
+                await _firestore.collection('bills').doc(billId).get();
+            if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
+              throw Exception('Bills are not paid');
+            }
+          }
+          await _firestore.collection('tables').doc(tableID).update({
+            'userIds': FieldValue.arrayRemove([userID]),
+          });
+          print('User removed from table');
+        }
+      } else {
+        // User is not the only one in the table
+        for (String billId in billIds) {
+          DocumentSnapshot billDoc =
+              await _firestore.collection('bills').doc(billId).get();
+          if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
+            throw Exception('Bills are not paid');
+          }
+        }
+        await _firestore.collection('tables').doc(tableID).update({
+          'userIds': FieldValue.arrayRemove([userID]),
+        });
+        print('User removed from table');
+      }
+
+      // Update the user's current table ID
+      await _firestore.collection('clients').doc(userID).update({
+        'currentTableID': '',
+      });
+      print('User removed from table successfully');
+    } catch (e) {
+      print('Error leaving table: $e');
+      throw Exception('Failed to leave table');
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:provider/provider.dart';
 import '../../models/customUser.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart' as custom_table;
@@ -22,7 +23,16 @@ class _TableScreenWrapperState extends State<TableScreenWrapper> {
     _checkOngoingTable();
   }
 
+  @override
+  void dispose() {
+    // Cancel ongoing tasks or subscriptions
+    super.dispose();
+  }
+
   Future<void> _checkOngoingTable() async {
+    if (!mounted) {
+      return;
+    }
     final user = Provider.of<CustomUser?>(context, listen: false);
     if (user != null) {
       try {
@@ -55,6 +65,8 @@ class _TableScreenWrapperState extends State<TableScreenWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final tableState = Provider.of<TableState>(context);
+
     if (isLoading) {
       return Scaffold(
         body: Center(
@@ -64,9 +76,9 @@ class _TableScreenWrapperState extends State<TableScreenWrapper> {
     }
 
     return Scaffold(
-      body: tableCode == null
+      body: tableCode == null || !tableState.isInTable
           ? CreateTableScreen(onTableCreated: _setTableCode)
-          : TableScreen(tableCode: tableCode!),
+          : TableScreen(tableCode: tableCode!, role: 'user'),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/screens/Manager/edit_menu_item_screen.dart';
 import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -381,7 +382,9 @@ class _MenuListState extends State<MenuList> {
                                                     padding: const EdgeInsets
                                                         .symmetric(
                                                         vertical: 12),
-                                                    backgroundColor: const Color.fromARGB(255, 212, 76, 66), // Red background
+                                                    backgroundColor: const Color
+                                                        .fromARGB(255, 212, 76,
+                                                        66), // Red background
                                                     shape:
                                                         RoundedRectangleBorder(
                                                       borderRadius:
@@ -622,8 +625,10 @@ class MenuItemWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AddMenuItemScreen(restaurantId: user!.uid),
+                        builder: (context) => EditMenuItemScreen(
+                          restaurantId: user!.uid,
+                          menuItemId: item.id,
+                        ),
                       ),
                     );
                   }
@@ -639,8 +644,8 @@ class MenuItemWidget extends StatelessWidget {
 
 class MenuItemImageWidget extends StatelessWidget {
   final String imageUrl;
-  final IconData icon;
-  final void Function() onIconTap;
+  final IconData? icon; // make it nullable
+  final void Function()? onIconTap;
 
   const MenuItemImageWidget({
     required this.imageUrl,
@@ -660,9 +665,7 @@ class MenuItemImageWidget extends StatelessWidget {
             width: 100,
             height: 100,
             loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
+              if (loadingProgress == null) return child;
               return const Center(child: CircularProgressIndicator());
             },
             errorBuilder: (context, error, stackTrace) {
@@ -670,35 +673,38 @@ class MenuItemImageWidget extends StatelessWidget {
             },
           ),
         ),
-        Positioned(
-          bottom: 5,
-          right: 5,
-          child: GestureDetector(
-            onTap: onIconTap,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Styles.primaryYellow,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 6,
-                    spreadRadius: 2,
+
+        // Only show the icon overlay if icon != null
+        if (icon != null)
+          Positioned(
+            bottom: 5,
+            right: 5,
+            child: GestureDetector(
+              onTap: onIconTap,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Styles.primaryYellow,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  radius: 18,
+                  child: Icon(
+                    icon,
+                    color: Colors.black,
+                    size: 18,
                   ),
-                ],
-              ),
-              child: CircleAvatar(
-                backgroundColor: Colors.transparent,
-                radius: 18,
-                child: Icon(
-                  icon,
-                  color: Colors.black,
-                  size: 18,
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

@@ -11,6 +11,7 @@ Widget TableCard({
   required double paidPercentage,
   required String orderStatus,
   required String tableCode, // Add tableCode as a parameter
+  required String role,
   required BuildContext context, // Pass BuildContext for navigation
 }) {
   Map<String, Color> colorMap = {
@@ -145,6 +146,7 @@ Widget TableCard({
                           MaterialPageRoute(
                             builder: (context) => TableScreen(
                               tableCode: tableCode,
+                              role: role,
                             ),
                           ),
                         );

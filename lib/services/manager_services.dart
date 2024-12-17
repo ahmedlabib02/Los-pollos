@@ -270,6 +270,18 @@ class ManagerServices {
     }
   }
 
+  // update menuitem using menuitem id
+  Future<void> updateMenuItem(MenuItem menuItem) async {
+    try {
+      await _firestore
+          .collection('menuItems')
+          .doc(menuItem.id)
+          .update(menuItem.toMap());
+    } catch (e) {
+      throw Exception('Error updating menu item: $e');
+    }
+  }
+
   /// Fetch all unique category names from a Menu doc by menuId.
   Future<List<String>> getAvailableCategories(String restaurantId) async {
     try {

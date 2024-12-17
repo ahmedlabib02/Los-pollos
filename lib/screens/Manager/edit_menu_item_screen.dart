@@ -2,90 +2,71 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:los_pollos_hermanos/screens/Client/category_dropdown.dart';
-import 'package:los_pollos_hermanos/screens/Client/variations_screen.dart';
 import 'package:los_pollos_hermanos/shared/Dropdown.dart';
 import 'package:los_pollos_hermanos/shared/GreyTextField.dart';
 import 'package:los_pollos_hermanos/shared/ImageUploader.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 
-class AddMenuItemScreen extends StatefulWidget {
-  /// The ID of the Restaurant we want to add items to.
+class EditMenuItemScreen extends StatefulWidget {
   final String restaurantId;
+  final String menuItemId;
 
-  AddMenuItemScreen({required this.restaurantId});
+  EditMenuItemScreen({
+    required this.restaurantId,
+    required this.menuItemId,
+  });
 
   @override
-  _AddMenuItemScreenState createState() => _AddMenuItemScreenState();
+  _EditMenuItemScreenState createState() => _EditMenuItemScreenState();
 }
 
-class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
-  // Text controllers
+class _EditMenuItemScreenState extends State<EditMenuItemScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _basePriceController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
+  MenuItem? menuItem;
 
-  final List<TextEditingController> _variantControllers = [];
-  final List<TextEditingController> _extrasControllers = [];
-  final List<TextEditingController> _extrasPriceControllers = [];
-
-  List<String> _categories = [];
-
-  String? _category;
   File? _selectedImage;
-
-  // final List<String> _categories = const [
-  //   'Option 1',
-  //   'Option 2',
-  //   'Option 3',
-  //   'Option 4',
-  //   'Option 5',
-  //   'Option 6',
-  //   'Option 7'
-  // ];
 
   double pad = 24.0;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _fetchMenuItemDetails();
   }
 
-  Future<void> _loadCategories() async {
+  void _fetchMenuItemDetails() async {
     try {
-      // 1. We need a menuId. Possibly fetch it from the Restaurant doc, or if you already have it, pass it in.
-      // For example, if you only have restaurantId, fetch the restaurant doc, get menuId, then fetch categories:
-      // But let's suppose we have a ManagerServices method that does it in one step or we have the menuId directly.
+      ClientService _client_service = ClientService();
+      menuItem = await _client_service.getMenuItem(widget.menuItemId);
 
-      // ManagerServices _managerServices = ManagerServices();
-      // String menuId = await _managerServices.getMenuIdForRestaurant(widget.restaurantId);
-      // List<String> fetchedCategories = await _managerServices.getAvailableCategories(menuId);
-
-      List<String> fetchedCategories =
-          await ManagerServices().getAvailableCategories(widget.restaurantId);
-
-      setState(() {
-        _categories = fetchedCategories;
-      });
+      if (menuItem != null) {
+        setState(() {
+          _titleController.text = menuItem!.name;
+          _descriptionController.text = menuItem!.description;
+          _basePriceController.text = menuItem!.price.toString();
+          _discountController.text = menuItem!.discount.toString();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Menu item not found')),
+        );
+      }
     } catch (e) {
-      print('Error fetching categories: $e');
-      // Show error or keep _categories empty
+      print('Error fetching menu item details: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching menu item details: $e')),
+      );
     }
   }
 
-  /// Handles saving the new MenuItem to Firestore.
   void _onSavePressed() async {
     try {
-      // 1. Validate user input
-      if (_category == null || _category!.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a category.')),
-        );
-        return;
-      }
       if (_titleController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Title cannot be empty.')),
@@ -93,56 +74,31 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
         return;
       }
 
-      // 2. Parse numeric fields
       double basePrice = double.tryParse(_basePriceController.text) ?? 0.0;
       double discount = double.tryParse(_discountController.text) ?? 0.0;
 
-      // 3. Build variants list
-      List<String> variants = _variantControllers
-          .map((c) => c.text.trim())
-          .where((text) => text.isNotEmpty)
-          .toList();
-
-      // 4. Build extras map (extraName -> extraPrice)
-      Map<String, double> extras = {};
-      for (int i = 0; i < _extrasControllers.length; i++) {
-        final extraName = _extrasControllers[i].text.trim();
-        final extraPrice =
-            double.tryParse(_extrasPriceControllers[i].text.trim()) ?? 0.0;
-        if (extraName.isNotEmpty) {
-          extras[extraName] = extraPrice;
-        }
-      }
-
-      // 5. Create a MenuItem model with placeholder ID (Firestore will assign one)
       MenuItem newItem = MenuItem(
         id: '', // will be assigned by Firestore
         name: _titleController.text.trim(),
         price: basePrice,
         description: _descriptionController.text.trim(),
-        variants: variants,
-        extras: extras,
+        variants: menuItem!.variants, // No variants section
+        extras: menuItem!.extras, // No extras section
         discount: discount,
         reviewIds: [], // starting empty
         imageUrl: '', // to be replaced if we upload an image
       );
 
       ManagerServices _managerServices = ManagerServices();
-      MenuItem createdItem = await _managerServices.createMenuItemForRestaurant(
-        restaurantId: widget.restaurantId,
-        category: _category!,
-        menuItem: newItem,
-        imageFile: _selectedImage, // pass your selected File (if any)
-      );
 
-      // 8. Show success and optionally navigate away
+      await _managerServices.updateMenuItem(newItem);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Created item: ${createdItem.name}')),
+        SnackBar(content: Text('Edit successful')),
       );
 
-      Navigator.pop(context, createdItem); // or any other navigation
+      Navigator.pop(context);
     } catch (e) {
-      // Handle exceptions from services
       print('Error creating menu item: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -161,7 +117,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 horizontal: pad), // Padding for the app bar
             child: AppBar(
               title: const Text(
-                'Add Item',
+                'Edit Item',
                 style: TextStyle(
                   fontWeight: FontWeight.w900, // Semibold font weight
                   fontSize: 26.0,
@@ -186,27 +142,11 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // PRODUCT DETAILS
               const Text('Product details', style: Styles.smallHeaderTextStyle),
               const SizedBox(height: 8),
-
-              // Title
               GreyTextField(label: 'Title', controller: _titleController),
               const SizedBox(height: 16),
-
-              // Category
-              Dropdown(
-                selectedValue: _category,
-                options: _categories,
-                onChange: (value) {
-                  setState(() {
-                    _category = value;
-                  });
-                },
-              ),
               const SizedBox(height: 16),
-
-              // Description
               GreyTextField(
                 label: 'Description',
                 controller: _descriptionController,
@@ -214,16 +154,12 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 maxHeight: 120,
               ),
               const SizedBox(height: 24),
-
-              // MEDIA
               const Text('Media',
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
-
-              // Image Upload
               ImageUploader(
                   selectedImage: _selectedImage,
                   onPickImage: () async {
@@ -234,33 +170,13 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                       _selectedImage = File(returnedImage.path);
                     });
                   }),
-
               const SizedBox(height: 24),
-
-              // VARIATIONS
-              // (from your custom widget `ItemCustomization`)
-              ItemCustomization(
-                variantControllers: _variantControllers,
-                isExtrasSection: false,
-              ),
-              const SizedBox(height: 24),
-
-              // EXTRAS
-              ItemCustomization(
-                variantControllers: _extrasControllers,
-                priceControllers: _extrasPriceControllers,
-                isExtrasSection: true,
-              ),
-              const SizedBox(height: 24),
-
-              // PRICING
               const Text('Pricing',
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   Expanded(
@@ -282,20 +198,16 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 18),
-
-              // ACTION BUTTONS
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // Save Button
                   ElevatedButton(
                     onPressed: _onSavePressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF2C230),
                       elevation: 0, // Removes shadow
-                      shadowColor: Colors.transparent, // Ensures no shadow,
+                      shadowColor: Colors.transparent, // Ensures no shadow
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -303,9 +215,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                     child: const Text('Save',
                         style: TextStyle(fontSize: 18, color: Colors.black)),
                   ),
-
                   const SizedBox(width: 10),
-                  // Discard Button
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);

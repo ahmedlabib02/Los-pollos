@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:los_pollos_hermanos/services/auth.dart';
 import 'package:los_pollos_hermanos/services/notification_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
-import 'package:los_pollos_hermanos/models/customUser.dart';
 
 class ManagerHome extends StatefulWidget {
   const ManagerHome({Key? key}) : super(key: key);
@@ -96,30 +94,6 @@ class _ManagerHomeState extends State<ManagerHome> {
               child: const Text('Send Offers Notification'),
             ),
             const SizedBox(height: 20),
-
-            // Button to send Notification to a specific user
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     try {
-            //       await _notificationService.sendNotificationToTopic(
-            //         'offers',
-            //         'Special Invitation!',
-            //         'fuck off will you',
-            //         'manager123',
-            //       );
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         const SnackBar(
-            //             content: Text('Notification sent to specific user!')),
-            //       );
-            //     } catch (e) {
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         SnackBar(
-            //             content: Text('Failed to send user notification: $e')),
-            //       );
-            //     }
-            //   },
-            //   child: const Text('Send User Notification'),
-            // ),
           ],
         ),
       ),

@@ -76,7 +76,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Orders",
+          "Past Orders",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 26.0,
