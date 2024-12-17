@@ -89,18 +89,32 @@ class NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
         if (response.payload != null) {
-          final Map<String, dynamic> payload = jsonDecode(response.payload!);
-          final String orderId = payload['orderId'] ?? '';
+          try {
+            final Map<String, dynamic> payload = jsonDecode(response.payload!);
+            final String orderId = payload['orderId'] ?? '';
+            final String notificationId = payload['notificationId'] ?? '';
+            final String senderId = payload['sentBy'] ?? '';
+            final String currentUid =
+                'CURRENT_USER_UID'; // Replace with the logged-in user ID.
 
-          // if (response.actionId == 'accept_action') {
-          //   print('User accepted the invite for Order ID: $orderId');
-          //   await ClientService()
-          //       .acceptOrderInvite(orderId); // Implement this logic
-          // } else if (response.actionId == 'reject_action') {
-          //   print('User rejected the invite for Order ID: $orderId');
-          //   await ClientService()
-          //       .rejectOrderInvite(orderId); // Implement this logic
-          // }
+            if (response.actionId == 'accept_action') {
+              print('User accepted the invite for Order ID: $orderId');
+              await ClientService().acceptInvite(
+                notificationId,
+                orderId,
+                currentUid, // Current User ID to remove notification
+                senderId, // Sender ID to add to userIds
+              );
+            } else if (response.actionId == 'reject_action') {
+              print('User rejected the invite for Order ID: $orderId');
+              await ClientService().rejectInvite(
+                notificationId,
+                currentUid, // Current User ID to remove notification
+              );
+            }
+          } catch (e) {
+            print('Error handling notification response: $e');
+          }
         }
       },
     );
