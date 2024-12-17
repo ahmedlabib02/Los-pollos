@@ -56,6 +56,7 @@ class _OrderItemCardState extends State<OrderItemCard> {
     // Fetch users based on updated _orderItem
     List<Map<String, dynamic>> users = [];
     for (String userId in _orderItem!.userIds) {
+      if (userId.isEmpty) continue;
       Client? client = await clientService.getClient(userId);
       if (client != null) {
         users.add(client.toMap());

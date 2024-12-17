@@ -78,7 +78,6 @@ class _MainPageState extends State<MainPage> {
                               color: Colors.redAccent, size: 30),
                           tooltip: 'Exit Table',
                           onPressed: () async {
-                            tableState.leaveTable();
                             // call the server to leave the table
                             try {
                               final user = Provider.of<CustomUser?>(context,
@@ -95,7 +94,7 @@ class _MainPageState extends State<MainPage> {
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString())),
+                                SnackBar(content: Text("You need to settle your bill before you can leave the table")),
                               );
                             }
                           },
