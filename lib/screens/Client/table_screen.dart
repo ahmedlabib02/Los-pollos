@@ -4,7 +4,6 @@ import 'package:los_pollos_hermanos/services/client_services.dart';
 import 'package:los_pollos_hermanos/shared/CustomChip.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
 import 'package:los_pollos_hermanos/shared/TableRing.dart';
-import 'package:los_pollos_hermanos/shared/temp_vars.dart';
 import 'package:los_pollos_hermanos/widgets/order_summary.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart' as TableModel;
 
@@ -141,7 +140,8 @@ class _TableScreenState extends State<TableScreen> {
                                   ),
                                 ),
                                 alignment: Alignment.center,
-                                child: CustomChip('${paidPercentage}% paid'),
+                                child: CustomChip(
+                                    '${paidPercentage.round()}% paid'),
                               ),
                             ),
                             Expanded(
@@ -159,7 +159,8 @@ class _TableScreenState extends State<TableScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: CustomChip(
-                                    '${currentTable!.totalAmount} EGP due'),
+                                  '${currentTable!.totalAmount.round()} EGP due',
+                                ),
                               ),
                             ),
 
@@ -228,7 +229,7 @@ class _TableScreenState extends State<TableScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Container(
-                            height: 500,
+                            height: 300, // Keeps consistent height
                             decoration: BoxDecoration(
                               color: Styles.inputFieldBgColor,
                               borderRadius: BorderRadius.circular(4.0),
