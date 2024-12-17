@@ -864,14 +864,108 @@ class ClientService {
           .orderBy('timestamp', descending: true)
           .get();
 
-      print('Number of notifications: ${snapshot.docs.length}');
-      return snapshot.docs.map((doc) {
-        print('Notification document: ${doc.data()}');
-        return AppNotification.fromDocument(doc);
+      List<AppNotification> notifications = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        return AppNotification(
+          id: doc.id,
+          userId: data['userId'] ?? uid, // Default to the current userId
+          title: data['title'] ?? 'No Title',
+          body: data['body'] ?? 'No Body',
+          timestamp:
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          sentBy: data['sentBy'] ?? 'Unknown',
+          type: data.containsKey('type')
+              ? NotificationType.values.firstWhere(
+                  (e) => e.toString() == 'NotificationType.${data['type']}',
+                  orElse: () => NotificationType.discount)
+              : NotificationType.discount,
+          orderId: data['orderId'] ?? '', // Safely handle missing 'orderId'
+        );
       }).toList();
+
+      return notifications;
     } catch (e) {
       print('Error fetching notifications: $e');
       throw Exception('Error fetching notifications: $e');
+    }
+  }
+
+  Future<String?> getUserImage(String senderId, NotificationType type) async {
+    try {
+      String collectionPath = type == NotificationType.discount
+          ? 'restaurants' // For discount notifications
+          : 'clients'; // For invite notifications
+
+      DocumentSnapshot senderDoc = await FirebaseFirestore.instance
+          .collection(collectionPath)
+          .doc(senderId)
+          .get();
+
+      if (senderDoc.exists) {
+        return senderDoc['imageUrl'] as String?; // Assuming 'imageUrl' exists
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching sender image: $e");
+      return null; // Return null if there's an error
+    }
+  }
+
+  Future<void> acceptInvite(String notificationId, String orderId,
+      String currentUid, String senderId) async {
+    try {
+      // Reference to the specific order document
+      DocumentReference orderRef =
+          _firestore.collection('orderItems').doc(orderId);
+
+      // 1. Add the sender's ID to the `userIds` array in the order
+      await orderRef.update({
+        'userIds':
+            FieldValue.arrayUnion([senderId]) // Add senderId, NOT currentUid
+      });
+      print('Sender ID ($senderId) added to order: $orderId');
+
+      // 2. Remove the notification from the current user's notification subcollection
+      DocumentReference notificationRef = _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId);
+
+      await notificationRef.delete();
+      print('Notification removed for user: $currentUid');
+    } catch (e) {
+      print('Error accepting invite: $e');
+      throw Exception('Failed to accept invite');
+    }
+  }
+
+  /// Reject Invite: Removes the notification
+  Future<void> rejectInvite(String notificationId, String currentUid) async {
+    try {
+      await removeNotification(notificationId, currentUid);
+      print('Notification removed after rejecting.');
+    } catch (e) {
+      print('Error rejecting invite: $e');
+      throw Exception('Failed to reject invite');
+    }
+  }
+
+  /// Remove Notification: Deletes the notification from the user's subcollection
+  Future<void> removeNotification(
+      String notificationId, String currentUid) async {
+    try {
+      await _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId)
+          .delete();
+      print('Notification removed: $notificationId');
+    } catch (e) {
+      print('Error removing notification: $e');
+      throw Exception('Failed to remove notification');
     }
   }
 }
