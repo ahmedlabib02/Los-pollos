@@ -66,7 +66,7 @@ class _TableScreenWrapperState extends State<TableScreenWrapper> {
     return Scaffold(
       body: tableCode == null
           ? CreateTableScreen(onTableCreated: _setTableCode)
-          : TableScreen(tableCode: tableCode!),
+          : TableScreen(tableCode: tableCode!, role: 'user'),
     );
   }
 }

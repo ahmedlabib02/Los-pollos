@@ -47,6 +47,7 @@ import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/provider/table_state_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/bill_summary_screen_dummy_data.dart';
 import 'package:los_pollos_hermanos/screens/Client/choose_restaurant_screen.dart';
+import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/table_screen.dart';
 import 'package:los_pollos_hermanos/screens/Client/test_screen.dart';
@@ -105,8 +106,9 @@ class Wrapper extends StatelessWidget {
               // Conditionally return MainPage or ChooseRestaurantScreen
               if (ongoingTable != null) {
                 // return BillSummaryScreen();
-                return MainPage();
+                // return MainPage();
                 // return MenuScreen();
+                return MenuItemScreen(menuItemId: 'OB1FTRIpRjT8BSlHUszC');
                 // return OrderSummary(tableId: 'hJVZXkhwtaqAWucdlEgx');
               } else {
                 return ChooseRestaurantScreen();

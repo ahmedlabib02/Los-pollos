@@ -31,20 +31,50 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   final List<TextEditingController> _extrasControllers = [];
   final List<TextEditingController> _extrasPriceControllers = [];
 
+  List<String> _categories = [];
+
   String? _category;
   File? _selectedImage;
 
-  final List<String> _categories = const [
-    'Option 1',
-    'Option 2',
-    'Option 3',
-    'Option 4',
-    'Option 5',
-    'Option 6',
-    'Option 7'
-  ];
+  // final List<String> _categories = const [
+  //   'Option 1',
+  //   'Option 2',
+  //   'Option 3',
+  //   'Option 4',
+  //   'Option 5',
+  //   'Option 6',
+  //   'Option 7'
+  // ];
 
   double pad = 24.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      // 1. We need a menuId. Possibly fetch it from the Restaurant doc, or if you already have it, pass it in.
+      // For example, if you only have restaurantId, fetch the restaurant doc, get menuId, then fetch categories:
+      // But let's suppose we have a ManagerServices method that does it in one step or we have the menuId directly.
+
+      // ManagerServices _managerServices = ManagerServices();
+      // String menuId = await _managerServices.getMenuIdForRestaurant(widget.restaurantId);
+      // List<String> fetchedCategories = await _managerServices.getAvailableCategories(menuId);
+
+      List<String> fetchedCategories =
+          await ManagerServices().getAvailableCategories(widget.restaurantId);
+
+      setState(() {
+        _categories = fetchedCategories;
+      });
+    } catch (e) {
+      print('Error fetching categories: $e');
+      // Show error or keep _categories empty
+    }
+  }
 
   /// Handles saving the new MenuItem to Firestore.
   void _onSavePressed() async {

@@ -7,6 +7,7 @@ import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/menu_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
+import 'package:los_pollos_hermanos/models/review_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
 import 'package:los_pollos_hermanos/models/notification_model.dart';
@@ -524,10 +525,11 @@ class ClientService {
           'amount': newAmount,
           'orderItemIds': FieldValue.arrayUnion([orderItemID])
         });
+
         // get the new orderItemIds and update the table
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
-            print("orderItemIds: $orderItemIds");
+        print("orderItemIds: $orderItemIds");
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -612,8 +614,8 @@ class ClientService {
             'itemName': menuItemName,
           });
         }
-        
-        if(orderItems.isEmpty){
+
+        if (orderItems.isEmpty) {
           continue;
         }
         print("billUserID: $billId");
@@ -871,14 +873,174 @@ class ClientService {
           .orderBy('timestamp', descending: true)
           .get();
 
-      print('Number of notifications: ${snapshot.docs.length}');
-      return snapshot.docs.map((doc) {
-        print('Notification document: ${doc.data()}');
-        return AppNotification.fromDocument(doc);
+      List<AppNotification> notifications = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        return AppNotification(
+          id: doc.id,
+          userId: data['userId'] ?? uid, // Default to the current userId
+          title: data['title'] ?? 'No Title',
+          body: data['body'] ?? 'No Body',
+          timestamp:
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          sentBy: data['sentBy'] ?? 'Unknown',
+          type: data.containsKey('type')
+              ? NotificationType.values.firstWhere(
+                  (e) => e.toString() == 'NotificationType.${data['type']}',
+                  orElse: () => NotificationType.discount)
+              : NotificationType.discount,
+          orderId: data['orderId'] ?? '', // Safely handle missing 'orderId'
+        );
       }).toList();
+
+      return notifications;
     } catch (e) {
       print('Error fetching notifications: $e');
       throw Exception('Error fetching notifications: $e');
+    }
+  }
+
+  Future<String?> getUserImage(String senderId, NotificationType type) async {
+    try {
+      String collectionPath = type == NotificationType.discount
+          ? 'restaurants' // For discount notifications
+          : 'clients'; // For invite notifications
+
+      DocumentSnapshot senderDoc = await FirebaseFirestore.instance
+          .collection(collectionPath)
+          .doc(senderId)
+          .get();
+
+      if (senderDoc.exists) {
+        return senderDoc['imageUrl'] as String?; // Assuming 'imageUrl' exists
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching sender image: $e");
+      return null; // Return null if there's an error
+    }
+  }
+
+  Future<void> acceptInvite(String notificationId, String orderId,
+      String currentUid, String senderId) async {
+    try {
+      // Reference to the specific order document
+      DocumentReference orderRef =
+          _firestore.collection('orderItems').doc(orderId);
+
+      // 1. Add the sender's ID to the `userIds` array in the order
+      await orderRef.update({
+        'userIds':
+            FieldValue.arrayUnion([senderId]) // Add senderId, NOT currentUid
+      });
+      print('Sender ID ($senderId) added to order: $orderId');
+
+      // 2. Remove the notification from the current user's notification subcollection
+      DocumentReference notificationRef = _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId);
+
+      await notificationRef.delete();
+      print('Notification removed for user: $currentUid');
+    } catch (e) {
+      print('Error accepting invite: $e');
+      throw Exception('Failed to accept invite');
+    }
+  }
+
+  /// Reject Invite: Removes the notification
+  Future<void> rejectInvite(String notificationId, String currentUid) async {
+    try {
+      await removeNotification(notificationId, currentUid);
+      print('Notification removed after rejecting.');
+    } catch (e) {
+      print('Error rejecting invite: $e');
+      throw Exception('Failed to reject invite');
+    }
+  }
+
+  /// Remove Notification: Deletes the notification from the user's subcollection
+  Future<void> removeNotification(
+      String notificationId, String currentUid) async {
+    try {
+      await _firestore
+          .collection('clients')
+          .doc(currentUid)
+          .collection('notifications')
+          .doc(notificationId)
+          .delete();
+      print('Notification removed: $notificationId');
+    } catch (e) {
+      print('Error removing notification: $e');
+      throw Exception('Failed to remove notification');
+    }
+  }
+
+  // Reviews --------------------------------------------------------------
+  Future<void> addReview(String menuItemId, String userId, String reviewContent,
+      int rating) async {
+    try {
+      DocumentReference reviewRef = _firestore.collection('reviews').doc();
+      await reviewRef.set({
+        'menuItemId': menuItemId,
+        'userId': userId,
+        'reviewContent': reviewContent,
+        'rating': rating,
+      });
+
+      // Fetch the menu item document
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItemId);
+      DocumentSnapshot menuItemSnapshot = await menuItemRef.get();
+
+      if (menuItemSnapshot.exists) {
+        // Update the menu item's reviews field
+        await menuItemRef.update({
+          'reviewIds': FieldValue.arrayUnion([reviewRef.id]),
+        });
+      } else {
+        throw Exception('Menu item not found');
+      }
+      print('Review added successfully');
+    } catch (e) {
+      print('Error adding review: $e');
+      throw Exception('Error adding review: $e');
+    }
+  }
+
+  Future<List<Review>> fetchReviews(String menuItemId) async {
+    try {
+      // Fetch the menu item document
+      DocumentSnapshot menuItemSnapshot =
+          await _firestore.collection('menuItems').doc(menuItemId).get();
+
+      if (!menuItemSnapshot.exists) {
+        throw Exception('Menu item not found');
+      }
+
+      // Get the list of review IDs
+      List<String> reviewIds =
+          List<String>.from(menuItemSnapshot.get('reviewIds'));
+
+      // Fetch each review document
+      List<Review> reviews = [];
+      for (String reviewId in reviewIds) {
+        DocumentSnapshot reviewSnapshot =
+            await _firestore.collection('reviews').doc(reviewId).get();
+
+        if (reviewSnapshot.exists) {
+          reviews.add(Review.fromMap(
+              reviewSnapshot.data() as Map<String, dynamic>,
+              reviewSnapshot.id));
+        }
+      }
+
+      return reviews;
+    } catch (e) {
+      print('Error fetching reviews for menu item: $e');
+      throw Exception('Failed to fetch reviews for menu item');
     }
   }
 }

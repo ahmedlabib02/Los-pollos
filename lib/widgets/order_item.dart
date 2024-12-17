@@ -4,7 +4,11 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/services/client_services.dart';
+
+import 'package:los_pollos_hermanos/services/notification_services.dart';
+
 import 'package:los_pollos_hermanos/services/manager_services.dart';
+
 import 'package:los_pollos_hermanos/shared/AvatarGroup.dart';
 import 'package:los_pollos_hermanos/shared/Dropdown.dart';
 import 'package:los_pollos_hermanos/shared/Styles.dart';
@@ -90,6 +94,29 @@ class _OrderItemCardState extends State<OrderItemCard> {
     );
   }
 
+  void _showReviewBottomDrawer(
+      BuildContext context, MenuItem menuItem, String loggedInUserId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (context) {
+        return ReviewBottomSheet(
+          menuItem: menuItem,
+          loggedInUserId: loggedInUserId,
+          onReviewSubmitted: () async {
+            // Re-fetch data after the user leaves the order
+            setState(() {
+              _fetchFuture = _fetchData();
+            });
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -150,9 +177,43 @@ class _OrderItemCardState extends State<OrderItemCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          menuItem.name,
-                          style: const TextStyle(fontSize: 16.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  menuItem.name,
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  ' - x${orderItem.itemCount}',
+                                  style: const TextStyle(
+                                    fontSize: 14.0,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0, vertical: 0.0),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(orderItem.status),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Text(
+                                _getStatusText(orderItem.status),
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                         const SizedBox(height: 2.0),
                         AvatarGroup(
@@ -163,26 +224,6 @@ class _OrderItemCardState extends State<OrderItemCard> {
                         ),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${menuItem.price.toStringAsFixed(2)} EGP',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6.0, vertical: 2.0),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Text(
-                          'x${orderItem.itemCount}',
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -201,22 +242,44 @@ class _OrderItemCardState extends State<OrderItemCard> {
                         fontSize: 16.0,
                       ),
                     ),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: 30),
-                      child: TextButton(
-                        onPressed: () {
-                          _showBottomDrawer(
-                              context, menuItem, users, loggedInUserId);
-                        },
-                        child: Text(
-                          'Details',
-                          style: TextStyle(
-                            color: Styles.primaryYellow,
-                            fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: 30),
+                          child: TextButton(
+                            onPressed: () {
+                              _showBottomDrawer(
+                                  context, menuItem, users, loggedInUserId);
+                            },
+                            style: TextButton.styleFrom(),
+                            child: const Text(
+                              'Details',
+                              style: TextStyle(
+                                color: Styles.primaryYellow,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                        style: TextButton.styleFrom(),
-                      ),
+                        if (orderItem.status == OrderStatus.served)
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxHeight: 30),
+                            child: TextButton(
+                              onPressed: () {
+                                _showReviewBottomDrawer(
+                                    context, menuItem, loggedInUserId);
+                              },
+                              style: TextButton.styleFrom(),
+                              child: const Text(
+                                'Review',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 74, 74, 74),
+                                  // fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     )
                   ],
                 ),
@@ -298,6 +361,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
     }
   }
 
+
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.accepted:
@@ -324,9 +388,11 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
     }
   }
 
+  final NotificationService notificationService = NotificationService();
+
+
   @override
   Widget build(BuildContext context) {
-
     String? loggedInUserRole = Provider.of<CustomUser?>(context)!.role;
 
     return Container(
@@ -348,21 +414,12 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 4.0),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(_localOrderItem.status),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Text(
-                    _getStatusText(_localOrderItem.status),
-                    style: const TextStyle(
-                      fontSize: 14.0,
+                Text('x${_localOrderItem.itemCount}',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black,
-                    ),
-                  ),
-                ),
+                    ))
               ],
             ),
             const SizedBox(height: 12.0),
@@ -393,80 +450,77 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     color: Colors.black,
                   ),
                 ),
-
                 loggedInUserRole == 'manager'
-                ?
-                DropdownButton<OrderStatus>(
-                    value: _localOrderItem.status,
-                    items: OrderStatus.values.map((OrderStatus status) {
-                      return DropdownMenuItem<OrderStatus>(
-                        value: status,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(status),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            _getStatusText(status),
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black,
+                    ? DropdownButton<OrderStatus>(
+                        value: _localOrderItem.status,
+                        items: OrderStatus.values.map((OrderStatus status) {
+                          return DropdownMenuItem<OrderStatus>(
+                            value: status,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0, vertical: 4.0),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(status),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Text(
+                                _getStatusText(status),
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black,
+                                ),
+                              ),
                             ),
+                          );
+                        }).toList(),
+                        onChanged: (OrderStatus? newStatus) async {
+                          if (newStatus != null) {
+                            try {
+                              // Update the status locally
+                              setState(() {
+                                _localOrderItem.status = newStatus;
+                              });
+
+                              // Call service to update the status in the backend
+                              await ManagerServices().updateOrderItemStatus(
+                                orderItemId: _localOrderItem.id,
+                                status: newStatus,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Order status updated to ${_getStatusText(newStatus)}.',
+                                  ),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Failed to update status: $e',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 4.0),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(_localOrderItem.status),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          _getStatusText(_localOrderItem.status),
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.black,
                           ),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (OrderStatus? newStatus) async {
-                      if (newStatus != null) {
-                        try {
-                          // Update the status locally
-                          setState(() {
-                            _localOrderItem.status = newStatus;
-                          });
-
-                          // Call service to update the status in the backend
-                          await ManagerServices().updateOrderItemStatus(
-                            orderItemId: _localOrderItem.id,
-                            status: newStatus,
-                          );
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Order status updated to ${_getStatusText(newStatus)}.',
-                              ),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Failed to update status: $e',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  )
-                  : Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 4.0),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(_localOrderItem.status),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Text(
-                      _getStatusText(_localOrderItem.status),
-                      style: const TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.black,
-                      ),
-                    ),
-                  )
-
+                      )
               ],
             ),
             const SizedBox(height: 16.0),
@@ -578,8 +632,33 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     : Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            print("Join button pressed");
-                            // Add invite functionality here
+                            // Prepare the parameters for the notification
+                            List<String> userIds = _localOrderItem
+                                .userIds; // User IDs involved in the order
+                            String title =
+                                "Join Request for Order"; // Title of the notification
+                            String body =
+                                "${widget.menuItem.name} - Shared Order Invite"; // Body content
+                            String sentBy = widget
+                                .loggedInUserId; // ID of the logged-in user
+                            String orderId = _localOrderItem
+                                .id; // The ID of the order being shared
+
+                            // Call the notification service
+                            notificationService.sendNotificationToMultipleUsers(
+                              userIds,
+                              title,
+                              body,
+                              sentBy,
+                              orderId,
+                            );
+
+                            // Show a confirmation snackbar (optional)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Join request notification sent")),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
@@ -602,5 +681,180 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
         ),
       ),
     );
+  }
+}
+
+class ReviewBottomSheet extends StatefulWidget {
+  final MenuItem menuItem;
+  final String loggedInUserId;
+  final VoidCallback onReviewSubmitted;
+
+  const ReviewBottomSheet({
+    Key? key,
+    required this.menuItem,
+    required this.loggedInUserId,
+    required this.onReviewSubmitted,
+  }) : super(key: key);
+
+  @override
+  _ReviewBottomSheetState createState() => _ReviewBottomSheetState();
+}
+
+class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
+  final TextEditingController _reviewController = TextEditingController();
+  int _rating = 0; // Rating starts from 0 (no rating)
+
+  Future<void> _submitReview() async {
+    final String reviewText = _reviewController.text.trim();
+    if (_rating == 0 || reviewText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please provide a rating and a review.')),
+      );
+      return;
+    }
+
+    try {
+      // Call a service to save the review
+      await ClientService().addReview(
+        widget.menuItem.id,
+        widget.loggedInUserId,
+        reviewText,
+        _rating,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully!')),
+      );
+
+      widget.onReviewSubmitted();
+      Navigator.of(context).pop(); // Close the bottom sheet
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit review: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Center(
+              child: Text(
+                "Write a review for ${widget.menuItem.name}",
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Rating Section
+            const Text(
+              "Rating",
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Row(
+              children: List.generate(5, (index) {
+                return IconButton(
+                  icon: Icon(
+                    index < _rating ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                    size: 32.0,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _rating = index + 1; // Stars are 1-based
+                    });
+                  },
+                );
+              }),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Review Input
+            const Text(
+              "Your Review",
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: _reviewController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: "Write your thoughts about the item...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitReview,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                ),
+                child: const Text(
+                  "Submit Review",
+                  style: TextStyle(fontSize: 16.0, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Color _getStatusColor(OrderStatus status) {
+  switch (status) {
+    case OrderStatus.accepted:
+      return Colors.blue.withOpacity(0.2);
+    case OrderStatus.inProgress:
+      return Colors.orange.withOpacity(0.2);
+    case OrderStatus.served:
+      return Colors.green.withOpacity(0.2);
+    default:
+      return Colors.grey.withOpacity(0.2);
+  }
+}
+
+String _getStatusText(OrderStatus status) {
+  switch (status) {
+    case OrderStatus.accepted:
+      return 'Accepted';
+    case OrderStatus.inProgress:
+      return 'In Progress';
+    case OrderStatus.served:
+      return 'Served';
+    default:
+      return 'Unknown';
   }
 }
