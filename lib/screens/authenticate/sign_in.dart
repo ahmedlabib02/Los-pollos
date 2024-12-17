@@ -157,23 +157,23 @@ class _SignInState extends State<SignIn> {
                           ),
                           const SizedBox(height: 10),
 
-                          // Forgot Password
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                // Forgot Password logic
-                              },
-                              child: const Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
+                          // // Forgot Password
+                          // Align(
+                          //   alignment: Alignment.centerRight,
+                          //   child: TextButton(
+                          //     onPressed: () {
+                          //       // Forgot Password logic
+                          //     },
+                          //     child: const Text(
+                          //       'Forgot Password?',
+                          //       style: TextStyle(
+                          //         color: Colors.blue,
+                          //         fontWeight: FontWeight.w600,
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
+                          // const SizedBox(height: 10),
 
                           // Error Message
                           if (_errorMessage != null)

@@ -510,8 +510,7 @@ class ClientService {
       for (String billId in billIds) {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(billId).get();
-        String userIdInBill = billDoc.get('userId');
-        if (userIdInBill == userID) {
+        if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
           userBillId = billId;
           break;
         }

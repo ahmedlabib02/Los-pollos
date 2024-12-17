@@ -1,7 +1,12 @@
 // lib/services/restaurant_service.dart
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:los_pollos_hermanos/models/bill_model.dart';
+import 'package:los_pollos_hermanos/models/menu_item_model.dart';
+import 'package:los_pollos_hermanos/models/menu_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/restaurant_model.dart';
@@ -112,6 +117,156 @@ class ManagerServices {
     } catch (e) {
       print('Error getting past tables: $e');
       throw e;
+    }
+  }
+
+  /// Creates a new [MenuItem] in Firestore, updates the corresponding
+  /// [Menu] document to include the new item in the specified category.
+  ///
+  /// [restaurantId] - The ID of the [Restaurant] document.
+  /// [category] - The category to which the new menu item belongs.
+  /// [menuItem] - The item data (excluding Firestore doc ID) to be created.
+  /// [imageFile] - Optional image file to upload to Firebase Storage.
+  ///
+  /// Returns the newly created [MenuItem] with its assigned Firestore doc ID and image URL.
+  Future<MenuItem> createMenuItemForRestaurant({
+    required String restaurantId,
+    required String category,
+    required MenuItem menuItem,
+    File? imageFile,
+  }) async {
+    try {
+      // 1. Fetch the Restaurant to get the menuId.
+      DocumentSnapshot restaurantSnapshot =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+
+      if (!restaurantSnapshot.exists) {
+        throw Exception('Restaurant with ID $restaurantId does not exist.');
+      }
+
+      Restaurant restaurant = Restaurant.fromMap(
+        restaurantSnapshot.data() as Map<String, dynamic>,
+        restaurantSnapshot.id,
+      );
+
+      // 2. (Optional) Upload the image to Firebase Storage if present.
+      String imageUrl = menuItem.imageUrl;
+      if (imageFile != null) {
+        // Create a unique path in storage, e.g. /menuItems/{some_unique_id}
+        String storagePath =
+            'menuItems/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
+
+        UploadTask uploadTask = FirebaseStorage.instance
+            .ref()
+            .child(storagePath)
+            .putFile(imageFile);
+        TaskSnapshot snapshot = await uploadTask;
+        imageUrl = await snapshot.ref.getDownloadURL();
+      }
+
+      // 3. Create the MenuItem document in Firestore (in `menuItems` collection).
+      //    Firestore will auto-generate the ID if you use add().
+      final menuItemRef = await _firestore.collection('menuItems').add({
+        'name': menuItem.name,
+        'price': menuItem.price,
+        'description': menuItem.description,
+        'variants': menuItem.variants,
+        'extras': menuItem.extras,
+        'discount': menuItem.discount,
+        'reviewIds': menuItem.reviewIds,
+        'imageUrl': imageUrl, // The final image URL (download URL if uploaded)
+      });
+
+      // 4. After creation, read back the doc to get the newly assigned ID.
+      final newMenuItemDoc = await menuItemRef.get();
+      final createdMenuItemId = newMenuItemDoc.id;
+
+      // 5. Now, we update the Menu document to include this new item in the specified category.
+      final menuDocRef = _firestore.collection('menus').doc(restaurant.menuId);
+
+      DocumentSnapshot menuSnapshot = await menuDocRef.get();
+      if (!menuSnapshot.exists) {
+        throw Exception('Menu with ID ${restaurant.menuId} does not exist.');
+      }
+
+      Menu menu = Menu.fromMap(
+        menuSnapshot.data() as Map<String, dynamic>,
+        menuSnapshot.id,
+      );
+
+      // Add the new item ID to the relevant category list.
+      menu.categories[category] ??=
+          []; // If category doesn't exist yet, initialize it
+      menu.categories[category]!.add(createdMenuItemId);
+
+      // Update the Menu in Firestore
+      await menuDocRef.update({
+        'categories': menu.categories,
+      });
+
+      // 6. Return the newly created MenuItem with the assigned Firestore ID and final image URL
+      return MenuItem(
+        id: createdMenuItemId,
+        name: menuItem.name,
+        price: menuItem.price,
+        description: menuItem.description,
+        variants: menuItem.variants,
+        extras: menuItem.extras,
+        discount: menuItem.discount,
+        reviewIds: menuItem.reviewIds,
+        imageUrl: imageUrl,
+      );
+    } catch (e) {
+      rethrow; // Pass the error up for the UI to handle
+    }
+  }
+
+  /// Delete a menu item from Firestore, and remove its ID from the Menu categories.
+  Future<void> deleteMenuItemForRestaurant({
+    required String restaurantId,
+    required MenuItem menuItem,
+    required String category,
+  }) async {
+    try {
+      // 1. Fetch Restaurant doc to get menuId
+      final restaurantDoc =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+      if (!restaurantDoc.exists) {
+        throw Exception('Restaurant with ID $restaurantId not found.');
+      }
+      final restaurant = Restaurant.fromMap(
+        restaurantDoc.data() as Map<String, dynamic>,
+        restaurantDoc.id,
+      );
+
+      // 2. Fetch the Menu doc by menuId
+      final menuDocRef = _firestore.collection('menus').doc(restaurant.menuId);
+      final menuDocSnap = await menuDocRef.get();
+      if (!menuDocSnap.exists) {
+        throw Exception('Menu with ID ${restaurant.menuId} not found.');
+      }
+      Menu menu = Menu.fromMap(
+        menuDocSnap.data() as Map<String, dynamic>,
+        menuDocSnap.id,
+      );
+
+      // 3. Remove the itemId from the relevant category array
+      final itemId = menuItem.id;
+      if (menu.categories[category] != null) {
+        menu.categories[category]!.remove(itemId);
+        // If the category becomes empty, you could also remove the key entirely:
+        if (menu.categories[category]!.isEmpty) {
+          menu.categories.remove(category);
+        }
+      }
+
+      // 4. Update the Menu doc
+      await menuDocRef.update({'categories': menu.categories});
+
+      // 5. Delete the menuItem doc from `menuItems` collection
+      await _firestore.collection('menuItems').doc(itemId).delete();
+    } catch (e) {
+      rethrow;
     }
   }
 
