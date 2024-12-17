@@ -53,6 +53,7 @@ class _MenuScreenState extends State<MenuScreen> {
         child: MenuList(
           menuItemsFuture: _menuItemsFuture,
           role: widget.role,
+          refreshCallback: _refreshMenuItems,
         ),
       ),
       floatingActionButton: widget.role == 'manager'
@@ -87,7 +88,12 @@ class MenuList extends StatefulWidget {
 
   final String role;
 
-  const MenuList({required this.menuItemsFuture, required this.role});
+  final VoidCallback? refreshCallback;
+  MenuList(
+      {required this.menuItemsFuture,
+      required this.role,
+      this.refreshCallback,
+      super.key});
 
   @override
   _MenuListState createState() => _MenuListState();
@@ -280,7 +286,6 @@ class _MenuListState extends State<MenuList> {
                           ),
                         ),
                         itemBuilder: (context, itemIndex) {
-                          final category = _categories[itemIndex];
                           final item = items[itemIndex];
                           // If the user is "manager", wrap in Dismissible
                           if (widget.role == 'manager') {
@@ -299,20 +304,109 @@ class _MenuListState extends State<MenuList> {
                                 // Optionally prompt for confirmation
                                 return await showDialog(
                                   context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text('Delete ${item.name}?'),
-                                    content: Text(
-                                        'Are you sure you want to remove this item?'),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(false),
-                                          child: Text('Cancel')),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(true),
-                                          child: Text('Delete')),
-                                    ],
+                                  builder: (ctx) => Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          16.0), // Rounded corners
+                                    ),
+                                    elevation: 0,
+                                    backgroundColor: Colors.white,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // Title
+                                          Text(
+                                            'Delete ${item.name}?',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          // Content
+                                          const Text(
+                                            'Do you want to permanently delete this menu item?',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black54,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          // Buttons
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              // Cancel Button
+                                              Expanded(
+                                                child: TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 12),
+                                                    backgroundColor:
+                                                        Colors.grey[
+                                                            200], // Light gray
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(false),
+                                                  child: const Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              //Delete Button
+                                              Expanded(
+                                                child: TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 12),
+                                                    backgroundColor: const Color.fromARGB(255, 212, 76, 66), // Red background
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(true),
+                                                  child: const Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
@@ -330,6 +424,8 @@ class _MenuListState extends State<MenuList> {
                                   );
                                   // 2. Optionally remove the item from local list:
                                   items.removeAt(itemIndex);
+                                  widget.refreshCallback
+                                      ?.call(); // if the parent provides a callback
                                 } catch (e) {
                                   print('Deletion error: $e');
                                   ScaffoldMessenger.of(context).showSnackBar(
