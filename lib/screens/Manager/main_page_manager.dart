@@ -49,11 +49,56 @@ class _MainPageManagerState extends State<MainPageManager> {
       TablesScreen(
         restaurantId: user!.uid,
       ),
-      MenuScreen(),
+      const MenuScreen(
+        role: 'manager',
+      ),
       // TablesScreen(),
       AccountScreen(),
     ];
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _titles[_selectedIndex],
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26.0,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              try {
+                await AuthService().signOut();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const Wrapper()),
+                  (route) =>
+                      false, // This removes all previous routes from the stack
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Signed out successfully')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Error signing out')),
+                );
+              }
+            },
+          ),
+        ],
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(10.0),
+          child: Container(
+            color: Styles.inputFieldBorderColor,
+            height: 1.0,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(

@@ -503,10 +503,18 @@ class ClientService {
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(currentTableID).get();
       List<String> billIds = List<String>.from(tableDoc.get('billIds'));
-      String userBillId = billIds.firstWhere(
-        (billId) => billId.contains(userID),
-        orElse: () => '',
-      );
+
+      String userBillId = '';
+
+      for (String billId in billIds) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(billId).get();
+        String userIdInBill = billDoc.get('userId');
+        if (userIdInBill == userID) {
+          userBillId = billId;
+          break;
+        }
+      }
 
       if (userBillId.isNotEmpty) {
         DocumentSnapshot billDoc =
@@ -517,6 +525,10 @@ class ClientService {
           'amount': newAmount,
           'orderItemIds': FieldValue.arrayUnion([orderItemID])
         });
+        // get the new orderItemIds and update the table
+        List<String> orderItemIds =
+            List<String>.from(billDoc.get('orderItemIds'));
+            print("orderItemIds: $orderItemIds");
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -578,7 +590,6 @@ class ClientService {
       DocumentSnapshot tableDoc =
           await _firestore.collection('tables').doc(currentTableID).get();
       List<String> billIds = List<String>.from(tableDoc.get('billIds'));
-
       for (String billId in billIds) {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(billId).get();
@@ -593,7 +604,7 @@ class ClientService {
           DocumentSnapshot orderItemDoc =
               await _firestore.collection('orderItems').doc(orderItemId).get();
           int itemCount = orderItemDoc.get('userIds').length;
-          String menuItemID = orderItemDoc.get('menuItemID');
+          String menuItemID = orderItemDoc.get('menuItemId');
           String menuItemName =
               (await _firestore.collection('menuItems').doc(menuItemID).get())
                   .get('name');
@@ -602,6 +613,11 @@ class ClientService {
             'itemName': menuItemName,
           });
         }
+        
+        if(orderItems.isEmpty){
+          continue;
+        }
+        print("billUserID: $billId");
 
         Map<String, dynamic> billSummary = {
           'id': billId,
