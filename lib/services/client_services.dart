@@ -615,7 +615,7 @@ class ClientService {
         for (String orderItemId in orderItemIds) {
           DocumentSnapshot orderItemDoc =
               await _firestore.collection('orderItems').doc(orderItemId).get();
-          int itemCount = orderItemDoc.get('userIds').length;
+          int itemCount = orderItemDoc.get('itemCount');
           String menuItemID = orderItemDoc.get('menuItemId');
           String menuItemName =
               (await _firestore.collection('menuItems').doc(menuItemID).get())
@@ -1097,6 +1097,7 @@ class ClientService {
           }
           await _firestore.collection('tables').doc(tableID).update({
             'userIds': FieldValue.arrayRemove([userID]),
+            'isOngoing': false,
           });
           print('User removed from table');
         }

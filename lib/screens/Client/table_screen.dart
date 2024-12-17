@@ -58,6 +58,7 @@ class _TableScreenState extends State<TableScreen> {
       }
     } catch (e) {
       print('Error loading table: $e');
+      if(!mounted) return;
       setState(() {
         isLoading = false;
       });
