@@ -106,9 +106,9 @@ class Wrapper extends StatelessWidget {
               // Conditionally return MainPage or ChooseRestaurantScreen
               if (ongoingTable != null) {
                 // return BillSummaryScreen();
-                // return MainPage();
+                return MainPage();
                 // return MenuScreen();
-                return MenuItemScreen(menuItemId: 'OB1FTRIpRjT8BSlHUszC');
+                // return MenuItemScreen(menuItemId: 'OB1FTRIpRjT8BSlHUszC');
                 // return OrderSummary(tableId: 'hJVZXkhwtaqAWucdlEgx');
               } else {
                 return ChooseRestaurantScreen();
