@@ -7,6 +7,7 @@ import 'package:los_pollos_hermanos/models/menu_item_model.dart';
 import 'package:los_pollos_hermanos/models/menu_model.dart';
 import 'package:los_pollos_hermanos/models/order_item_model.dart';
 import 'package:los_pollos_hermanos/models/restaurant_model.dart';
+import 'package:los_pollos_hermanos/models/review_model.dart';
 import 'package:los_pollos_hermanos/models/table_model.dart';
 import '../models/client_model.dart';
 import 'package:los_pollos_hermanos/models/notification_model.dart';
@@ -528,7 +529,7 @@ class ClientService {
         // get the new orderItemIds and update the table
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
-            print("orderItemIds: $orderItemIds");
+        print("orderItemIds: $orderItemIds");
       } else {
         DocumentReference billRef = _firestore.collection('bills').doc();
         Bill bill = Bill(
@@ -613,8 +614,8 @@ class ClientService {
             'itemName': menuItemName,
           });
         }
-        
-        if(orderItems.isEmpty){
+
+        if (orderItems.isEmpty) {
           continue;
         }
         print("billUserID: $billId");
@@ -880,6 +881,72 @@ class ClientService {
     } catch (e) {
       print('Error fetching notifications: $e');
       throw Exception('Error fetching notifications: $e');
+    }
+  }
+
+  // Reviews --------------------------------------------------------------
+  Future<void> addReview(String menuItemId, String userId, String reviewContent,
+      int rating) async {
+    try {
+      DocumentReference reviewRef = _firestore.collection('reviews').doc();
+      await reviewRef.set({
+        'menuItemId': menuItemId,
+        'userId': userId,
+        'reviewContent': reviewContent,
+        'rating': rating,
+      });
+
+      // Fetch the menu item document
+      DocumentReference menuItemRef =
+          _firestore.collection('menuItems').doc(menuItemId);
+      DocumentSnapshot menuItemSnapshot = await menuItemRef.get();
+
+      if (menuItemSnapshot.exists) {
+        // Update the menu item's reviews field
+        await menuItemRef.update({
+          'reviewIds': FieldValue.arrayUnion([reviewRef.id]),
+        });
+      } else {
+        throw Exception('Menu item not found');
+      }
+      print('Review added successfully');
+    } catch (e) {
+      print('Error adding review: $e');
+      throw Exception('Error adding review: $e');
+    }
+  }
+
+  Future<List<Review>> fetchReviews(String menuItemId) async {
+    try {
+      // Fetch the menu item document
+      DocumentSnapshot menuItemSnapshot =
+          await _firestore.collection('menuItems').doc(menuItemId).get();
+
+      if (!menuItemSnapshot.exists) {
+        throw Exception('Menu item not found');
+      }
+
+      // Get the list of review IDs
+      List<String> reviewIds =
+          List<String>.from(menuItemSnapshot.get('reviewIds'));
+
+      // Fetch each review document
+      List<Review> reviews = [];
+      for (String reviewId in reviewIds) {
+        DocumentSnapshot reviewSnapshot =
+            await _firestore.collection('reviews').doc(reviewId).get();
+
+        if (reviewSnapshot.exists) {
+          reviews.add(Review.fromMap(
+              reviewSnapshot.data() as Map<String, dynamic>,
+              reviewSnapshot.id));
+        }
+      }
+
+      return reviews;
+    } catch (e) {
+      print('Error fetching reviews for menu item: $e');
+      throw Exception('Failed to fetch reviews for menu item');
     }
   }
 }
