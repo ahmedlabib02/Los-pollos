@@ -159,61 +159,64 @@ class _TableScreenState extends State<TableScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: CustomChip(
-                                  '${currentTable!.totalAmount} EGP due',
-                                ),
+                                    '${currentTable!.totalAmount} EGP due'),
                               ),
                             ),
-                            Expanded(
-                              child: Container(
-                                alignment: Alignment.center,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 30,
-                                    maxWidth: 80,
-                                  ),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              BillSummaryScreen(),
+
+                            // Conditionally show the "Track bill" button only if role != manager
+                            if (widget.role != 'manager')
+                              Expanded(
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxHeight: 30,
+                                      maxWidth: 80,
+                                    ),
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                BillSummaryScreen(),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFFF2C230),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0, vertical: 0.0),
+                                        elevation: 0,
+                                        shadowColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6.0),
                                         ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFF2C230),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0, vertical: 0.0),
-                                      elevation: 0,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(6.0),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Track bill',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            color: Styles.inputFieldTextColor,
+                                            size: 16,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    child: const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Track bill',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.chevron_right,
-                                          color: Styles.inputFieldTextColor,
-                                          size: 16,
-                                        ),
-                                      ],
-                                    ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 26),
