@@ -67,6 +67,7 @@ class MyApp extends StatelessWidget {
             child: MaterialApp(
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
+                scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
                 inputDecorationTheme: InputDecorationTheme(
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -89,6 +90,12 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                textTheme: GoogleFonts.madaTextTheme(
+                  Theme.of(context).textTheme.apply(
+                        bodyColor: Colors.black,
+                        displayColor: Colors.black,
+                      ),
+                ),
               ),
               home: const Wrapper(),
             ),
@@ -97,7 +104,12 @@ class MyApp extends StatelessWidget {
 
         return MaterialApp(
           theme: ThemeData(
+            scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
             inputDecorationTheme: InputDecorationTheme(
+  
+              // add colors to all texts to be black
+      
+
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
@@ -116,6 +128,12 @@ class MyApp extends StatelessWidget {
                   color: Colors.grey, // Default border
                 ),
               ),
+            ),
+            textTheme: GoogleFonts.madaTextTheme(
+              Theme.of(context).textTheme.apply(
+                    bodyColor: Colors.black,
+                    displayColor: Colors.black,
+                  ),
             ),
           ),
           home: Loading(),
