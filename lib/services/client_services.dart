@@ -602,8 +602,11 @@ class ClientService {
         DocumentSnapshot billDoc =
             await _firestore.collection('bills').doc(billId).get();
         String billUserID = billDoc.get('userId');
-        String billUserName = userDoc.get('name');
-        String billUserImageUrl = userDoc.get('imageUrl');
+        //  get the bill user 
+        DocumentSnapshot billUserDoc =
+            await _firestore.collection('clients').doc(billUserID).get();
+        String billUserName = billUserDoc.get('name');
+        String billUserImageUrl = billUserDoc.get('imageUrl');
         double billAmount = billDoc.get('amount');
         List<String> orderItemIds =
             List<String>.from(billDoc.get('orderItemIds'));
@@ -625,7 +628,7 @@ class ClientService {
         if (orderItems.isEmpty) {
           continue;
         }
-        print("billUserID: $billId");
+        print("billUserName: $billUserName");
 
         Map<String, dynamic> billSummary = {
           'id': billId,
@@ -950,6 +953,7 @@ class ClientService {
           .doc(currentUid)
           .collection('notifications')
           .doc(notificationId);
+    
 
       await notificationRef.delete();
       print('Notification removed for user: $currentUid');
