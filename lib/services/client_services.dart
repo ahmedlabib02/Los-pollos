@@ -559,6 +559,68 @@ class ClientService {
       print("Failed to create or update bill: $e");
     }
   }
+  Future<void> createOrUpdateBill2(
+      String userID, String orderItemID, String restaurantId) async {
+    try {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('clients').doc(userID).get();
+      String currentTableID = userDoc.get('currentTableID');
+      DocumentSnapshot orderItemDoc =
+          await _firestore.collection('orderItems').doc(orderItemID).get();
+      double orderItemAmount = orderItemDoc.get('price') /
+          orderItemDoc.get('userIds').length as double;
+      DocumentSnapshot tableDoc =
+          await _firestore.collection('tables').doc(currentTableID).get();
+      List<String> billIds = List<String>.from(tableDoc.get('billIds'));
+
+      String userBillId = '';
+
+      for (String billId in billIds) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(billId).get();
+        if (billDoc.get('userId') == userID && !billDoc.get('isPaid')) {
+          userBillId = billId;
+          break;
+        }
+      }
+
+      if (userBillId.isNotEmpty) {
+        DocumentSnapshot billDoc =
+            await _firestore.collection('bills').doc(userBillId).get();
+        double currentAmount = billDoc.get('amount') - orderItemDoc.get('price');
+        double newAmount = currentAmount + orderItemAmount;
+        await _firestore.collection('bills').doc(userBillId).update({
+          'amount': newAmount,
+          'orderItemIds': FieldValue.arrayUnion([orderItemID])
+        });
+
+        // get the new orderItemIds and update the table
+        List<String> orderItemIds =
+            List<String>.from(billDoc.get('orderItemIds'));
+        print("orderItemIds: $orderItemIds");
+      } else {
+        DocumentReference billRef = _firestore.collection('bills').doc();
+        Bill bill = Bill(
+          id: billRef.id,
+          amount: orderItemAmount,
+          userId: userID,
+          isPaid: false,
+          orderItemIds: [orderItemID],
+          restaurantId: restaurantId,
+        );
+
+        await billRef
+            .set({...bill.toMap(), 'timestamp': FieldValue.serverTimestamp()});
+        await _firestore.collection('tables').doc(currentTableID).update({
+          'billIds': FieldValue.arrayUnion([billRef.id])
+        });
+      }
+    } catch (e) {
+      print("Failed to create or update bill: $e");
+    }
+  }
+
+
 
   Future<void> updateAllBills(String tableID) async {
     try {
@@ -948,7 +1010,9 @@ class ClientService {
       print('Sender ID ($senderId) added to order: $orderId');
 
       createOrUpdateBill(senderId, orderId, restaurantId);
-      createOrUpdateBill(currentUid, orderId, restaurantId);
+      createOrUpdateBill2(currentUid, orderId, restaurantId);
+
+      
 
       // 2. Remove the notification from the current user's notification subcollection
       DocumentReference notificationRef = _firestore
