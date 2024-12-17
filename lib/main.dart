@@ -67,19 +67,27 @@ class MyApp extends StatelessWidget {
             child: MaterialApp(
               title: 'Los Pollos Hermanos',
               theme: ThemeData(
-                primarySwatch: Colors.brown,
-
-                // scaffoldBackgroundColor: Color.fromARGB(
-                // 255, 246, 246, 246), // Set global background color
-                scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
-                textTheme: GoogleFonts.madaTextTheme(), // default font for app
-                // primaryTextTheme: GoogleFonts.madaTextTheme(),
-                // textSelectionTheme: TextSelectionThemeData(
-                // cursorColor: const Color.fromARGB(
-                // 255, 0, 0, 0), // Change this to the color you want
-                // ),
                 inputDecorationTheme: InputDecorationTheme(
-                  focusColor: Colors.green,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color.fromRGBO(
+                          242, 194, 48, 1), // Custom golden color
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color:
+                          Colors.grey, // Default border color when not focused
+                    ),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Colors.grey, // Default border
+                    ),
+                  ),
                 ),
               ),
               home: const Wrapper(),
@@ -87,7 +95,29 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        return const MaterialApp(
+        return MaterialApp(
+          theme: ThemeData(
+            inputDecorationTheme: InputDecorationTheme(
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Color.fromRGBO(242, 194, 48, 1), // Custom golden color
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Colors.grey, // Default border color when not focused
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Colors.grey, // Default border
+                ),
+              ),
+            ),
+          ),
           home: Loading(),
           debugShowCheckedModeBanner: false,
         );
