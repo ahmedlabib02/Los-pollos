@@ -109,7 +109,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
-                'Created item: ${createdItem.name} (ID: ${createdItem.id})')),
+                'Created item: ${createdItem.name}')),
       );
 
       Navigator.pop(context, createdItem); // or any other navigation

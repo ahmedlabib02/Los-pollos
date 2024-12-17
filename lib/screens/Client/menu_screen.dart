@@ -3,6 +3,7 @@ import 'package:los_pollos_hermanos/models/customUser.dart';
 import 'package:los_pollos_hermanos/provider/selected_restaurant_provider.dart';
 import 'package:los_pollos_hermanos/screens/Client/menu_item_screen.dart';
 import 'package:los_pollos_hermanos/screens/Manager/add_menu_item_screen.dart';
+import 'package:los_pollos_hermanos/services/manager_services.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:los_pollos_hermanos/models/menu_item_model.dart';
@@ -190,15 +191,20 @@ class _MenuListState extends State<MenuList> {
           return const Center(child: Text('Error loading menu items'));
         }
 
-        // Initialize menu items only once
-        if (_menuItems == null && snapshot.hasData) {
+        if (snapshot.hasData) {
+          // Always update _menuItems from snapshot
           _menuItems = snapshot.data!;
           _filteredMenuItems = Map.from(_menuItems!);
           _categories = _menuItems!.keys.toList();
-          _activeCategory = _categories.isNotEmpty ? _categories.first : null;
+          // Optionally preserve _activeCategory if it's still valid,
+          // or reassign if the categories changed.
+          if (_activeCategory == null ||
+              !_categories.contains(_activeCategory)) {
+            _activeCategory = _categories.isNotEmpty ? _categories.first : null;
+          }
         }
 
-        // Safeguard in case of empty data
+        // Safeguard in case snapshot.data is empty
         if (_menuItems == null || _menuItems!.isEmpty) {
           return const Center(child: Text('No menu items available.'));
         }
@@ -274,11 +280,77 @@ class _MenuListState extends State<MenuList> {
                           ),
                         ),
                         itemBuilder: (context, itemIndex) {
+                          final category = _categories[itemIndex];
                           final item = items[itemIndex];
-                          return MenuItemWidget(
-                            item: item,
-                            role: widget.role,
-                          );
+                          // If the user is "manager", wrap in Dismissible
+                          if (widget.role == 'manager') {
+                            return Dismissible(
+                              key: ValueKey(item.id),
+                              direction:
+                                  DismissDirection.endToStart, // Swipe left
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                color: Colors.red,
+                                padding: const EdgeInsets.only(right: 20),
+                                child: const Icon(Icons.delete,
+                                    color: Colors.white),
+                              ),
+                              confirmDismiss: (direction) async {
+                                // Optionally prompt for confirmation
+                                return await showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text('Delete ${item.name}?'),
+                                    content: Text(
+                                        'Are you sure you want to remove this item?'),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(false),
+                                          child: Text('Cancel')),
+                                      TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(true),
+                                          child: Text('Delete')),
+                                    ],
+                                  ),
+                                );
+                              },
+                              onDismissed: (direction) async {
+                                // 1. Call the manager service to delete the item from Firestore
+                                try {
+                                  final user = Provider.of<CustomUser?>(context,
+                                      listen: false);
+                                  await ManagerServices()
+                                      .deleteMenuItemForRestaurant(
+                                    restaurantId: user!
+                                        .uid, // if manager ID is the restaurantId
+                                    menuItem: item,
+                                    category: category, // from your code
+                                  );
+                                  // 2. Optionally remove the item from local list:
+                                  items.removeAt(itemIndex);
+                                } catch (e) {
+                                  print('Deletion error: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('Error deleting item: $e')),
+                                  );
+                                }
+                              },
+                              child: MenuItemWidget(
+                                item: item,
+                                role: widget.role,
+                              ),
+                            );
+                          } else {
+                            // If role is user, just show the normal item (no dismissible)
+                            return MenuItemWidget(
+                              item: item,
+                              role: widget.role,
+                            );
+                          }
                         },
                       ),
                       Container(

@@ -156,8 +156,10 @@ class ManagerServices {
         String storagePath =
             'menuItems/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
 
-        UploadTask uploadTask =
-            FirebaseStorage.instance.ref().child(storagePath).putFile(imageFile);
+        UploadTask uploadTask = FirebaseStorage.instance
+            .ref()
+            .child(storagePath)
+            .putFile(imageFile);
         TaskSnapshot snapshot = await uploadTask;
         imageUrl = await snapshot.ref.getDownloadURL();
       }
@@ -216,6 +218,55 @@ class ManagerServices {
       );
     } catch (e) {
       rethrow; // Pass the error up for the UI to handle
+    }
+  }
+
+  /// Delete a menu item from Firestore, and remove its ID from the Menu categories.
+  Future<void> deleteMenuItemForRestaurant({
+    required String restaurantId,
+    required MenuItem menuItem,
+    required String category,
+  }) async {
+    try {
+      // 1. Fetch Restaurant doc to get menuId
+      final restaurantDoc =
+          await _firestore.collection('restaurants').doc(restaurantId).get();
+      if (!restaurantDoc.exists) {
+        throw Exception('Restaurant with ID $restaurantId not found.');
+      }
+      final restaurant = Restaurant.fromMap(
+        restaurantDoc.data() as Map<String, dynamic>,
+        restaurantDoc.id,
+      );
+
+      // 2. Fetch the Menu doc by menuId
+      final menuDocRef = _firestore.collection('menus').doc(restaurant.menuId);
+      final menuDocSnap = await menuDocRef.get();
+      if (!menuDocSnap.exists) {
+        throw Exception('Menu with ID ${restaurant.menuId} not found.');
+      }
+      Menu menu = Menu.fromMap(
+        menuDocSnap.data() as Map<String, dynamic>,
+        menuDocSnap.id,
+      );
+
+      // 3. Remove the itemId from the relevant category array
+      final itemId = menuItem.id;
+      if (menu.categories[category] != null) {
+        menu.categories[category]!.remove(itemId);
+        // If the category becomes empty, you could also remove the key entirely:
+        if (menu.categories[category]!.isEmpty) {
+          menu.categories.remove(category);
+        }
+      }
+
+      // 4. Update the Menu doc
+      await menuDocRef.update({'categories': menu.categories});
+
+      // 5. Delete the menuItem doc from `menuItems` collection
+      await _firestore.collection('menuItems').doc(itemId).delete();
+    } catch (e) {
+      rethrow;
     }
   }
 
