@@ -138,7 +138,7 @@ class _OrderItemCardState extends State<OrderItemCard> {
         // Use the newly fetched orderItem instead of _orderItem
         return Container(
           // color: Colors.green,
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          // padding: const EdgeInsets.only(top: 2.0),
           margin: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 1.0),
           // decoration: BoxDecoration(
           //   color: Colors.white,
@@ -229,7 +229,7 @@ class _OrderItemCardState extends State<OrderItemCard> {
               Container(
                 // color: Colors.red,
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
@@ -239,27 +239,32 @@ class _OrderItemCardState extends State<OrderItemCard> {
                       ),
                     ),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: 30),
+                          constraints: BoxConstraints(maxHeight: 35),
                           child: TextButton(
                             onPressed: () {
                               _showBottomDrawer(
                                   context, menuItem, users, loggedInUserId);
                             },
-                            style: TextButton.styleFrom(),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                            ),
                             child: const Text(
                               'Details',
                               style: TextStyle(
-                                color: Styles.primaryYellow,
-                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0),
+                                decoration: TextDecoration.underline,
+
+                                // fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
                         if (orderItem.status == OrderStatus.served)
                           ConstrainedBox(
-                            constraints: BoxConstraints(maxHeight: 30),
+                            constraints: BoxConstraints(maxHeight: 35),
                             child: TextButton(
                               onPressed: () {
                                 _showReviewBottomDrawer(
@@ -269,7 +274,8 @@ class _OrderItemCardState extends State<OrderItemCard> {
                               child: const Text(
                                 'Review',
                                 style: TextStyle(
-                                  color: Color.fromARGB(255, 74, 74, 74),
+                                  color: Color.fromARGB(255, 93, 93, 93),
+                                  decoration: TextDecoration.underline,
                                   // fontWeight: FontWeight.bold,
                                 ),
                               ),

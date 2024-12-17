@@ -23,7 +23,7 @@ class _TableScreenState extends State<TableScreen> {
   TableModel.Table? currentTable;
   bool isLoading = true;
   List<Map<String, dynamic>> users = []; // Store fetched user data
-  double paidPercentage = 0.0;
+  double paidPercentage = 70.0;
 
   @override
   void initState() {
